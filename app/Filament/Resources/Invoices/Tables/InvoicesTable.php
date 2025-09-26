@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Filament\Resources\Invoices\Tables;
+
+use App\Models\Invoice;
+use App\Models\Customer;
+use Filament\Tables\Table;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Support\Facades\Auth;
+use Filament\Actions\BulkActionGroup;
+use Filament\Forms\Components\Toggle;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Support\Enums\FontWeight;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Actions\InvoiceActions\PayInvoiceAction;
+
+class InvoicesTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->modifyQueryUsing(fn(Builder $query) => $query->with(['returnInvoices']))
+            ->recordUrl(null) // disable row clicking
+            ->recordAction(null)
+            ->defaultSort('created_at', 'desc')
+            ->columns([
+                TextColumn::make('invoice_number')
+                    ->label('رقم الفاتورة')
+                    ->weight('semibold')
+                    ->searchable()
+                    ->formatStateUsing(fn(string $state): string => strtoupper($state)),
+
+                TextColumn::make('customer.name')
+                    ->label('اسم العميل')
+                    ->searchable(),
+
+                TextColumn::make('total_amount')
+                    ->label('إجمالي الفاتورة')
+                    ->suffix(' جنيه '),
+
+                TextColumn::make('createdDate')
+                    ->label('تاريخ الفاتورة')
+                    ->color('primary'),
+
+                TextColumn::make('has_returns')
+                    ->label('هل بها مرتجع؟')
+                    ->extraAttributes(['class' => 'text-sm'])
+                    ->icon(fn(Invoice $record) => $record->has_returns ? 'heroicon-o-arrow-path' : 'heroicon-o-check')
+                    ->iconPosition('before')
+                    ->color(fn(Invoice $record): string => $record->has_returns ? 'danger' : 'success')
+                    ->formatStateUsing(fn(Invoice $record): string => $record->has_returns ? 'مرتجع' : 'لا'),
+
+                TextColumn::make('status')
+                    ->label('الحالة')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'pending'   => 'orange',
+                        'paid'      => 'success',
+                        'cancelled' => 'danger',
+                        default     => 'secondary',
+                    })
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'pending'   => 'قيد الانتظار',
+                        'paid'      => 'مدفوعة',
+                        'cancelled' => 'ملغاة',
+                        default     => $state,
+                    }),
+            ])
+            ->filters([
+                Filter::make('paid_status')
+                    ->schema([
+                        Toggle::make('pending_only')
+                            ->label('عرض الفواتير غير المدفوعة')
+                            ->default(false)
+                            ->inline(false),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if ($data['pending_only'] ?? false) {
+                            $query->where('status', 'pending');
+                        }
+                    })
+                    ->columnSpanFull(),
+
+                SelectFilter::make('customer_id')
+                    ->label('اسم العميل')
+                    ->searchable()
+                    ->options(fn() => Customer::limit(20)->pluck('name', 'id')->toArray())
+                    ->getOptionLabelUsing(fn($value): ?string => Customer::find($value)?->name)
+                    ->getSearchResultsUsing(fn(string $search) => Customer::where('name', 'like', "%{$search}%")
+                        ->pluck('name', 'id')
+                        ->toArray())
+                    ->placeholder('كل العملاء')
+                    ->columnSpan(2),
+            ], layout: FiltersLayout::AboveContent)
+            ->deferFilters(false)
+            ->recordActions([
+                ViewAction::make()
+                    ->label('عرض الفاتورة'),
+                PayInvoiceAction::make(),
+                EditAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
+                        ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                ]),
+            ]);
+    }
+}
