@@ -30,6 +30,36 @@ class Product extends Model
         'stock_quantity' => 'integer',
     ];
 
+    protected $appends = ['wholesale_price', 'retail_price'];
+
+    /**
+     * wholesale_price سعر الجملة
+     * retail_price  سعر التجزئة
+     */
+    public function getWholesalePriceAttribute()
+    {
+        $price = $this->production_price * 1.1; // +10%
+
+        if ($this->discount > 0) {
+            $price -= ($price * $this->discount / 100);
+        }
+
+        return round($price, 2);
+    }
+
+    public function getRetailPriceAttribute()
+    {
+        $price = $this->production_price * 1.2; // +20%
+
+        if ($this->discount > 0) {
+            $price -= ($price * $this->discount / 100);
+        }
+
+        return round($price, 2);
+    }
+
+    // Relations
+
     public function purchases(): HasMany
     {
         return $this->hasMany(ProductPurchase::class);
@@ -40,19 +70,53 @@ class Product extends Model
         return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
+    // Accessors
+
     /**
-     * حساب متوسط سعر التكلفة
+     * حساب متوسط السعر بناء على المتاح فى المخزن فقط
+     * حساب تكلفة المخزون الحالي بطريقة FIFO
+     * First In First Out
+     * الأقدم يخرج أولاً - المخزون الحالي من آخر المشتريات
      */
     public function getAverageCostAttribute(): float
     {
-        $totalQuantity = $this->purchases()->sum('quantity');
-        $totalCost = $this->purchases()->sum('total_cost');
-
-        if ($totalQuantity > 0) {
-            return round($totalCost / $totalQuantity, 2);
+        if ($this->stock_quantity <= 0) {
+            return 0;
         }
 
-        return 0;
+        // إجمالي المشتريات المسجلة في product_purchases
+        $recordedPurchasesQuantity = $this->purchases()->sum('quantity');
+        $recordedPurchasesCost = $this->purchases()->sum('total_cost');
+
+        // إذا المخزون الحالي أكبر من المشتريات المسجلة (يوجد مخزون قديم غير موجود فى المشتريات)
+        if ($this->stock_quantity > $recordedPurchasesQuantity) {
+            $oldStockQuantity = $this->stock_quantity - $recordedPurchasesQuantity;
+            $oldStockTotalCost = $oldStockQuantity * $this->production_price;
+            $totalCost = $oldStockTotalCost + $recordedPurchasesCost;
+
+            return round($totalCost / $this->stock_quantity, 2);
+        }
+
+        // إذا المخزون الحالي أقل من أو يساوي المشتريات المسجلة (FIFO عادي)
+        $purchases = $this->purchases()
+            ->orderBy('purchase_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $remainingStock = $this->stock_quantity;
+        $totalCost = 0;
+
+        foreach ($purchases as $purchase) {
+            if ($remainingStock <= 0) {
+                break;
+            }
+
+            $quantityFromThisPurchase = min($remainingStock, $purchase->quantity);
+            $totalCost += $quantityFromThisPurchase * $purchase->purchase_price;
+            $remainingStock -= $quantityFromThisPurchase;
+        }
+
+        return round($totalCost / $this->stock_quantity, 2);
     }
 
     /**
@@ -130,17 +194,6 @@ class Product extends Model
             return 'متوفر';
         }
     }
-
-    // public function getFinalPriceAttribute()
-    // {
-    //     if ($this->discount > 0) {
-    //         $final = $this->attributes['price'] - ($this->attributes['price'] * $this->discount / 100);
-
-    //         return number_format($final, 2, '.', '');
-    //     }
-
-    //     return number_format($this->attributes['price'], 2, '.', '');
-    // }
 
     /**
      * السعر بعد الخصم

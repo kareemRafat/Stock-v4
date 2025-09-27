@@ -15,9 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->enum('type', ['جملة', 'قطاعي'])->default('جملة');
             $table->decimal('production_price', 10, 2)->comment('سعر المصنع');
-            $table->decimal('price', 10, 2)->comment('سعر البيع');
             $table->unsignedTinyInteger('discount')->default(0);
             $table->integer('stock_quantity')->default(0);
             $table->foreignId('supplier_id')->nullable()->constrained()->onDelete('set null')->comment('المورد');
@@ -26,7 +24,7 @@ return new class extends Migration
             $table->timestamps();
 
             // for performance
-            $table->index(['name', 'type']);
+            $table->index(['name']);
             $table->index('stock_quantity');
         });
     }

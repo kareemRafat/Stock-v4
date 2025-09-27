@@ -43,7 +43,6 @@ class ProductFactory extends Factory
                 'متوفر الآن بسعر مميز لفترة محدودة.',
             ]),
             'production_price' => $this->faker->randomFloat(2, 10, 1000), // من 10 إلى 1000 جنيه
-            'price' => $this->faker->randomFloat(2, 10, 1000), // من 10 إلى 1000 جنيه
             'discount' => $this->faker->numberBetween(0, 30), // خصم بين 0% و 30%
             'stock_quantity' => $this->faker->numberBetween(0, 500),
             'unit' => $this->faker->randomElement([

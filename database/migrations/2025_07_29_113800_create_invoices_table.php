@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->enum('status', ['pending', 'paid', 'cancelled'])->default('pending');
+            $table->enum('price_type', ['wholesale', 'retail'])->default('wholesale')->comment('جملة وقطاعي');
             $table->text('notes')->nullable();
             $table->timestamps();
         });

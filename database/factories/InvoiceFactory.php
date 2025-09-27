@@ -23,6 +23,7 @@ class InvoiceFactory extends Factory
             'invoice_number' => $this->faker->unique()->numerify('inv-#####'), // رقم فاتورة فريد
             'total_amount' => $this->faker->randomFloat(2, 100, 5000), // من 100 إلى 5000 جنيه
             'notes' => $this->faker->optional()->sentence(10, true),
+            'price_type' => 'wholesale',
             'status' => 'pending',
             'created_at' => now(),
             'updated_at' => now(),

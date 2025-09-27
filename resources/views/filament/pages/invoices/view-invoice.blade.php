@@ -83,12 +83,24 @@
                     <table class="w-full">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">مسلسل</th>
-                                <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">المنتج</th>
-                                <th class="text-center py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">الكمية</th>
-                                <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">الخصم</th>
-                                <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">السعر</th>
-                                <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">الإجمالي</th>
+                                <th
+                                    class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                    مسلسل</th>
+                                <th
+                                    class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                    المنتج</th>
+                                <th
+                                    class="text-center py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                    الكمية</th>
+                                <th
+                                    class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                    الخصم</th>
+                                <th
+                                    class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                    السعر</th>
+                                <th
+                                    class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                    الإجمالي</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -98,12 +110,19 @@
                             @endphp
                             @foreach ($this->getRecord()->items as $item)
                                 @php
-                                    $totalBeforeSale += $item->product?->price * $item->quantity;
-                                    $totalDiscounts +=
+                                    // السعر الأساسي (قبل الخصم)
+                                    $lineTotal = $item->price * $item->quantity;
+                                    $totalBeforeSale += $lineTotal;
+
+                                    // قيمة الخصم لو موجود
+                                    $discountAmount =
                                         $item->product->discount > 0
-                                            ? ($item->product->price * $item->quantity * $item->product->discount) / 100
+                                            ? ($item->price * $item->quantity * $item->product->discount) / 100
                                             : 0;
+
+                                    $totalDiscounts += $discountAmount;
                                 @endphp
+
                                 <tr class="border-t border-gray-400">
                                     <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
                                         {{ $loop->iteration }}
@@ -118,10 +137,13 @@
                                         {{ $item->product->discount > 0 ? $item->product->discount . ' %' : '---' }}
                                     </td>
                                     <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
-                                        {{ number_format($item->product->price, 2) }}
+                                        {{-- السعر قبل الخصم --}}
+                                        {{ number_format($item->price, 2) }}
                                     </td>
-                                    <td class="py-2 px-4 text-right font-medium text-gray-600 text-sm border border-gray-400">
-                                        {{ number_format($item->subtotal, 2) }}
+                                    <td
+                                        class="py-2 px-4 text-right font-medium text-gray-600 text-sm border border-gray-400">
+                                        {{-- الإجمالي بعد الخصم --}}
+                                        {{ number_format($lineTotal - $discountAmount, 2) }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -139,7 +161,8 @@
                     <div class="space-y-2">
                         <div class="flex justify-between py-2 px-2">
                             <span class="text-sm text-black">الإجمالي:</span>
-                            <span class="font-medium text-sm text-black">{{ number_format($totalBeforeSale, 2) }}</span>
+                            <span
+                                class="font-medium text-sm text-black">{{ number_format($totalBeforeSale, 2) }}</span>
                         </div>
                         <div class="flex justify-between py-2 px-2">
                             <span class="text-sm text-black">الخصومات:</span>
@@ -150,11 +173,10 @@
                             <span class="text-base font-medium text-black">الإجمالي بعد الخصم:</span>
                             <span class="text-base font-medium text-black">
                                 {{ number_format(
-                                    $this->getRecord()->total_amount == 0
-                                        ? $totalBeforeSale - $totalDiscounts
-                                        : $this->getRecord()->total_amount,
-                                    2
-                                ) }} ج.م
+                                    $totalBeforeSale - $totalDiscounts,
+                                    2,
+                                ) }}
+                                ج.م
                             </span>
                         </div>
                     </div>

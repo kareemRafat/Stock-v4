@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\Customer;
 use Filament\Schemas\Schema;
+use Filament\Forms\Components\Radio;
 use Filament\Support\Icons\Heroicon;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
@@ -15,6 +16,7 @@ use Filament\Schemas\Components\Wizard;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ViewField;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Wizard\Step;
 use App\Filament\Forms\Components\ClientDatetimeHidden;
 
@@ -49,10 +51,11 @@ class InvoiceForm
                 ->label('رقم الفاتورة')
                 ->default(fn($livewire) => $livewire instanceof CreateRecord ? Invoice::generateUniqueInvoiceNumber() : null)
                 ->disabled()
-                ->dehydrated() // allow it to be saved
-                ->dehydrateStateUsing(fn($state) => $state) // manually pass the state
+                ->dehydrated()
+                ->dehydrateStateUsing(fn($state) => $state)
                 ->required()
                 ->rules(['required', 'string', 'max:255']),
+
             Select::make('customer_id')
                 ->searchable()
                 ->native(false)
@@ -62,13 +65,10 @@ class InvoiceForm
                 ->loadingMessage('تحميل العملاء ...')
                 ->placeholder('اختر العميل...')
                 ->options(function () {
-                    // get 10 when open
                     return Customer::where('status', 'enabled')
                         ->limit(10)
                         ->get()
-                        ->mapWithKeys(function ($customer) {
-                            return [$customer->id => $customer->name];
-                        });
+                        ->mapWithKeys(fn($c) => [$c->id => $c->name]);
                 })
                 ->getOptionLabelUsing(fn($value) => Customer::find($value)?->name)
                 ->getSearchResultsUsing(function ($search) {
@@ -76,19 +76,60 @@ class InvoiceForm
                         ->where('status', 'enabled')
                         ->limit(50)
                         ->get()
-                        ->mapWithKeys(function ($customer) {
-                            return [$customer->id => $customer->name];
-                        });
+                        ->mapWithKeys(fn($c) => [$c->id => $c->name]);
                 }),
 
+            // نوع السعر على مستوى الفاتورة
+            ToggleButtons::make('price_type')
+                ->label('نوع السعر (لكل الفاتورة)')
+                ->options([
+                    'wholesale' => 'جملة',
+                    'retail'    => 'قطاعي',
+                ])
+                ->default('wholesale')
+                ->required()
+                ->inline()
+                ->extraAttributes(['class' => 'pl-2 py-2'])
+                ->colors([
+                    'wholesale' => 'teal',
+                    'retail'    => 'orange',
+                ])
+                ->icons([
+                    'wholesale' => 'heroicon-o-shopping-bag',
+                    'retail'    => 'heroicon-o-shopping-cart',
+                ])
+                ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                    $items = $get('items') ?? [];
+
+                    foreach ($items as $index => $item) {
+                        $product = \App\Models\Product::find($item['product_id'] ?? null);
+
+                        if ($product) {
+                            $price = $state === 'retail'
+                                ? $product->retail_price
+                                : $product->wholesale_price;
+
+                            $quantity = $item['quantity'] ?? 1;
+                            $subtotal = round($price * $quantity, 2);
+
+                            $set("items.{$index}.price", round($price, 2));
+                            $set("items.{$index}.subtotal", $subtotal);
+                        }
+                    }
+
+                    // تحديث الإجمالي
+                    $total = collect($get('items'))->sum('subtotal');
+                    $set('total_amount', round($total, 2));
+                })
+                ->columnSpanFull(),
 
             Textarea::make('notes')
                 ->columnSpanFull(),
 
-            // get the javascript Date
-            ClientDatetimeHidden::make('created_at')
+            ClientDatetimeHidden::make('created_at'),
         ];
     }
+
 
     public static function getInvoiceItemsInfo()
     {
@@ -108,7 +149,7 @@ class InvoiceForm
                                 ->get()
                                 ->mapWithKeys(function ($product) {
                                     return [
-                                        $product->id => $product->name . ' - ' . $product->type
+                                        $product->id => $product->name
                                     ];
                                 });
                         })
@@ -122,34 +163,68 @@ class InvoiceForm
                                 ->get()
                                 ->mapWithKeys(function ($product) {
                                     return [
-                                        $product->id => $product->name . ' - ' . $product->type
+                                        $product->id => $product->name
                                     ];
                                 });
                         })
                         ->getOptionLabelUsing(function ($value) {
                             $product = \App\Models\Product::find($value);
-                            return $product ? $product->name . ' - ' . $product->type : '';
+                            return $product ? $product->name  : '';
                         })
                         ->live()
                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                            $product  = \App\Models\Product::find($state);
-                            $price    = $product?->final_price ?? 0;
-                            $stock    = $product?->stock_quantity ?? 0;
-                            $quantity = $get('quantity') ?? 1;
+                            $product = Product::find($state);
+                            if (! $product) {
+                                return;
+                            }
 
-                            $set('price', $price);
-                            $set('stock_quantity', $stock);
-                            $set('subtotal', round($price * $quantity, 2));
+                            // نوع السعر على مستوى الفاتورة (wholesale/retail)
+                            $invoicePriceType = $get('../../price_type') ?? 'wholesale';
 
-                            // Recalculate total
+                            // اختر السعر بناء على النوع
+                            $price = $invoicePriceType === 'retail' ? $product->retail_price : $product->wholesale_price;
+                            $quantity = (int) ($get('quantity') ?? 1);
+
+                            // خزّن الأسعار والخصم داخل الـ item عشان الـ JS يستخدمهم لاحقًا
+                            $set('wholesale_price', round($product->wholesale_price, 2));
+                            $set('retail_price', round($product->retail_price, 2));
+                            $set('product_discount', $product->discount ?? 0);
+
+                            // احسب الخصم (تحويل 10 -> 0.1 لو كان مُخزّن كنسبة صحيحة)
+                            $discountRate = (float) ($product->discount ?? 0);
+                            if ($discountRate > 1) {
+                                $discountRate = $discountRate / 100;
+                            }
+
+                            $lineTotal = $price * $quantity;
+                            $discountAmount = $discountRate > 0 ? round($lineTotal * $discountRate, 2) : 0;
+                            $subtotal = round($lineTotal - $discountAmount, 2);
+
+                            // حدّث حقول السطر
+                            $set('price', round($price, 2));
+                            $set('stock_quantity', $product->stock_quantity);
+                            $set('subtotal', $subtotal);
+
+                            // حدّث إجمالي الفاتورة من الـ items الحالية
                             $items = $get('../../items') ?? [];
                             $total = collect($items)->sum('subtotal');
                             $set('../../total_amount', round($total, 2));
                         }),
+                    Hidden::make('wholesale_price')->default(0),
+                    Hidden::make('retail_price')->default(0),
+                    Hidden::make('product_discount')->default(0),
+
                     TextInput::make('stock_quantity')
                         ->label('المتاح بالمخزن')
                         ->disabled()
                         ->dehydrated(false),
+
+                    TextInput::make('price')
+                        ->label('السعر')
+                        ->numeric()
+                        ->required()
+                        ->disabled()
+                        ->dehydrated(),
 
                     TextInput::make('quantity')
                         ->label('الكمية')
@@ -166,40 +241,44 @@ class InvoiceForm
                                 }
                             };
                         })
-                        ->afterStateUpdatedJs('
+                        ->afterStateUpdatedJs(
+                            <<<'JS'
                             const price = parseFloat($get("price")) || 0;
                             const quantity = parseFloat($state) || 0;
-                            const subtotal = Math.round(price * quantity * 100) / 100;
 
+                            // خصم المنتج مخزن في hidden field داخل الـ item
+                            let discount = parseFloat($get("product_discount")) || 0;
+                            if (discount > 1) discount = discount / 100;
+
+                            let subtotal = price * quantity;
+                            if (discount > 0) {
+                                const discountAmount = Math.round(price * quantity * discount * 100) / 100;
+                                subtotal = subtotal - discountAmount;
+                            }
+
+                            subtotal = Math.round(subtotal * 100) / 100;
                             $set("subtotal", subtotal);
 
-                            // Recalculate total
+                            // Recalculate total across all items
                             const items = $get("../../items") || [];
                             const total = items.reduce((sum, item) => sum + (parseFloat(item.subtotal) || 0), 0);
                             $set("../../total_amount", Math.round(total * 100) / 100);
-                        ')
+                            JS
+                        )
                         ->skipRenderAfterStateUpdated(),
 
-                    TextInput::make('price')
-                        ->label('السعر')
-                        ->numeric()
-                        ->required()
-                        ->disabled()
-                        ->dehydrated(),
-
                     TextInput::make('subtotal')
-                        ->label('الإجمالي')
+                        ->label('الإجمالي بعد الخصم')
                         ->numeric()
                         ->disabled()
                         ->dehydrated()
                         ->default(0),
                 ])
                 ->addActionLabel('إضافة صنف')
-                ->columns(5) // was 4, now 5 because we added stock_quantity
+                ->columns(5)
                 ->minItems(1)
                 ->required(),
 
-            //! show blue blade
             ViewField::make('total_amount_display')
                 ->view('filament.partials.invoice-total')
                 ->live()
@@ -207,12 +286,9 @@ class InvoiceForm
                     $items = $get('items') ?? [];
                     $total = collect($items)->sum('subtotal');
 
-                    return [
-                        'total' => $total,
-                    ];
+                    return ['total' => $total];
                 }),
 
-            // Hidden field for saving total to DB
             Hidden::make('total_amount')
                 ->dehydrated()
                 ->default(0),
