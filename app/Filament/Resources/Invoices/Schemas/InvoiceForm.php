@@ -190,7 +190,7 @@ class InvoiceForm
                         ->dehydrated(false),
 
                     TextInput::make('price')
-                        ->label('السعر بعد اضافة خصم المنتج')
+                        ->label('السعر بعد اضافة الخصم')
                         ->numeric()
                         ->required()
                         ->disabled()

@@ -107,20 +107,36 @@
                             @php
                                 $totalBeforeSale = 0;
                                 $totalDiscounts = 0;
+                                $totalAfterDiscount = 0;
                             @endphp
+
                             @foreach ($this->getRecord()->items as $item)
                                 @php
-                                    // السعر الأساسي (قبل الخصم)
-                                    $lineTotal = $item->price * $item->quantity;
-                                    $totalBeforeSale += $lineTotal;
+                                    // السعر الأساسي (قبل الخصم) على مستوى المنتج
+                                    $unitPriceBeforeDiscount =
+                                        $this->getRecord()->price_type === 'wholesale'
+                                            ? $item->product->base_wholesale_price
+                                            : $item->product->base_retail_price;
 
-                                    // قيمة الخصم لو موجود
-                                    $discountAmount =
-                                        $item->product->discount > 0
-                                            ? ($item->price * $item->quantity * $item->product->discount) / 100
-                                            : 0;
+                                    // السعر بعد الخصم (لكل وحدة)
+                                    $unitPriceAfterDiscount =
+                                        $this->getRecord()->price_type === 'wholesale'
+                                            ? $item->product->discounted_wholesale_price
+                                            : $item->product->discounted_retail_price;
 
-                                    $totalDiscounts += $discountAmount;
+                                    // الإجمالي قبل الخصم للمنتج
+                                    $lineTotalBefore = $unitPriceBeforeDiscount * $item->quantity;
+
+                                    // الإجمالي بعد الخصم للمنتج
+                                    $lineTotalAfter = $unitPriceAfterDiscount * $item->quantity;
+
+                                    // قيمة الخصم للمنتج
+                                    $lineDiscount = $lineTotalBefore - $lineTotalAfter;
+
+                                    // تراكم الإجماليات
+                                    $totalBeforeSale += $lineTotalBefore;
+                                    $totalAfterDiscount += $lineTotalAfter;
+                                    $totalDiscounts += $lineDiscount;
                                 @endphp
 
                                 <tr class="border-t border-gray-400">
@@ -137,16 +153,17 @@
                                         {{ $item->product->discount > 0 ? $item->product->discount . ' %' : '---' }}
                                     </td>
                                     <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
-                                        {{-- السعر قبل الخصم --}}
-                                        {{ number_format($item->price, 2) }}
+                                        {{-- السعر الأساسي قبل الخصم --}}
+                                        {{ number_format($unitPriceBeforeDiscount, 2) }}
                                     </td>
                                     <td
                                         class="py-2 px-4 text-right font-medium text-gray-600 text-sm border border-gray-400">
                                         {{-- الإجمالي بعد الخصم --}}
-                                        {{ number_format($lineTotal - $discountAmount, 2) }}
+                                        {{ number_format($lineTotalAfter, 2) }}
                                     </td>
                                 </tr>
                             @endforeach
+
                         </tbody>
                     </table>
                 </div>
@@ -172,10 +189,7 @@
                         <div class="flex justify-between py-3 px-4 rounded-md">
                             <span class="text-base font-medium text-black">الإجمالي بعد الخصم:</span>
                             <span class="text-base font-medium text-black">
-                                {{ number_format(
-                                    $totalBeforeSale - $totalDiscounts,
-                                    2,
-                                ) }}
+                                {{ number_format($totalBeforeSale - $totalDiscounts, 2) }}
                                 ج.م
                             </span>
                         </div>

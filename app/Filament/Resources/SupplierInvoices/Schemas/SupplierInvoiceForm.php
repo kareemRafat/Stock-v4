@@ -76,7 +76,7 @@ class SupplierInvoiceForm
                                     ->get()
                                     ->mapWithKeys(function ($product) {
                                         return [
-                                            $product->id => $product->name . ' - ' . $product->type
+                                            $product->id => $product->name
                                         ];
                                     });
                             })
@@ -90,15 +90,16 @@ class SupplierInvoiceForm
                                     ->get()
                                     ->mapWithKeys(function ($product) {
                                         return [
-                                            $product->id => $product->name . ' - ' . $product->type
+                                            $product->id => $product->name
                                         ];
                                     });
                             })
                             ->getOptionLabelUsing(function ($value) {
                                 $product = \App\Models\Product::find($value);
-                                return $product ? $product->name . ' - ' . $product->type : '';
+                                return $product ? $product->name : '';
                             })
-                            ->live(),
+                            ->live()
+                            ->columnSpan(2),
 
                         TextInput::make('quantity')
                             ->label('الكمية')
@@ -135,11 +136,6 @@ class SupplierInvoiceForm
                                 $set('total_placeholder', total + ' جنيه');
                             JS)
                             ->skipRenderAfterStateUpdated(),
-
-                        TextInput::make('sell_price')
-                            ->label('سعر البيع')
-                            ->numeric()
-                            ->required(),
 
                         TextInput::make('subtotal')
                             ->label('الإجمالي')

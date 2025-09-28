@@ -7,6 +7,7 @@ use App\Models\Customer;
 use Filament\Tables\Table;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\ActionGroup;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\Auth;
 use Filament\Actions\BulkActionGroup;
@@ -38,6 +39,15 @@ class InvoicesTable
                 TextColumn::make('customer.name')
                     ->label('اسم العميل')
                     ->searchable(),
+
+                TextColumn::make('price_type')
+                    ->label('نوع الفاتورة')
+                    ->formatStateUsing(fn($state) => $state === 'wholesale' ? 'جملة' : 'قطاعي')
+                    ->badge()
+                    ->colors([
+                        'primary' => fn($state) => $state === 'wholesale',
+                        'success' => fn($state) => $state === 'retail',
+                    ]),
 
                 TextColumn::make('total_amount')
                     ->label('إجمالي الفاتورة')
@@ -72,7 +82,7 @@ class InvoicesTable
                     }),
             ])
             ->filters([
-                Filter::make('paid_status')
+                Filter::make('status')
                     ->schema([
                         Toggle::make('pending_only')
                             ->label('عرض الفواتير غير المدفوعة')
@@ -96,13 +106,33 @@ class InvoicesTable
                         ->toArray())
                     ->placeholder('كل العملاء')
                     ->columnSpan(2),
+
+                SelectFilter::make('price_type')
+                    ->label('نوع الفاتورة')
+                    ->options([
+                        'wholesale' => 'جملة',
+                        'retail'    => 'قطاعي',
+                    ])
+                    ->native(false)
+                    ->columnSpan(2),
+
             ], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
             ->recordActions([
                 ViewAction::make()
                     ->label('عرض الفاتورة'),
-                PayInvoiceAction::make(),
-                EditAction::make(),
+
+                ActionGroup::make([
+                    PayInvoiceAction::make(),
+                    EditAction::make()
+                        ->extraAttributes(['class' => 'font-medium']),
+                ])
+                    ->label('المزيد')
+                    ->button()
+                    ->color('gray')
+                    ->size('xs')
+                    ->tooltip('إجراءات إضافية'),
+
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

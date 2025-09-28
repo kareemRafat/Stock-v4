@@ -21,7 +21,7 @@ class PayInvoiceAction
     public static function make(): Action
     {
         return Action::make('payInvoice')
-            ->label('سداد')
+            ->label(fn($record) => $record->status === 'paid' ? 'خالص' : 'سداد الفاتورة')
             ->disabled(fn($record) => $record->status === 'paid')
             ->modalSubmitActionLabel('تسديد فاتورة')
             ->modalHeading(
@@ -76,9 +76,9 @@ class PayInvoiceAction
                     self::notifySuccess('تمت عملية التسديد بنجاح');
                 });
             })
-            ->color('rose')
-            // ->extraAttributes(['class' => 'font-semibold'])
-            ->icon('heroicon-s-clipboard-document-check');
+            ->color(fn($record) => $record->status === 'paid' ? 'gray' : 'rose')
+            ->extraAttributes(['class' => 'font-medium'])
+            ->icon(fn($record) => $record->status === 'paid' ? 'heroicon-s-check-circle' : 'heroicon-s-banknotes');
     }
 
     protected static function useWalletIfRequested($customer, $record, $paid, $total, $data): float

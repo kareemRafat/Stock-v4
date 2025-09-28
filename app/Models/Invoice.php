@@ -20,6 +20,7 @@ class Invoice extends Model
         'total_amount',
         'notes',
         'status',
+        'price_type',
         'created_at',
     ];
 

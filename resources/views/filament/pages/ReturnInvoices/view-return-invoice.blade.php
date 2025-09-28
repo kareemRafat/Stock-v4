@@ -1,7 +1,10 @@
 <x-filament-panels::page>
     <div class="py-4">
         <!-- Print Buttons Section -->
-        <div class="flex justify-end mb-4 no-print gap-4 ">
+        <div class="flex justify-between items-end mb-4 no-print gap-4 ">
+            <div>
+                رقم الفاتورة الاصلية : {{ $this->record->original_invoice_number }}
+            </div>
             <!-- Print Button -->
             <button onclick="printInvoice()"
                 class="flex items-center text-sm font-semibold text-white px-4 py-2 rounded-md shadow hover:bg-primary-700 transition duration-200 gap-2"
@@ -9,7 +12,6 @@
                 <x-heroicon-o-printer class="h-5 w-5" />
                 <span>طباعة الفاتورة</span>
             </button>
-
         </div>
 
         <div id="print-area" class="bg-white p-6 rounded-lg shadow-sm ring-1 ring-gray-200">
@@ -46,7 +48,7 @@
                         </div>
 
                     </div>
-                    <div class="flex px-4 pt-4 pb-2 mb-2 text-sm font-medium justify-end gap-4">
+                    <div class="flex px-4 pb-2 mb-2 text-sm font-medium justify-end gap-4">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                             class="w-4 h-4 font-bold">
                             <path fill-rule="evenodd"
@@ -106,19 +108,35 @@
                                 $totalDiscounts = 0;
                                 $totalAfterDiscount = 0;
                             @endphp
+
                             @foreach ($this->record->items as $item)
                                 @php
-                                    $itemTotalBeforeDiscount = $item->product->price * $item->quantity_returned;
-                                    $itemDiscount =
-                                        $item->product->discount > 0
-                                            ? ($itemTotalBeforeDiscount * $item->product->discount) / 100
-                                            : 0;
-                                    $itemSubtotal = $itemTotalBeforeDiscount - $itemDiscount;
+                                    // نوع السعر (جملة / قطاعي)
+                                    $unitPriceBeforeDiscount =
+                                        $this->record->price_type === 'wholesale'
+                                            ? $item->product->base_wholesale_price
+                                            : $item->product->base_retail_price;
 
-                                    $totalBeforeSale += $itemTotalBeforeDiscount;
-                                    $totalDiscounts += $itemDiscount;
-                                    $totalAfterDiscount += $itemSubtotal;
+                                    $unitPriceAfterDiscount =
+                                        $this->record->price_type === 'wholesale'
+                                            ? $item->product->discounted_wholesale_price
+                                            : $item->product->discounted_retail_price;
+
+                                    // إجمالي قبل الخصم للمنتج
+                                    $lineTotalBefore = $unitPriceBeforeDiscount * $item->quantity_returned;
+
+                                    // إجمالي بعد الخصم للمنتج
+                                    $lineTotalAfter = $unitPriceAfterDiscount * $item->quantity_returned;
+
+                                    // قيمة الخصم
+                                    $lineDiscount = $lineTotalBefore - $lineTotalAfter;
+
+                                    // إجماليات الفاتورة
+                                    $totalBeforeSale += $lineTotalBefore;
+                                    $totalAfterDiscount += $lineTotalAfter;
+                                    $totalDiscounts += $lineDiscount;
                                 @endphp
+
                                 <tr class="border-t border-gray-400">
                                     <td class="py-2 px-4 text-right text-gray-600 text-sm border border-gray-400">
                                         {{ $loop->iteration }}
@@ -133,15 +151,18 @@
                                         {{ $item->product->discount > 0 ? $item->product->discount . ' %' : '---' }}
                                     </td>
                                     <td class="py-2 px-4 text-right text-gray-600 text-sm border border-gray-400">
-                                        {{ number_format($item->product->price, 2) }}
+                                        {{-- السعر الأساسي قبل الخصم --}}
+                                        {{ number_format($unitPriceBeforeDiscount, 2) }}
                                     </td>
                                     <td
                                         class="py-2 px-4 text-right font-medium text-gray-600 text-sm border border-gray-400">
-                                        {{ number_format($itemSubtotal, 2) }}
+                                        {{-- الإجمالي بعد الخصم --}}
+                                        {{ number_format($lineTotalAfter, 2) }}
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
+
                     </table>
                 </div>
             </div>
@@ -154,12 +175,12 @@
                 <div class="w-full">
                     <div class="space-y-2">
                         <div class="flex justify-between py-2 px-2">
-                            <span class="text-sm text-black">الإجمالي:</span>
+                            <span class="text-sm text-black">الإجمالي قبل الخصم:</span>
                             <span
                                 class="font-medium text-sm text-black">{{ number_format($totalBeforeSale, 2) }}</span>
                         </div>
                         <div class="flex justify-between py-2 px-2">
-                            <span class="text-sm text-black">الخصومات:</span>
+                            <span class="text-sm text-black">إجمالي الخصومات:</span>
                             <span class="font-medium text-sm text-black">{{ number_format($totalDiscounts, 2) }}</span>
                         </div>
                         <hr class="border-gray-400">
@@ -172,6 +193,7 @@
                     </div>
                 </div>
             </div>
+
 
         </div>
     </div>
