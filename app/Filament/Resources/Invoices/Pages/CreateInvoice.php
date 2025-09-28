@@ -69,38 +69,16 @@ class CreateInvoice extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $total = 0;
+        $this->record->update([
+            'total_amount' => $this->record->items()->sum('subtotal'),
+        ]);
 
+        // Decrease stock for each product in items
         foreach ($this->record->items as $item) {
             if ($item->product) {
-                // السعر × الكمية
-                $lineTotal = $item->price * $item->quantity;
-
-                // لو فيه خصم على المنتج
-                $discountAmount = $item->product->discount > 0
-                    ? ($lineTotal * $item->product->discount) / 100
-                    : 0;
-
-                // الإجمالي بعد الخصم
-                $finalSubtotal = $lineTotal - $discountAmount;
-
-                // حدّث السطر
-                $item->update([
-                    'subtotal' => round($finalSubtotal, 2),
-                ]);
-
-                // اجمع على التوتال
-                $total += $finalSubtotal;
-
-                // خصم الكمية من المخزن
                 $item->product->decrement('stock_quantity', $item->quantity);
             }
         }
-
-        // حدّث إجمالي الفاتورة
-        $this->record->update([
-            'total_amount' => round($total, 2),
-        ]);
     }
 
     protected function getRedirectUrl(): string

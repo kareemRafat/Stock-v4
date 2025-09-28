@@ -33,38 +33,42 @@ class ProductsTable
                     )
                     ->sortable(false)
                     ->weight('semibold'),
+
                 TextColumn::make('name')
                     ->searchable()
                     ->color('purple')
                     ->label('الاسم')
                     ->weight(FontWeight::Medium),
-                TextColumn::make('type')
-                    ->label('نوع البيع')
-                    ->formatStateUsing(fn(string $state): string => $state) // يعرض القيمة نفسها
-                    ->weight(FontWeight::Medium)
-                    ->color(fn(string $state): string => match ($state) {
-                        'جملة' => 'success',
-                        'قطاعي' => 'rose',
-                        default => 'gray',
-                    }),
+
                 TextColumn::make('unit')
                     ->label('الوحدة')
                     ->weight(FontWeight::Medium),
+
                 TextColumn::make('stock_quantity')
                     ->numeric()
                     ->label('الكمية المتوفرة')
                     ->formatStateUsing(fn($state) => $state == 0 ? 'لاتوجد' : $state)
                     ->color(fn($state) => $state == 0 ? 'danger' : ($state < 20 ? 'orange' : null))
                     ->weight(FontWeight::Bold),
+
                 TextColumn::make('production_price')
                     ->label('سعر المصنع')
                     ->suffix(' جنيه ')
                     ->weight(FontWeight::Medium)
                     ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
-                TextColumn::make('price')
-                    ->label('السعر')
+
+                TextColumn::make('base_retail_price')
+                    ->label('سعر القطاعي')
                     ->suffix(' جنيه ')
-                    ->weight(FontWeight::Medium),
+                    ->weight(FontWeight::Medium)
+                    ->color('orange'),
+
+                TextColumn::make('base_wholesale_price')
+                    ->label('سعر الجملة')
+                    ->suffix(' جنيه ')
+                    ->weight(FontWeight::Medium)
+                    ->color('indigo'),
+
                 TextColumn::make('discount')
                     ->numeric(locale: 'en')
                     ->label('الخصم')
@@ -111,7 +115,7 @@ class ProductsTable
             ], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
             ->recordActions([
-                AddStockAction::make(),
+                // AddStockAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

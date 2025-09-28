@@ -15,6 +15,7 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Concerns\InteractsWithForms;
 use App\Filament\Resources\Products\ProductResource;
+use Filament\Forms\Components\Textarea;
 
 class AddProducts extends Page
 {
@@ -52,22 +53,11 @@ class AddProducts extends Page
         return [
             Repeater::make('products')
                 ->schema([
-                    Section::make()
-                        ->schema([
-                            TextInput::make('name')
-                                ->required()
-                                ->label('اسم المنتج'),
-                            Radio::make('type')
-                                ->label('')
-                                ->options([
-                                    'جملة' => 'جملة',
-                                    'قطاعي' => 'قطاعي',
-                                ])
-                                ->default('جملة')
-                                ->required()
-                                ->inline(true),
-                        ]),
                     Grid::make(3)->schema([
+                        TextInput::make('name')
+                            ->required()
+                            ->label('اسم المنتج'),
+
                         TextInput::make('unit')
                             ->label('وحدة القياس')
                             ->required()
@@ -76,12 +66,6 @@ class AddProducts extends Page
                         TextInput::make('production_price')
                             ->required()
                             ->label('سعر المصنع')
-                            ->numeric()
-                            ->suffix('جنيه'),
-
-                        TextInput::make('price')
-                            ->required()
-                            ->label('سعر البيع')
                             ->numeric()
                             ->suffix('جنيه'),
 
@@ -112,7 +96,7 @@ class AddProducts extends Page
                                     ->toArray();
                             }),
 
-                        TextInput::make('description')
+                        Textarea::make('description')
                             ->label('الوصف')
                             ->columnSpanFull(),
                     ]),

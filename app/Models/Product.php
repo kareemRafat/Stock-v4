@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -30,32 +31,49 @@ class Product extends Model
         'stock_quantity' => 'integer',
     ];
 
-    protected $appends = ['wholesale_price', 'retail_price'];
+    protected $appends = [
+        'base_wholesale_price',
+        'base_retail_price',
+        'discounted_wholesale_price',
+        'discounted_retail_price',
+    ];
 
     /**
      * wholesale_price سعر الجملة
      * retail_price  سعر التجزئة
      */
-    public function getWholesalePriceAttribute()
+    // السعر الأساسي (بدون خصم)
+    protected function baseWholesalePrice(): Attribute
     {
-        $price = $this->production_price * 1.1; // +10%
-
-        if ($this->discount > 0) {
-            $price -= ($price * $this->discount / 100);
-        }
-
-        return round($price, 2);
+        return Attribute::get(fn() => round($this->production_price * 1.1, 2));
     }
 
-    public function getRetailPriceAttribute()
+    protected function baseRetailPrice(): Attribute
     {
-        $price = $this->production_price * 1.2; // +20%
+        return Attribute::get(fn() => round($this->production_price * 1.2, 2));
+    }
 
-        if ($this->discount > 0) {
-            $price -= ($price * $this->discount / 100);
-        }
+    // السعر بعد الخصم
+    protected function discountedWholesalePrice(): Attribute
+    {
+        return Attribute::get(function () {
+            $price = $this->base_wholesale_price;
+            if ($this->discount > 0) {
+                $price -= ($price * $this->discount / 100);
+            }
+            return round($price, 2);
+        });
+    }
 
-        return round($price, 2);
+    protected function discountedRetailPrice(): Attribute
+    {
+        return Attribute::get(function () {
+            $price = $this->base_retail_price;
+            if ($this->discount > 0) {
+                $price -= ($price * $this->discount / 100);
+            }
+            return round($price, 2);
+        });
     }
 
     // Relations
