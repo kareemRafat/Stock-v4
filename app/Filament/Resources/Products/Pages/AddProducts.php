@@ -37,10 +37,8 @@ class AddProducts extends Page
         $this->form->fill([
             'products' => array_fill(0, 1, [
                 'name' => '',
-                'type' => 'جملة',
                 'unit' => '',
                 'production_price' => 0,
-                'price' => 0,
                 'discount' => 0,
                 'stock_quantity' => 0,
                 'description' => '',

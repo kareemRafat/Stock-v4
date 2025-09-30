@@ -20,9 +20,9 @@ class SupplierInvoiceForm
                     ->label('المورد')
                     ->loadingMessage('تحميل الموردين ...')
                     ->searchable()
+                    ->required()
                     ->preload()
                     ->placeholder('اختر المورد...')
-                    ->required()
                     ->options(function () {
                         // show only 20
                         return Supplier::query()
@@ -43,16 +43,22 @@ class SupplierInvoiceForm
                                 return [$supplier->id => $supplier->name];
                             });
                     }),
+
                 TextInput::make('invoice_number')
                     ->label('رقم الفاتورة')
                     ->required()
                     ->maxLength(50)
                     ->unique(ignoreRecord: true),
+
                 TextInput::make('total_amount')
                     ->label('إجمالي الفاتورة')
                     ->numeric()
                     ->prefix('جنيه')
-                    ->required(),
+                    ->required()
+                    ->rules(['numeric', 'between:0,999999999999999.99'])
+                    ->validationMessages([
+                        'between' => 'اجمالى الفاتورة غير صحيح',
+                    ]),
 
                 DatePicker::make('invoice_date')
                     ->label('تاريخ الفاتورة')
@@ -69,6 +75,7 @@ class SupplierInvoiceForm
                             ->label('الصنف')
                             ->loadingMessage('تحميل المنتجات ...')
                             ->searchable()
+                            ->required()
                             ->preload()
                             ->options(function () {
                                 return \App\Models\Product::query()
