@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Products\Pages;
 
+use App\Models\Product;
 use App\Models\StockMovement;
+use App\Services\StockService;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use App\Filament\Resources\Products\ProductResource;
@@ -18,23 +20,33 @@ class ListProducts extends ListRecords
             CreateAction::make()
                 ->createAnother(false)
                 ->slideOver()
-                ->after(function ($record) {
-                    // this work cause we insert with modal
-                    StockMovement::firstOrCreate(
-                        [
-                            'product_id'    => $record->id,
-                            'movement_type' => 'opening_stock',
-                        ],
-                        [
-                            'qty_in'     => $record->stock_quantity,
-                            'qty_out'    => 0,
-                            'cost_price' => $record->production_price,
-                            'retail_price' => $record->retail_price,
-                            'wholesale_price' => $record->wholesale_price,
-                            'created_at' => $record->created_at
-                        ]
-                    );
+                ->using(function (array $data , StockService $stockService) {
+                    // store stock_quantity in to reuse
+                    $openingStock = $data['stock_quantity'] ?? 0;
+
+                    // exclude stock_quantity before product create
+                    unset($data['stock_quantity']);
+
+                    // create product without stock_quantity
+                    $product = Product::create($data);
+
+                    // استخدام StockService لتسجيل opening stock وتحديث products.stock_quantity
+                    if ($openingStock > 0) {
+                        $stockService->recordMovement(
+                            product: $product,
+                            movementType: 'opening_stock',
+                            quantity: $openingStock,
+                            costPrice: $product->production_price,
+                            wholeSalePrice: $product->wholesale_price,
+                            retailPrice: $product->retail_price,
+                            referenceId: $product->id,
+                            referenceTable: 'products'
+                        );
+                    }
+
+                    return $product;
                 }),
+
             AddProductsAction::make('addProducts'),
         ];
     }

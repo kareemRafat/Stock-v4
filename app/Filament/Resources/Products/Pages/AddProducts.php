@@ -18,6 +18,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Forms\Concerns\InteractsWithForms;
 use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Forms\Components\ClientDatetimeHidden;
+use App\Services\StockService;
 
 class AddProducts extends Page
 {
@@ -125,27 +126,25 @@ class AddProducts extends Page
         ];
     }
 
-    public function save(): void
+    public function save(StockService $stockService): void
     {
         $data = $this->form->getState();
 
         foreach ($data['products'] as $productData) {
-            $product = Product::create($productData);
+            $stockQuantity = $productData['stock_quantity'];
 
-            // add Stock Movement
-            StockMovement::firstOrCreate(
-                [
-                    'product_id'    => $product->id,
-                    'movement_type' => 'opening_stock',
-                ],
-                [
-                    'qty_in'     => $product->stock_quantity,
-                    'qty_out'    => 0,
-                    'cost_price' => $product->production_price,
-                    'retail_price' => $product->retail_price,
-                    'wholesale_price' => $product->wholesale_price,
-                    'created_at' => $product->created_at
-                ]
+            $product = $this->insertProductWithoutStock($productData);
+
+            // use stockService service to update stock
+            $stockService->recordMovement(
+                product: $product,
+                movementType: 'opening_stock',
+                quantity: $stockQuantity,
+                costPrice: $product->production_price,
+                wholeSalePrice: $product->wholesale_price,
+                retailPrice: $product->retail_price,
+                referenceId: $product->id,
+                referenceTable: 'products'
             );
         }
 
@@ -155,6 +154,15 @@ class AddProducts extends Page
             ->send();
 
         $this->redirect(ProductResource::getUrl('index'));
+    }
+
+    protected function insertProductWithoutStock($productData)
+    {
+        // remove the stock_quantity from product data
+        // because i insert it in $stockService->recordMovement
+        // to avoid stock_quantity duplication on insert
+        unset($productData['stock_quantity']);
+        return Product::create($productData);
     }
 
     protected function getFormStatePath(): string
