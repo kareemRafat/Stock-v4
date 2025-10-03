@@ -22,11 +22,12 @@ class StockService
         ?float $wholeSalePrice = null,
         ?float $retailPrice = null,
         $referenceId = null,
-        $referenceTable = null
+        $referenceTable = null,
+        $createdAt  = null
     ) {
         return DB::transaction(
             function ()
-            use ($product, $movementType, $quantity, $costPrice, $wholeSalePrice, $retailPrice, $referenceId, $referenceTable) {
+            use ($product, $movementType, $quantity, $costPrice, $wholeSalePrice, $retailPrice, $referenceId, $referenceTable, $createdAt) {
 
                 // if the operation is insert input
                 if (in_array($movementType, $this->input)) {
@@ -52,7 +53,7 @@ class StockService
                     'retail_price'     => $retailPrice ?? $product->retail_price,
                     'reference_id'     => $referenceId,
                     'reference_table'  => $referenceTable,
-                    'created_at'       => $product->created_at
+                    'created_at'       => $createdAt ?? $product->created_at
                 ]);
             }
         );

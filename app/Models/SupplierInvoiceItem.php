@@ -10,7 +10,9 @@ class SupplierInvoiceItem extends Model
     /** @use HasFactory<\Database\Factories\SupplierInvoiceItemFactory> */
     use HasFactory;
 
-    protected $fillable = ['supplier_invoice_id', 'product_id', 'quantity', 'price', 'subtotal'];
+    public $timestamps = false ;
+
+    protected $fillable = ['supplier_invoice_id', 'product_id', 'quantity', 'cost_price', 'wholesale_price', 'retail_price', 'subtotal'];
 
     public function invoice()
     {

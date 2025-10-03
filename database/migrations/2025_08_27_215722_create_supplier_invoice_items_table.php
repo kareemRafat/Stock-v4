@@ -17,12 +17,12 @@ return new class extends Migration
             $table->foreignId('product_id')->nullable()->constrained()->onDelete('set null');
             $table->integer('quantity');
             $table->decimal('cost_price', 10, 2)->comment('سعر الشراء من المورد');
+            $table->decimal('wholesale_price', 10, 2)->nullable();
+            $table->decimal('retail_price', 10, 2)->nullable();
             $table->decimal('subtotal', 10, 2);
-            $table->timestamps();
 
             $table->index(['supplier_invoice_id', 'product_id']);
         });
-
     }
 
     /**

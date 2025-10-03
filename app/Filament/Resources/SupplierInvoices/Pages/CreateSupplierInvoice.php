@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\SupplierInvoices\Pages;
 
+use App\Models\Product;
 use Filament\Actions\Action;
 use App\Models\ProductPurchase;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
+use App\Services\StockService;
 
 class CreateSupplierInvoice extends CreateRecord
 {
@@ -18,28 +20,32 @@ class CreateSupplierInvoice extends CreateRecord
 
     protected function afterCreate(): void
     {
+        // to call StockService service - afterCreate can`t use dependancy injection
+        $stockService = app(StockService::class);
+
+        //  update products prices
         foreach ($this->record->items as $item) {
-
-            // Add ProductPurchase
-            ProductPurchase::create([
-                'product_id' => $item->product_id,
-                'supplier_id' => $this->record->supplier_id,
-                'quantity' => $item->quantity,
-                'purchase_price' => $item->price, // سعر الشراء من الفاتورة
-                'total_cost' => $item->subtotal, // $item->quantity * $item->price
-                'purchase_date' => $this->record->invoice_date,
-                'supplier_invoice_number' => $this->record->invoice_number,
-                'notes' => "فاتورة رقم: {$this->record->invoice_number} - مورد: {$this->record->supplier->name}",
-            ]);
-        }
-
-        //  update Average Cost
-        $productIds = $this->record->items->pluck('product_id')->unique();
-        foreach ($productIds as $productId) {
-            $product = \App\Models\Product::find($productId);
+            $product = $item->product;
             if ($product) {
-                $product->updateAverageCost(); // Product model function
+                // تحديث سعر الجملة والقطاعي لكل منتج حسب الفاتورة
+                $product->update([
+                    'cost_price' => $item->cost_price,
+                    'wholesale_price' => $item->wholesale_price,
+                    'retail_price'    => $item->retail_price,
+                ]);
             }
+
+            $stockService->recordMovement(
+                product: $product,
+                movementType: 'purchase',
+                quantity: $item->quantity,
+                costPrice: $item->cost_price,
+                wholeSalePrice: $item->wholesale_price,
+                retailPrice: $item->retail_price,
+                referenceId: $this->record->id,
+                referenceTable: 'supplier_invoices',
+                createdAt : $this->record->created_at
+            );
         }
 
         \Filament\Notifications\Notification::make()

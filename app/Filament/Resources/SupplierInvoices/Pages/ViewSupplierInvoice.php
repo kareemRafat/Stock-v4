@@ -15,7 +15,7 @@ class ViewSupplierInvoice extends ViewRecord
 
     protected static ?string $title = 'عرض فاتورة المورد';
 
-     public function infolist(Schema $schema): Schema
+    public function infolist(Schema $schema): Schema
     {
         return $schema
             ->components([
@@ -54,8 +54,18 @@ class ViewSupplierInvoice extends ViewRecord
                                     ->label('الكمية')
                                     ->numeric()
                                     ->weight('semibold'),
-                                TextEntry::make('price')
+                                TextEntry::make('cost_price')
                                     ->label('سعر الوحدة')
+                                    ->suffix(' جنيه')
+                                    ->numeric()
+                                    ->weight('semibold'),
+                                TextEntry::make('wholesale_price')
+                                    ->label('سعر الجملة')
+                                    ->suffix(' جنيه')
+                                    ->numeric()
+                                    ->weight('semibold'),
+                                TextEntry::make('retail_price')
+                                    ->label('سعر القطاعي')
                                     ->suffix(' جنيه')
                                     ->numeric()
                                     ->weight('semibold'),
@@ -65,7 +75,7 @@ class ViewSupplierInvoice extends ViewRecord
                                     ->numeric()
                                     ->weight('semibold'),
                             ])
-                            ->columns(4)
+                            ->columns(6)
                             ->grid(1),
                     ])
                     ->columnSpanFull()

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SupplierInvoices\Schemas;
 
+use App\Filament\Forms\Components\ClientDatetimeHidden;
 use App\Models\Supplier;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
@@ -60,6 +61,8 @@ class SupplierInvoiceForm
                     ->native(false)
                     ->placeholder('اختر تاريخ الفاتورة'),
 
+                ClientDatetimeHidden::make('created_at'),
+
                 Repeater::make('items')
                     ->label('الأصناف')
                     ->columnSpanFull()
@@ -101,25 +104,7 @@ class SupplierInvoiceForm
                             ->live()
                             ->columnSpan(2),
 
-                        TextInput::make('quantity')
-                            ->label('الكمية')
-                            ->numeric()
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdatedJs(<<<'JS'
-                                const subtotal = ($state ?? 0) * ($get('price') ?? 0);
-                                $set('subtotal', subtotal);
-
-                                // recalc total from all rows
-                                let total = 0;
-                                for (const item of $get('items') ?? []) {
-                                    total += parseInt(item.subtotal ?? 0);
-                                }
-                                $set('total_placeholder', total + ' جنيه');
-                            JS)
-                            ->skipRenderAfterStateUpdated(),
-
-                        TextInput::make('price')
+                        TextInput::make('cost_price')
                             ->label('سعر الوحدة')
                             ->numeric()
                             ->required()
@@ -127,6 +112,17 @@ class SupplierInvoiceForm
                             ->afterStateUpdatedJs(<<<'JS'
                                 const subtotal = ($state ?? 0) * ($get('quantity') ?? 0);
                                 $set('subtotal', subtotal);
+                            JS)
+                            ->skipRenderAfterStateUpdated(),
+
+                        TextInput::make('quantity')
+                            ->label('الكمية')
+                            ->numeric()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdatedJs(<<<'JS'
+                                const subtotal = ($state ?? 0) * ($get('cost_price') ?? 0);
+                                $set('subtotal', subtotal);
 
                                 // recalc total from all rows
                                 let total = 0;
@@ -135,13 +131,25 @@ class SupplierInvoiceForm
                                 }
                                 $set('total_placeholder', total + ' جنيه');
                             JS)
-                            ->skipRenderAfterStateUpdated(),
+                            ->skipRenderAfterStateUpdated()
+                            ->columnSpan(2),
 
                         TextInput::make('subtotal')
                             ->label('الإجمالي')
                             ->numeric()
                             ->required()
                             ->dehydrated(true)
+                            ->columnSpan(2),
+
+                        TextInput::make('wholesale_price')
+                            ->label('سعر الجملة')
+                            ->numeric()
+                            ->required(),
+                        TextInput::make('retail_price')
+                            ->label('سعر القطاعي')
+                            ->numeric()
+                            ->required()
+                            ->columnSpan(2)
                     ])
                     ->columns(5)
                     ->addActionLabel('إضافة صنف جديد')
