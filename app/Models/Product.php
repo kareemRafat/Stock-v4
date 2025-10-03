@@ -22,6 +22,9 @@ class Product extends Model
         'production_price',
         'type',
         'supplier_id',
+        'wholesale_price',
+        'retail_price',
+        'created_at'
     ];
 
     protected $casts = [
@@ -86,6 +89,11 @@ class Product extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
     }
 
     // Accessors

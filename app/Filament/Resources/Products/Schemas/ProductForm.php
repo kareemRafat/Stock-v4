@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use App\Filament\Forms\Components\ClientDatetimeHidden;
 use App\Models\Supplier;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
@@ -18,6 +19,7 @@ class ProductForm
                     ->required()
                     ->rules('required')
                     ->label('اسم المنتج')
+                    ->unique(ignoreRecord: true)
                     ->columnSpanFull(),
 
                 TextInput::make('unit')
@@ -30,6 +32,20 @@ class ProductForm
                     ->required()
                     ->rules('required')
                     ->label('سعر المصنع')
+                    ->numeric()
+                    ->suffix('جنيه'),
+
+                TextInput::make('wholesale_price')
+                    ->required()
+                    ->rules('required')
+                    ->label('سعر الجملة')
+                    ->numeric()
+                    ->suffix('جنيه'),
+
+                TextInput::make('retail_price')
+                    ->required()
+                    ->rules('required')
+                    ->label('سعر القطاعي')
                     ->numeric()
                     ->suffix('جنيه'),
 
@@ -66,6 +82,8 @@ class ProductForm
                 Textarea::make('description')
                     ->columnSpanFull()
                     ->label('وصف المنتج'),
+
+                ClientDatetimeHidden::make('created_at')
             ]);
     }
 }

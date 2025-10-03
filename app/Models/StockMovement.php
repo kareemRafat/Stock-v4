@@ -6,18 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class StockMovements extends Model
+class StockMovement extends Model
 {
     protected $fillable = [
         'product_id',
-        'branch_id',
         'movement_type',
         'reference_id',
         'reference_table',
         'qty_in',
         'qty_out',
         'cost_price',
-        'sale_price',
+        'wholesale_price',
+        'retail_price',
+        'created_at'
     ];
 
     /**

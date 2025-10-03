@@ -5,17 +5,19 @@ namespace App\Filament\Resources\ProductResource\Pages;
 use Filament\Actions;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Models\StockMovement;
 use Filament\Resources\Pages\Page;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Concerns\InteractsWithForms;
 use App\Filament\Resources\Products\ProductResource;
-use Filament\Forms\Components\Textarea;
+use App\Filament\Forms\Components\ClientDatetimeHidden;
 
 class AddProducts extends Page
 {
@@ -37,10 +39,10 @@ class AddProducts extends Page
         $this->form->fill([
             'products' => array_fill(0, 1, [
                 'name' => '',
-                'type' => 'جملة',
                 'unit' => '',
                 'production_price' => 0,
-                'price' => 0,
+                'retail_price' => 0,
+                'wholesale_price' => 0,
                 'discount' => 0,
                 'stock_quantity' => 0,
                 'description' => '',
@@ -56,7 +58,8 @@ class AddProducts extends Page
                     Grid::make(3)->schema([
                         TextInput::make('name')
                             ->required()
-                            ->label('اسم المنتج'),
+                            ->label('اسم المنتج')
+                            ->columnSpan(2),
 
                         TextInput::make('unit')
                             ->label('وحدة القياس')
@@ -66,6 +69,18 @@ class AddProducts extends Page
                         TextInput::make('production_price')
                             ->required()
                             ->label('سعر المصنع')
+                            ->numeric()
+                            ->suffix('جنيه'),
+
+                        TextInput::make('wholesale_price')
+                            ->required()
+                            ->label('سعر الجملة')
+                            ->numeric()
+                            ->suffix('جنيه'),
+
+                        TextInput::make('retail_price')
+                            ->required()
+                            ->label('سعر القطاعي')
                             ->numeric()
                             ->suffix('جنيه'),
 
@@ -99,6 +114,8 @@ class AddProducts extends Page
                         Textarea::make('description')
                             ->label('الوصف')
                             ->columnSpanFull(),
+
+                        ClientDatetimeHidden::make('created_at')
                     ]),
                 ])
                 ->label('منتجات جديدة')
@@ -112,9 +129,24 @@ class AddProducts extends Page
     {
         $data = $this->form->getState();
 
-        foreach ($data['products'] as $product) {
-            $product['created_at'] = now();
-            Product::create($product);
+        foreach ($data['products'] as $productData) {
+            $product = Product::create($productData);
+
+            // add Stock Movement
+            StockMovement::firstOrCreate(
+                [
+                    'product_id'    => $product->id,
+                    'movement_type' => 'opening_stock',
+                ],
+                [
+                    'qty_in'     => $product->stock_quantity,
+                    'qty_out'    => 0,
+                    'cost_price' => $product->production_price,
+                    'retail_price' => $product->retail_price,
+                    'wholesale_price' => $product->wholesale_price,
+                    'created_at' => $product->created_at
+                ]
+            );
         }
 
         Notification::make()

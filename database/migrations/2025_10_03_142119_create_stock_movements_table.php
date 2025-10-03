@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
 
+            // when delete product delete stock_movement for this product
             $table->foreignId('product_id')
                 ->constrained()
                 ->cascadeOnDelete();
@@ -27,14 +28,16 @@ return new class extends Migration
                 'adjustment',
             ]);
 
+            // null when opening_stock
             $table->unsignedBigInteger('reference_id')->nullable(); // ID للفاتورة / العملية
-            $table->string('reference_table', 50)->nullable();       // اسم الجدول المرتبط
+            $table->string('reference_table', 50)->nullable();       // polymorphic relation
 
             $table->decimal('qty_in', 12, 2)->default(0);
             $table->decimal('qty_out', 12, 2)->default(0);
 
-            $table->decimal('cost_price', 12, 2);   // تكلفة الشراء/الوحدة
-            $table->decimal('sale_price', 12, 2)->nullable(); // سعر البيع وقت العملية
+            $table->decimal('cost_price', 12, 2)->comment('تكلفة الشراء/الوحدة');
+            $table->decimal('wholesale_price', 10, 2)->nullable()->comment('سعر الجملة');
+            $table->decimal('retail_price', 12, 2)->nullable()->comment('سعر البيع وقت العملية');
 
             $table->timestamps();
         });

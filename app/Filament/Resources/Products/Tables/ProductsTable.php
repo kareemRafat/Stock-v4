@@ -57,17 +57,17 @@ class ProductsTable
                     ->weight(FontWeight::Medium)
                     ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
 
-                TextColumn::make('base_retail_price')
-                    ->label('سعر القطاعي')
-                    ->suffix(' جنيه ')
-                    ->weight(FontWeight::Medium)
-                    ->color('orange'),
-
-                TextColumn::make('base_wholesale_price')
+                TextColumn::make('wholesale_price')
                     ->label('سعر الجملة')
                     ->suffix(' جنيه ')
                     ->weight(FontWeight::Medium)
                     ->color('indigo'),
+
+                TextColumn::make('retail_price')
+                    ->label('سعر القطاعي')
+                    ->suffix(' جنيه ')
+                    ->weight(FontWeight::Medium)
+                    ->color('orange'),
 
                 TextColumn::make('discount')
                     ->numeric(locale: 'en')
