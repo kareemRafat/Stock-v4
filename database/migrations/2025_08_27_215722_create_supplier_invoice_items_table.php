@@ -16,10 +16,13 @@ return new class extends Migration
             $table->foreignId('supplier_invoice_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_id')->nullable()->constrained()->onDelete('set null');
             $table->integer('quantity');
-            $table->decimal('price', 10, 2);
+            $table->decimal('cost_price', 10, 2)->comment('سعر الشراء من المورد');
             $table->decimal('subtotal', 10, 2);
             $table->timestamps();
+
+            $table->index(['supplier_invoice_id', 'product_id']);
         });
+
     }
 
     /**

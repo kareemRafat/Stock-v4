@@ -25,7 +25,7 @@ class SupplierInvoiceItemFactory extends Factory
             'supplier_invoice_id' => SupplierInvoice::factory(),
             'product_id'          => Product::factory(),
             'quantity'            => $quantity,
-            'price'               => $price,
+            'cost_price'               => $price,
             'subtotal'            => $quantity * $price,
         ];
     }

@@ -87,7 +87,7 @@ class ViewSupplierInvoice extends ViewRecord
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                ->url(SupplierInvoiceResource::getUrl('index')),
+                ->action(fn() => redirect(SupplierInvoiceResource::getUrl('index'))),
         ];
     }
 }

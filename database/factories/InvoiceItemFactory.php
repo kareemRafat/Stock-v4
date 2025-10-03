@@ -20,7 +20,7 @@ class InvoiceItemFactory extends Factory
     {
         $product = Product::inRandomOrder()->first() ?? Product::factory()->create();
         $quantity = $this->faker->numberBetween(1, 10);
-        $price = $product->price;
+        $price = $product->production_price;
         $subtotal = $price * $quantity;
 
         return [

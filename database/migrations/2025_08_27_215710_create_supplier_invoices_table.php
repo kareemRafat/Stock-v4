@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('supplier_invoices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
-            $table->dateTime('invoice_date');
+            $table->date('invoice_date')->comment('تاريخ الفاتورة من المورد');
             $table->decimal('total_amount', 10, 2);
             $table->string('invoice_number')->unique();
             $table->text('notes')->nullable();
