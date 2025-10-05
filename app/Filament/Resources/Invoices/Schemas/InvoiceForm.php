@@ -98,6 +98,7 @@ class InvoiceForm
                     'wholesale' => 'heroicon-o-shopping-bag',
                     'retail'    => 'heroicon-o-shopping-cart',
                 ])
+                ->live()
                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
                     $items = $get('items') ?? [];
 
@@ -105,9 +106,13 @@ class InvoiceForm
                         $product = \App\Models\Product::find($item['product_id'] ?? null);
 
                         if ($product) {
-                            $price = $state === 'retail'
-                                ? $product->discounted_retail_price
-                                : $product->discounted_wholesale_price;
+                            if ($state === 'retail') {
+                                $price = $product->retail_price;
+                            } else {
+                                $basePrice = $product->wholesale_price;
+                                $discountPercent = $product->discount ?? 0;
+                                $price = $basePrice - ($basePrice * ($discountPercent / 100));
+                            }
 
                             $quantity = $item['quantity'] ?? 1;
                             $subtotal = round($price * $quantity, 2);
@@ -168,9 +173,13 @@ class InvoiceForm
 
                             $invoicePriceType = $get('../../price_type'); // نوع السعر من الفاتورة
 
-                            $price = $invoicePriceType === 'retail'
-                                ? $product->discounted_retail_price
-                                : $product->discounted_wholesale_price;
+
+                            if ($invoicePriceType === 'wholesale') {
+                                $price = $product->discounted_wholesale_price;
+                            } else {
+                                $price = round($$product->base_retail_price, 2);
+                            }
+
 
                             $quantity = $get('quantity') ?? 1;
 

@@ -45,22 +45,10 @@ class Product extends Model
      * wholesale_price سعر الجملة
      * retail_price  سعر التجزئة
      */
-    // السعر الأساسي (بدون خصم)
-    protected function baseWholesalePrice(): Attribute
-    {
-        return Attribute::get(fn() => round($this->production_price * 1.1, 2));
-    }
-
-    protected function baseRetailPrice(): Attribute
-    {
-        return Attribute::get(fn() => round($this->production_price * 1.2, 2));
-    }
-
-    // السعر بعد الخصم
     protected function discountedWholesalePrice(): Attribute
     {
         return Attribute::get(function () {
-            $price = $this->base_wholesale_price;
+            $price = $this->wholesale_price;
             if ($this->discount > 0) {
                 $price -= ($price * $this->discount / 100);
             }
@@ -70,13 +58,7 @@ class Product extends Model
 
     protected function discountedRetailPrice(): Attribute
     {
-        return Attribute::get(function () {
-            $price = $this->base_retail_price;
-            if ($this->discount > 0) {
-                $price -= ($price * $this->discount / 100);
-            }
-            return round($price, 2);
-        });
+        return Attribute::get( fn() => $this->retail_price);
     }
 
     // Relations

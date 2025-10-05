@@ -55,17 +55,17 @@ class ViewSupplierInvoice extends ViewRecord
                                     ->numeric()
                                     ->weight('semibold'),
                                 TextEntry::make('cost_price')
-                                    ->label('سعر الوحدة')
+                                    ->label('سعر المورد للوحدة')
                                     ->suffix(' جنيه')
                                     ->numeric()
                                     ->weight('semibold'),
                                 TextEntry::make('wholesale_price')
-                                    ->label('سعر الجملة')
+                                    ->label('سعر البيع للجملة')
                                     ->suffix(' جنيه')
                                     ->numeric()
                                     ->weight('semibold'),
                                 TextEntry::make('retail_price')
-                                    ->label('سعر القطاعي')
+                                    ->label('سعر البيع للقطاعي')
                                     ->suffix(' جنيه')
                                     ->numeric()
                                     ->weight('semibold'),

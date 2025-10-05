@@ -105,7 +105,7 @@ class SupplierInvoiceForm
                             ->columnSpan(2),
 
                         TextInput::make('cost_price')
-                            ->label('سعر الوحدة')
+                            ->label('سعر المورد للوحدة')
                             ->numeric()
                             ->required()
                             ->reactive()
@@ -142,11 +142,11 @@ class SupplierInvoiceForm
                             ->columnSpan(2),
 
                         TextInput::make('wholesale_price')
-                            ->label('سعر الجملة')
+                            ->label('سعر الجملة الجديد')
                             ->numeric()
                             ->required(),
                         TextInput::make('retail_price')
-                            ->label('سعر القطاعي')
+                            ->label('سعر القطاعي الجديد')
                             ->numeric()
                             ->required()
                             ->columnSpan(2)

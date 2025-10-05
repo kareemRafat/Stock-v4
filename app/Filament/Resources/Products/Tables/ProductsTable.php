@@ -51,11 +51,11 @@ class ProductsTable
                     ->color(fn($state) => $state == 0 ? 'danger' : ($state < 20 ? 'orange' : null))
                     ->weight(FontWeight::Bold),
 
-                TextColumn::make('production_price')
-                    ->label('سعر المصنع')
-                    ->suffix(' جنيه ')
-                    ->weight(FontWeight::Medium)
-                    ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                // TextColumn::make('production_price')
+                //     ->label('سعر المصنع')
+                //     ->suffix(' جنيه ')
+                //     ->weight(FontWeight::Medium)
+                //     ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
 
                 TextColumn::make('wholesale_price')
                     ->label('سعر الجملة')
