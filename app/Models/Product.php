@@ -18,7 +18,7 @@ class Product extends Model
         'discount',
         'stock_quantity',
         'unit',
-        'production_price',
+        'cost_price',
         'type',
         'supplier_id',
         'wholesale_price',
@@ -27,18 +27,11 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'production_price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
         'wholesale_price' => 'decimal:2',
         'retail_price' => 'decimal:2',
         'discount' => 'integer',
         'stock_quantity' => 'integer',
-    ];
-
-    protected $appends = [
-        'base_wholesale_price',
-        'base_retail_price',
-        'discounted_wholesale_price',
-        'discounted_retail_price',
     ];
 
     /**
@@ -54,11 +47,6 @@ class Product extends Model
             }
             return round($price, 2);
         });
-    }
-
-    protected function discountedRetailPrice(): Attribute
-    {
-        return Attribute::get( fn() => $this->retail_price);
     }
 
     // Relations
@@ -99,7 +87,7 @@ class Product extends Model
         // إذا المخزون الحالي أكبر من المشتريات المسجلة (يوجد مخزون قديم غير موجود فى المشتريات)
         if ($this->stock_quantity > $recordedPurchasesQuantity) {
             $oldStockQuantity = $this->stock_quantity - $recordedPurchasesQuantity;
-            $oldStockTotalCost = $oldStockQuantity * $this->production_price;
+            $oldStockTotalCost = $oldStockQuantity * $this->cost_price;
             $totalCost = $oldStockTotalCost + $recordedPurchasesCost;
 
             return round($totalCost / $this->stock_quantity, 2);
@@ -215,12 +203,12 @@ class Product extends Model
     }
 
     /**
-     * تحديث متوسط سعر التكلفة في حقل production_price
+     * تحديث متوسط سعر التكلفة في حقل cost_price
      */
     public function updateAverageCost(): void
     {
         $this->update([
-            'production_price' => $this->average_cost
+            'cost_price' => $this->average_cost
         ]);
     }
 

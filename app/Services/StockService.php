@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class StockService
 {
     public $input = ['opening_stock', 'purchase', 'sale_return', 'adjustment_in'];
-    public $output = ['sale', 'purchase_return', 'adjustment_out'];
+    public $output = ['invoice_sale', 'purchase_return', 'adjustment_out'];
 
     /**
      * add Stock Movement to StockMovement and update products stock
@@ -48,7 +48,7 @@ class StockService
                     'movement_type'    => $movementType,
                     'qty_in'           => $qtyIn,
                     'qty_out'          => $qtyOut,
-                    'cost_price'       => $costPrice ?? $product->production_price,
+                    'cost_price'       => $costPrice ?? $product->cost_price,
                     'wholesale_price'  => $wholeSalePrice ?? $product->retail_price,
                     'retail_price'     => $retailPrice ?? $product->retail_price,
                     'reference_id'     => $referenceId,

@@ -1,4 +1,4 @@
-<?php 
+<?php
 // database/seeders/SupplierSeeder.php
 namespace Database\Seeders;
 

@@ -36,7 +36,7 @@ class ListProducts extends ListRecords
                             product: $product,
                             movementType: 'opening_stock',
                             quantity: $openingStock,
-                            costPrice: $product->production_price,
+                            costPrice: $product->cost_price,
                             wholeSalePrice: $product->wholesale_price,
                             retailPrice: $product->retail_price,
                             referenceId: $product->id,

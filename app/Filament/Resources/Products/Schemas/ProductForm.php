@@ -28,7 +28,7 @@ class ProductForm
                     ->required()
                     ->placeholder('كرتونة - قطعة - كيلو إلخ'),
 
-                TextInput::make('production_price')
+                TextInput::make('cost_price')
                     ->required()
                     ->rules('required')
                     ->label('سعر المصنع')

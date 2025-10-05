@@ -41,7 +41,7 @@ class AddProducts extends Page
             'products' => array_fill(0, 1, [
                 'name' => '',
                 'unit' => '',
-                'production_price' => 0,
+                'cost_price' => 0,
                 'retail_price' => 0,
                 'wholesale_price' => 0,
                 'discount' => 0,
@@ -67,7 +67,7 @@ class AddProducts extends Page
                             ->required()
                             ->placeholder('كرتونة - قطعة - كيلو'),
 
-                        TextInput::make('production_price')
+                        TextInput::make('cost_price')
                             ->required()
                             ->label('سعر المصنع')
                             ->numeric()
@@ -140,7 +140,7 @@ class AddProducts extends Page
                 product: $product,
                 movementType: 'opening_stock',
                 quantity: $stockQuantity,
-                costPrice: $product->production_price,
+                costPrice: $product->cost_price,
                 wholeSalePrice: $product->wholesale_price,
                 retailPrice: $product->retail_price,
                 referenceId: $product->id,

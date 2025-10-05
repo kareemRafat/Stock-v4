@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->decimal('production_price', 10, 2)->comment('سعر المصنع');
+            $table->decimal('cost_price', 10, 2)->comment('سعر المصنع');
             $table->decimal('wholesale_price', 10, 2)->nullable()->comment('سعر الجملة');
             $table->decimal('retail_price', 10, 2)->nullable()->comment('سعر القطاعي');
             $table->unsignedTinyInteger('discount')->default(0);

@@ -15,7 +15,7 @@ class CreateSupplierInvoice extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return static::$resource::getUrl('index');
+        return $this->getResource()::getUrl('index');
     }
 
     protected function afterCreate(): void
@@ -44,7 +44,7 @@ class CreateSupplierInvoice extends CreateRecord
                 retailPrice: $item->retail_price,
                 referenceId: $this->record->id,
                 referenceTable: 'supplier_invoices',
-                createdAt : $this->record->created_at
+                createdAt: $this->record->created_at
             );
         }
 

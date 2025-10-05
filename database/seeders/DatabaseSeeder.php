@@ -8,10 +8,11 @@ use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\Customer;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Supplier;
 use App\Models\InvoiceItem;
 use App\Models\CustomerWallet;
-use App\Models\OutsourcedProduction;
 use Illuminate\Database\Seeder;
+use App\Models\OutsourcedProduction;
 
 class DatabaseSeeder extends Seeder
 {
@@ -39,15 +40,16 @@ class DatabaseSeeder extends Seeder
 
         // supplier seeders
         $this->call([
-            SupplierSeeder::class, // ✅ أضف السطر ده
+            // SupplierSeeder::class,
         ]);
 
-        Product::factory(50)->create();
+        // Product::factory(50)->create();
         Customer::factory(10)->create();
-        Invoice::factory(20)->create();
-        InvoiceItem::factory(20)->create();
-        CustomerWallet::factory(20)->create();
+        // Invoice::factory(20)->create();
+        // InvoiceItem::factory(20)->create();
+        // CustomerWallet::factory(20)->create();
+        Supplier::factory(10)->create();
 
-        OutsourcedProduction::factory(20)->create();
+        // OutsourcedProduction::factory(20)->create();
     }
 }

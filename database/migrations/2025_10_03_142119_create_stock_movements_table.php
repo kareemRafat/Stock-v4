@@ -22,7 +22,7 @@ return new class extends Migration
             $table->enum('movement_type', [
                 'opening_stock',
                 'purchase',
-                'sale',
+                'invoice_sale',
                 'purchase_return',
                 'sale_return',
                 'adjustment',

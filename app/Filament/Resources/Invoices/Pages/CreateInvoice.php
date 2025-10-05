@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Invoices\Pages;
 
 use Filament\Actions\Action;
+use App\Services\StockService;
 use Filament\Schemas\Components\Section;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Wizard\Step;
@@ -56,15 +57,17 @@ class CreateInvoice extends CreateRecord
         ];
     }
 
-    //! for testin
-    // public function create(bool $another = false): void
-    // {
-    //     $data = $this->form->getRawState();
+    //! for testing
+    /*
+    public function create(bool $another = false): void
+    {
+        $data = $this->form->getRawState();
 
-    //     dd($data);
+        dd($data);
 
-    //     parent::create($another);
-    // }
+        parent::create($another);
+    }
+    */
 
 
     protected function afterCreate(): void
@@ -73,11 +76,33 @@ class CreateInvoice extends CreateRecord
             'total_amount' => $this->record->items()->sum('subtotal'),
         ]);
 
-        // Decrease stock for each product in items
+        // Inject the StockService manually (Filament doesn't do constructor DI here)
+        $stockService = app(StockService::class);
+
+        // 1️⃣ Update total amount
+        $this->record->update([
+            'total_amount' => $this->record->items()->sum('subtotal'),
+        ]);
+
+        // 2️⃣ Loop through items and record stock movement for each
         foreach ($this->record->items as $item) {
-            if ($item->product) {
-                $item->product->decrement('stock_quantity', $item->quantity);
+            $product = $item->product;
+            if (! $product) {
+                continue;
             }
+
+            // Decrease stock via StockService
+            $stockService->recordMovement(
+                product: $product,
+                movementType: 'invoice_sale',
+                quantity: $item->quantity,
+                costPrice: $product->cost_price,
+                wholeSalePrice: $product->wholesale_price,
+                retailPrice: $product->retail_price,
+                referenceId: $this->record->id,
+                referenceTable: 'invoices',
+                createdAt : $this->record->created_at
+            );
         }
     }
 

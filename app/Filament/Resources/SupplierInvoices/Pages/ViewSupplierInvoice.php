@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\SupplierInvoiceResource\Pages;
 
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\TextSize;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -49,31 +50,37 @@ class ViewSupplierInvoice extends ViewRecord
                                 TextEntry::make('product.name')
                                     ->label('اسم المنتج')
                                     ->color('indigo')
-                                    ->weight('semibold'),
+                                    ->weight('semibold')
+                                    ->size(TextSize::Medium),
                                 TextEntry::make('quantity')
                                     ->label('الكمية')
                                     ->numeric()
-                                    ->weight('semibold'),
+                                    ->weight('semibold')
+                                    ->size(TextSize::Medium),
                                 TextEntry::make('cost_price')
                                     ->label('سعر المورد للوحدة')
                                     ->suffix(' جنيه')
                                     ->numeric()
-                                    ->weight('semibold'),
+                                    ->weight('semibold')
+                                    ->size(TextSize::Medium),
                                 TextEntry::make('wholesale_price')
                                     ->label('سعر البيع للجملة')
                                     ->suffix(' جنيه')
                                     ->numeric()
-                                    ->weight('semibold'),
+                                    ->weight('semibold')
+                                    ->size(TextSize::Medium),
                                 TextEntry::make('retail_price')
                                     ->label('سعر البيع للقطاعي')
                                     ->suffix(' جنيه')
                                     ->numeric()
-                                    ->weight('semibold'),
+                                    ->weight('semibold')
+                                    ->size(TextSize::Medium),
                                 TextEntry::make('subtotal')
                                     ->label('الإجمالي')
                                     ->suffix(' جنيه')
                                     ->numeric()
-                                    ->weight('semibold'),
+                                    ->weight('semibold')
+                                    ->size(TextSize::Medium),
                             ])
                             ->columns(6)
                             ->grid(1),

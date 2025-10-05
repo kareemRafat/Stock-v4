@@ -175,9 +175,9 @@ class InvoiceForm
 
 
                             if ($invoicePriceType === 'wholesale') {
-                                $price = $product->discounted_wholesale_price;
+                                $price = round($product->discounted_wholesale_price , 2);
                             } else {
-                                $price = round($$product->base_retail_price, 2);
+                                $price = round($product->retail_price, 2);
                             }
 
 

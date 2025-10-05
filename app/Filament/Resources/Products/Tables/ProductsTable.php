@@ -51,7 +51,7 @@ class ProductsTable
                     ->color(fn($state) => $state == 0 ? 'danger' : ($state < 20 ? 'orange' : null))
                     ->weight(FontWeight::Bold),
 
-                // TextColumn::make('production_price')
+                // TextColumn::make('cost_price')
                 //     ->label('سعر المصنع')
                 //     ->suffix(' جنيه ')
                 //     ->weight(FontWeight::Medium)
