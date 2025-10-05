@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ReturnInvoices\Pages;
 
 use App\Models\Invoice;
 use App\Models\Product;
+use App\Services\StockService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Notifications\Notification;
@@ -152,7 +153,7 @@ class CreateReturnInvoice extends CreateRecord
     private function getProductPrice($productId): float
     {
         $product = Product::find($productId);
-        return $product->price ?? 0;
+        return $product->cost_price ?? 0;
     }
 
     /**
@@ -164,8 +165,11 @@ class CreateReturnInvoice extends CreateRecord
             // Create the return invoice
             $returnInvoice = static::getModel()::create($data);
 
+            // use stock service class
+            $stockService = app(StockService::class);
+
             foreach ($validItems as $item) {
-                $this->createReturnInvoiceItem($returnInvoice, $item);
+                $this->createReturnInvoiceItem($returnInvoice, $item, $stockService);
             }
 
             return $returnInvoice;
@@ -175,7 +179,7 @@ class CreateReturnInvoice extends CreateRecord
     /**
      * Create a single return invoice item and update inventory
      */
-    private function createReturnInvoiceItem(Model $returnInvoice, array $item): void
+    private function createReturnInvoiceItem(Model $returnInvoice, array $item, StockService $stockService): void
     {
         $quantityReturned = $this->getQuantityReturned($item);
 
@@ -195,9 +199,21 @@ class CreateReturnInvoice extends CreateRecord
             'subtotal' => $subtotal,
         ]);
 
+        //! need edit
+        //!!
         // Update inventory: add the returned quantity back to stock
         if ($product) {
-            $product->increment('stock_quantity', $quantityReturned);
+            $stockService->recordMovement(
+                product: $product,
+                movementType: 'sale_return',
+                quantity: $quantityReturned,
+                costPrice: $product->cost_price,
+                wholeSalePrice: $product->wholesale_price,
+                // discount : //!
+                retailPrice: $product->retail_price,
+                referenceId: $returnInvoice->id,
+                referenceTable: 'return_invoices'
+            );
         }
     }
 
@@ -206,12 +222,8 @@ class CreateReturnInvoice extends CreateRecord
         return static::$resource::getUrl('view', ['record' => $this->record]);
     }
 
-    // to remove add and add more
-    protected function getFormActions(): array
+    public function canCreateAnother(): bool
     {
-        return [
-            $this->getCreateFormAction(), // زر إضافة فقط
-            $this->getCancelFormAction(), // زر إلغاء يرجع للـ index
-        ];
+        return false;
     }
 }

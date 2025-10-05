@@ -20,12 +20,12 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->enum('movement_type', [
-                'opening_stock',
-                'purchase',
-                'invoice_sale',
-                'purchase_return',
-                'sale_return',
-                'adjustment',
+                'opening_stock', // products insert
+                'purchase', // supplier invoices
+                'invoice_sale', // customer invoice
+                'purchase_return', // supplier Invoice Return
+                'sale_return', // customers Return
+                'adjustment', // manual update
             ]);
 
             // null when opening_stock

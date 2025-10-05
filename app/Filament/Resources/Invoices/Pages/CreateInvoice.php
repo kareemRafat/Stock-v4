@@ -72,10 +72,6 @@ class CreateInvoice extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $this->record->update([
-            'total_amount' => $this->record->items()->sum('subtotal'),
-        ]);
-
         // Inject the StockService manually (Filament doesn't do constructor DI here)
         $stockService = app(StockService::class);
 
@@ -91,19 +87,41 @@ class CreateInvoice extends CreateRecord
                 continue;
             }
 
-            // Decrease stock via StockService
+            // the prices and discount in the time of invoice
+            $costPrice      = $product->cost_price ?? 0;
+            $wholesalePrice = $product->wholesale_price ?? 0;
+            $retailPrice    = $product->retail_price ?? 0;
+            $discountPercent = $product->discount ?? 0;
+
+
+            $item->update([
+                'cost_price'      => $costPrice,
+                'wholesale_price' => $wholesalePrice,
+                'retail_price'    => $retailPrice,
+                'discount' => $discountPercent
+            ]);
+
+            // use item (snapshot)
+            $costPrice      = $item->cost_price      ?? $product->production_price;
+            $wholesalePrice = $item->wholesale_price ?? $product->wholesale_price;
+            $retailPrice    = $item->retail_price    ?? $product->retail_price;
+
+            // 3️⃣ Decrease stock via StockService
             $stockService->recordMovement(
                 product: $product,
                 movementType: 'invoice_sale',
                 quantity: $item->quantity,
-                costPrice: $product->cost_price,
+                costPrice: $costPrice,
                 wholeSalePrice: $product->wholesale_price,
-                retailPrice: $product->retail_price,
+                discount : $product->discount,
+                retailPrice: $retailPrice,
                 referenceId: $this->record->id,
                 referenceTable: 'invoices',
-                createdAt : $this->record->created_at
+                createdAt: $this->record->created_at
             );
         }
+
+        $this->dispatch('$refresh');
     }
 
     protected function getRedirectUrl(): string

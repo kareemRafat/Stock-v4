@@ -117,7 +117,7 @@ class InvoiceForm
                             $quantity = $item['quantity'] ?? 1;
                             $subtotal = round($price * $quantity, 2);
 
-                            $set("items.{$index}.price", round($price, 2));
+                            $set("items.{$index}.cost_price", round($price, 2));
                             $set("items.{$index}.subtotal", $subtotal);
                         }
                     }
@@ -183,7 +183,7 @@ class InvoiceForm
 
                             $quantity = $get('quantity') ?? 1;
 
-                            $set('price', round($price, 2));
+                            $set('cost_price', round($price, 2));
                             $set('stock_quantity', $product->stock_quantity);
                             $set('subtotal', round($price * $quantity, 2));
 
@@ -198,7 +198,7 @@ class InvoiceForm
                         ->disabled()
                         ->dehydrated(false),
 
-                    TextInput::make('price')
+                    TextInput::make('cost_price')
                         ->label('السعر بعد اضافة الخصم')
                         ->numeric()
                         ->required()
@@ -221,9 +221,9 @@ class InvoiceForm
                             };
                         })
                         ->afterStateUpdatedJs('
-                        const price = parseFloat($get("price")) || 0;
+                        const price = parseFloat($get("cost_price")) || 0;
                         const quantity = parseFloat($state) || 0;
-                        const subtotal = Math.round(price * quantity * 100) / 100;
+                        const subtotal = Math.round(cost_price * quantity * 100) / 100;
 
                         $set("subtotal", subtotal);
 

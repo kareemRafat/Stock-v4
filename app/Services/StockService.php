@@ -21,13 +21,14 @@ class StockService
         ?float $costPrice = null,
         ?float $wholeSalePrice = null,
         ?float $retailPrice = null,
+        ?float $discount = null,
         $referenceId = null,
         $referenceTable = null,
         $createdAt  = null
     ) {
         return DB::transaction(
             function ()
-            use ($product, $movementType, $quantity, $costPrice, $wholeSalePrice, $retailPrice, $referenceId, $referenceTable, $createdAt) {
+            use ($product, $movementType, $quantity, $costPrice, $wholeSalePrice, $retailPrice, $referenceId, $referenceTable, $discount, $createdAt) {
 
                 // if the operation is insert input
                 if (in_array($movementType, $this->input)) {
@@ -42,6 +43,10 @@ class StockService
                     $qtyOut = $quantity;
                 }
 
+                if ($discount !== null && $wholeSalePrice !== null) {
+                    $wholeSalePrice = $wholeSalePrice - ($wholeSalePrice * ($discount / 100));
+                }
+
                 // add stock_movements table Record
                 return StockMovement::create([
                     'product_id'       => $product->id,
@@ -49,7 +54,7 @@ class StockService
                     'qty_in'           => $qtyIn,
                     'qty_out'          => $qtyOut,
                     'cost_price'       => $costPrice ?? $product->cost_price,
-                    'wholesale_price'  => $wholeSalePrice ?? $product->retail_price,
+                    'wholesale_price'  => $wholeSalePrice,
                     'retail_price'     => $retailPrice ?? $product->retail_price,
                     'reference_id'     => $referenceId,
                     'reference_table'  => $referenceTable,

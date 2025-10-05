@@ -142,7 +142,7 @@ class SupplierInvoiceForm
                             ->columnSpan(2),
 
                         TextInput::make('wholesale_price')
-                            ->label('سعر الجملة الجديد')
+                            ->label('سعر الجملة الجديد قبل الخصم')
                             ->numeric()
                             ->required(),
                         TextInput::make('retail_price')

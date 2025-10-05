@@ -16,7 +16,10 @@ return new class extends Migration
             $table->foreignId('invoice_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('product_id')->nullable()->constrained()->onDelete('set null');
             $table->integer('quantity');
-            $table->decimal('price', 10, 2);
+            $table->decimal('cost_price', 10, 2)->nullable()->comment('سعر المصنع وقت البيع');
+            $table->decimal('wholesale_price', 10, 2)->nullable()->comment('سعر الجملة وقت البيع');
+            $table->decimal('retail_price', 10, 2)->nullable()->comment('سعر القطاعي وقت البيع');
+            $table->decimal('discount', 5, 2)->nullable()->comment('قيمة الخصم وقت البيع');
             $table->decimal('subtotal', 10, 2);
             $table->timestamps();
         });

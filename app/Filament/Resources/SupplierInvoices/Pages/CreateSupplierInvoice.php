@@ -2,9 +2,7 @@
 
 namespace App\Filament\Resources\SupplierInvoices\Pages;
 
-use App\Models\Product;
 use Filament\Actions\Action;
-use App\Models\ProductPurchase;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
 use App\Services\StockService;
@@ -18,11 +16,11 @@ class CreateSupplierInvoice extends CreateRecord
         return $this->getResource()::getUrl('index');
     }
 
+
     protected function afterCreate(): void
     {
         // to call StockService service - afterCreate can`t use dependancy injection
         $stockService = app(StockService::class);
-
         //  update products prices
         foreach ($this->record->items as $item) {
             $product = $item->product;
@@ -41,6 +39,7 @@ class CreateSupplierInvoice extends CreateRecord
                 quantity: $item->quantity,
                 costPrice: $item->cost_price,
                 wholeSalePrice: $item->wholesale_price,
+                discount : $product->discount ,
                 retailPrice: $item->retail_price,
                 referenceId: $this->record->id,
                 referenceTable: 'supplier_invoices',
@@ -53,6 +52,8 @@ class CreateSupplierInvoice extends CreateRecord
             ->body("تم إضافة {$this->record->items->count()} منتج وتحديث المخزن")
             ->success()
             ->send();
+
+        $this->dispatch('$refresh');
     }
 
     protected function getHeaderActions(): array
@@ -67,12 +68,8 @@ class CreateSupplierInvoice extends CreateRecord
         ];
     }
 
-    // to remove add and add more
-    protected function getFormActions(): array
+    public function canCreateAnother(): bool
     {
-        return [
-            $this->getCreateFormAction(), // Add button
-            $this->getCancelFormAction(), // cancel button
-        ];
+        return false;
     }
 }

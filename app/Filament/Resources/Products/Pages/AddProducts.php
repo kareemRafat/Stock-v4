@@ -142,6 +142,7 @@ class AddProducts extends Page
                 quantity: $stockQuantity,
                 costPrice: $product->cost_price,
                 wholeSalePrice: $product->wholesale_price,
+                discount : $product->discount,
                 retailPrice: $product->retail_price,
                 referenceId: $product->id,
                 referenceTable: 'products'

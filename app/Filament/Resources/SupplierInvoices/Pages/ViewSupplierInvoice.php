@@ -64,10 +64,17 @@ class ViewSupplierInvoice extends ViewRecord
                                     ->weight('semibold')
                                     ->size(TextSize::Medium),
                                 TextEntry::make('wholesale_price')
-                                    ->label('سعر البيع للجملة')
+                                    ->label('سعر  الجملة بعد الخصم')
                                     ->suffix(' جنيه')
                                     ->numeric()
                                     ->weight('semibold')
+                                    ->state(function ($record) {
+                                        $price = $record->wholesale_price ?? 0;
+                                        $discount = $record->product->discount ?? 0;
+
+                                        $final = $price - ($price * ($discount / 100));
+                                        return round($final, 2);
+                                    })
                                     ->size(TextSize::Medium),
                                 TextEntry::make('retail_price')
                                     ->label('سعر البيع للقطاعي')
@@ -104,7 +111,8 @@ class ViewSupplierInvoice extends ViewRecord
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                ->action(fn() => redirect(SupplierInvoiceResource::getUrl('index'))),
+                ->url(fn() => SupplierInvoiceResource::getUrl('index'))
+            // ->action(fn() => redirect(SupplierInvoiceResource::getUrl('index'))),
         ];
     }
 }

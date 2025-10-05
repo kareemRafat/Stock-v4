@@ -32,18 +32,13 @@
                 <div class="mt-4 sm:mt-0 sm:text-right">
                     <div
                         class="flex items-stretch text-primary-900 px-4 py-1.5 rounded-md mb-2 text-sm font-medium justify-end gap-4">
-                        <!-- Invoice Number -->
                         <div class="flex items-center flex-col">
                             <span class="mb-2">رقم الفاتورة :</span>
                             <span># {{ $this->getRecord()->invoice_number }}</span>
                         </div>
-
-                        <!-- Vertical Separator -->
                         <div
                             style="width: 1px; height: auto; border-right: 1px solid rgb(111, 111, 111); margin: 0 2px;">
                         </div>
-
-                        <!-- Date -->
                         <div class="flex items-center flex-col">
                             <span class="mr-1 mb-2">التاريخ:</span>
                             <span>{{ $this->getRecord()->createdDate }}</span>
@@ -64,10 +59,9 @@
                 </div>
             </div>
 
-            <!-- Separator -->
             <hr class="my-4 border-gray-500">
 
-            <!-- Bill To Section -->
+            <!-- Customer -->
             <div class="mb-6">
                 <h3 class="text-base font-medium text-gray-600 my-4">طبعت الفاتورة لأمر :</h3>
                 <div
@@ -77,151 +71,116 @@
                 </div>
             </div>
 
-            <!-- Items Table for Invoice -->
-            <div class="mb-6">
-                <div class="overflow-hidden">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th
-                                    class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
-                                    مسلسل</th>
-                                <th
-                                    class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
-                                    المنتج</th>
-                                <th
-                                    class="text-center py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
-                                    الكمية</th>
-                                <th
-                                    class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
-                                    الخصم</th>
-                                <th
-                                    class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
-                                    السعر</th>
-                                <th
-                                    class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
-                                    الإجمالي</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php
-                                $isWholesale = $this->getRecord()->price_type === 'wholesale';
+            <!-- Items Table -->
+            <div class="mb-6 overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                مسلسل</th>
+                            <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                المنتج</th>
+                            <th class="text-center py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                الكمية</th>
+                            <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                الخصم</th>
+                            <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                السعر</th>
+                            <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                                الإجمالي</th>
+                        </tr>
+                    </thead>
 
-                                $totalBeforeSale = 0;
-                                $totalDiscounts = 0;
-                                $totalAfterDiscount = 0;
+                    <tbody>
+                        @php
+                            $isWholesale = $this->getRecord()->price_type === 'wholesale';
+                            $totalBeforeSale = 0;
+                            $totalDiscounts = 0;
+                            $totalAfterDiscount = 0;
+                        @endphp
+
+                        @foreach ($this->getRecord()->items as $item)
+                            @php
+                                $product = $item->product;
+
+                                // الأسعار من invoice_items (snapshot)
+                                $wholesalePrice = $item->wholesale_price ?? ($product->wholesale_price ?? 0);
+                                $retailPrice = $item->retail_price ?? ($product->retail_price ?? 0);
+                                $discountPercent = $item->discount_percent ?? ($product->discount ?? 0);
+
+                                // السعر المستخدم في الفاتورة (بعد الخصم للجملة)
+                                if ($isWholesale) {
+                                    $unitPriceBefore = $wholesalePrice;
+                                    $unitPriceAfter = $item->price ?? $wholesalePrice * (1 - $discountPercent / 100);
+                                } else {
+                                    $unitPriceBefore = $retailPrice;
+                                    $unitPriceAfter = $item->price ?? $retailPrice;
+                                }
+
+                                // الإجماليات
+                                $lineTotalBefore = $unitPriceBefore * $item->quantity;
+                                $lineTotalAfter = $unitPriceAfter * $item->quantity;
+                                $lineDiscount = $lineTotalBefore - $lineTotalAfter;
+
+                                // تراكم الإجماليات
+                                $totalBeforeSale += $lineTotalBefore;
+                                $totalAfterDiscount += $lineTotalAfter;
+                                $totalDiscounts += $lineDiscount;
                             @endphp
 
-                            @foreach ($this->getRecord()->items as $item)
-                                @php
-                                    $product = $item->product;
-                                    if (!$product) {
-                                        continue;
-                                    }
+                            <tr class="border-t border-gray-400">
+                                <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
+                                    {{ $loop->iteration }}</td>
+                                <td class="py-2 px-4 text-gray-600 text-sm border border-gray-400">
+                                    {{ $product->name ?? '---' }}</td>
+                                <td class="py-2 px-4 text-center text-gray-500 text-sm border border-gray-400">
+                                    {{ $item->quantity }} {{ $product->unit ?? '' }}</td>
 
-                                    // السعر الأساسي
-                                    $unitPriceBefore = $isWholesale
-                                        ? $product->wholesale_price
-                                        : $product->retail_price;
+                                <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
+                                    {{ $isWholesale ? number_format($discountPercent, 2) . ' %' : '-' }}
+                                </td>
 
-                                    // السعر بعد الخصم (للجملة فقط)
-                                    $unitPriceAfter = $isWholesale
-                                        ? $product->discounted_wholesale_price
-                                        : $product->retail_price;
+                                <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
+                                    {{ number_format($unitPriceAfter, 2) }}
+                                </td>
 
-                                    // إجماليات
-                                    $lineTotalBefore = $unitPriceBefore * $item->quantity;
-                                    $lineTotalAfter = $unitPriceAfter * $item->quantity;
-                                    $lineDiscount = $lineTotalBefore - $lineTotalAfter;
-
-                                    // تراكم الإجماليات
-                                    $totalBeforeSale += $lineTotalBefore;
-                                    $totalAfterDiscount += $lineTotalAfter;
-                                    $totalDiscounts += $lineDiscount;
-                                @endphp
-
-                                <tr class="border-t border-gray-400">
-                                    <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
-                                        {{ $loop->iteration }}
-                                    </td>
-
-                                    <td class="py-2 px-4 text-gray-600 text-sm border border-gray-400">
-                                        {{ $product->name ?? '---' }}
-                                    </td>
-
-                                    <td class="py-2 px-4 text-center text-gray-500 text-sm border border-gray-400">
-                                        {{ $item->quantity }} {{ $product->unit ?? '---' }}
-                                    </td>
-
-                                    {{-- الخصم --}}
-                                    <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
-                                        {{ $isWholesale ? ($product->discount > 0 ? $product->discount . ' %' : '0 %') : '-' }}
-                                    </td>
-
-                                    {{-- السعر --}}
-                                    <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
-                                        {{ number_format($isWholesale ? $unitPriceAfter : $unitPriceBefore, 2) }}
-                                    </td>
-
-                                    {{-- الإجمالي --}}
-                                    <td
-                                        class="py-2 px-4 text-right font-medium text-gray-600 text-sm border border-gray-400">
-                                        {{ number_format($isWholesale ? $lineTotalAfter : $lineTotalBefore, 2) }}
-                                    </td>
-                                </tr>
-                            @endforeach
-
-
-                        </tbody>
-                    </table>
-                </div>
+                                <td
+                                    class="py-2 px-4 text-right font-medium text-gray-600 text-sm border border-gray-400">
+                                    {{ number_format($lineTotalAfter, 2) }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
 
-            <!-- Items Table for Ezn el sarf -->
             @include('filament.pages.invoices.delivery-note')
 
             <!-- Totals -->
-            <div class="flex w-full justify-between mt-2 font-semibold">
-                <div class="w-full">
-                    <div class="space-y-2">
-                        <div class="flex justify-between py-2 px-2">
-                            <span class="text-sm text-black">الإجمالي:</span>
-                            <span class="font-medium text-sm text-black">
-                                {{ number_format($totalBeforeSale, 2) }}
-                            </span>
-                        </div>
+            <div class="flex w-full justify-between mt-4 font-semibold">
+                <div class="w-full space-y-2">
+                    <div class="flex justify-between py-2 px-2">
+                        <span class="text-sm text-black">الإجمالي قبل الخصم:</span>
+                        <span class="font-medium text-sm text-black">{{ number_format($totalBeforeSale, 2) }}</span>
+                    </div>
 
-                        @if ($isWholesale)
-                            <div class="flex justify-between py-2 px-2">
-                                <span class="text-sm text-black">الخصومات:</span>
-                                <span class="font-medium text-sm text-black">
-                                    {{ number_format($totalDiscounts, 2) }}
-                                </span>
-                            </div>
-                            <hr class="border-gray-400">
-                            <div class="flex justify-between py-3 px-4 rounded-md">
-                                <span class="text-base font-medium text-black">الإجمالي بعد الخصم:</span>
-                                <span class="text-base font-medium text-black">
-                                    {{ number_format($totalAfterDiscount, 2) }} ج.م
-                                </span>
-                            </div>
-                        @else
-                            <div class="flex justify-between py-2 px-2">
-                                <span class="text-sm text-black">الخصومات:</span>
-                                <span class="font-medium text-sm text-black">-</span>
-                            </div>
-                            <hr class="border-gray-400">
-                            <div class="flex justify-between py-3 px-4 rounded-md">
-                                <span class="text-base font-medium text-black">الإجمالي:</span>
-                                <span class="text-base font-medium text-black">
-                                    {{ number_format($totalBeforeSale, 2) }} ج.م
-                                </span>
-                            </div>
-                        @endif
+                    <div class="flex justify-between py-2 px-2">
+                        <span class="text-sm text-black">إجمالي الخصومات:</span>
+                        <span class="font-medium text-sm text-black">
+                            {{ $isWholesale ? number_format($totalDiscounts, 2) : '-' }}
+                        </span>
+                    </div>
+
+                    <hr class="border-gray-400">
+
+                    <div class="flex justify-between py-3 px-4 rounded-md">
+                        <span class="text-base font-medium text-black">الإجمالي :</span>
+                        <span class="text-base font-medium text-black">
+                            {{ number_format($isWholesale ? $totalAfterDiscount : $totalBeforeSale, 2) }} ج.م
+                        </span>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -229,7 +188,6 @@
         function printInvoice() {
             const printContents = document.getElementById('print-area').innerHTML;
             const originalContents = document.body.innerHTML;
-
             document.body.innerHTML = printContents;
             window.print();
             document.body.innerHTML = originalContents;
@@ -237,19 +195,15 @@
 
         function printDeliveryNote() {
             const deliveryNoteArea = document.getElementById('delivery-note-area');
-
             if (!deliveryNoteArea) {
                 alert('منطقة إذن الصرف غير موجودة');
                 return;
             }
-
             const printContents = deliveryNoteArea.innerHTML;
             const originalContents = document.body.innerHTML;
-
             document.body.innerHTML = printContents;
             window.print();
             document.body.innerHTML = originalContents;
         }
     </script>
-
 </x-filament-panels::page>

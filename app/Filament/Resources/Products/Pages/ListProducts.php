@@ -20,7 +20,7 @@ class ListProducts extends ListRecords
             CreateAction::make()
                 ->createAnother(false)
                 ->slideOver()
-                ->using(function (array $data , StockService $stockService) {
+                ->using(function (array $data, StockService $stockService) {
                     // store stock_quantity in to reuse
                     $openingStock = $data['stock_quantity'] ?? 0;
 
@@ -38,6 +38,7 @@ class ListProducts extends ListRecords
                             quantity: $openingStock,
                             costPrice: $product->cost_price,
                             wholeSalePrice: $product->wholesale_price,
+                            discount : $product->discount ,
                             retailPrice: $product->retail_price,
                             referenceId: $product->id,
                             referenceTable: 'products'
