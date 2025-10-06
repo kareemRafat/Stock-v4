@@ -85,7 +85,7 @@
                             <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
                                 الخصم</th>
                             <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
-                                السعر</th>
+                                السعر للوحدة</th>
                             <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
                                 الإجمالي</th>
                         </tr>

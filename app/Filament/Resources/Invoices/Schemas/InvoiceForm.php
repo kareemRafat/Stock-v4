@@ -222,7 +222,7 @@ class InvoiceForm
                         ->afterStateUpdatedJs('
                         const price = parseFloat($get("cost_price")) || 0;
                         const quantity = parseFloat($state) || 0;
-                        const subtotal = Math.round(cost_price * quantity * 100) / 100;
+                        const subtotal = Math.round(price * quantity * 100) / 100;
 
                         $set("subtotal", subtotal);
 
