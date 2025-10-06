@@ -27,7 +27,6 @@ class InvoiceForm
         return $schema
             ->components([
                 Wizard::make([
-
                     Step::make('Order')
                         ->icon(Heroicon::ShoppingBag)
                         ->completedIcon(Heroicon::HandThumbUp)

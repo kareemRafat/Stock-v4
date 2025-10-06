@@ -30,6 +30,8 @@ class StockService
             function ()
             use ($product, $movementType, $quantity, $costPrice, $wholeSalePrice, $retailPrice, $referenceId, $referenceTable, $discount, $createdAt) {
 
+                // dd($wholeSalePrice, $retailPrice);
+
                 // if the operation is insert input
                 if (in_array($movementType, $this->input)) {
                     $product->increment('stock_quantity', $quantity);
@@ -55,7 +57,7 @@ class StockService
                     'qty_out'          => $qtyOut,
                     'cost_price'       => $costPrice ?? $product->cost_price,
                     'wholesale_price'  => $wholeSalePrice,
-                    'retail_price'     => $retailPrice ?? $product->retail_price,
+                    'retail_price'     => $retailPrice,
                     'reference_id'     => $referenceId,
                     'reference_table'  => $referenceTable,
                     'created_at'       => $createdAt ?? $product->created_at
