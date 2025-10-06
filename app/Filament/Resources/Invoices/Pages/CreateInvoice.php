@@ -89,14 +89,14 @@ class CreateInvoice extends CreateRecord
 
             // the prices and discount in the time of invoice
             $costPrice      = $product->cost_price ?? 0;
-            $wholesalePrice = $product->wholesale_price ?? 0;
+            $wholesalePrice = $product->discounted_wholesale_price ?? 0;
             $retailPrice    = $product->retail_price ?? 0;
             $discountPercent = $product->discount ?? 0;
 
 
             $item->update([
                 'cost_price'      => $costPrice,
-                'wholesale_price' => $wholesalePrice,
+                'wholesale_price' => $wholesalePrice, // added after discount
                 'retail_price'    => $retailPrice,
                 'discount' => $discountPercent
             ]);

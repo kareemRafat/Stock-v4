@@ -105,27 +105,27 @@ class InvoiceForm
                     foreach ($items as $index => $item) {
                         $product = \App\Models\Product::find($item['product_id'] ?? null);
 
-                        if ($product) {
-                            if ($state === 'retail') {
-                                $price = $product->retail_price;
-                            } else {
-                                $basePrice = $product->wholesale_price;
-                                $discountPercent = $product->discount ?? 0;
-                                $price = $basePrice - ($basePrice * ($discountPercent / 100));
-                            }
-
-                            $quantity = $item['quantity'] ?? 1;
-                            $subtotal = round($price * $quantity, 2);
-
-                            $set("items.{$index}.cost_price", round($price, 2));
-                            $set("items.{$index}.subtotal", $subtotal);
+                        if (! $product) {
+                            continue;
                         }
+
+                        // use accessor
+                        $price = $state === 'wholesale'
+                            ? $product->discounted_wholesale_price
+                            : $product->retail_price;
+
+                        $quantity = $item['quantity'] ?? 1;
+                        $subtotal = round($price * $quantity, 2);
+
+                        $set("items.{$index}.cost_price", round($price, 2));
+                        $set("items.{$index}.subtotal", $subtotal);
                     }
 
-                    // تحديث الإجمالي
+                    // update total
                     $total = collect($get('items'))->sum('subtotal');
                     $set('total_amount', round($total, 2));
                 })
+
                 ->columnSpanFull(),
 
             Textarea::make('notes')
@@ -175,7 +175,7 @@ class InvoiceForm
 
 
                             if ($invoicePriceType === 'wholesale') {
-                                $price = round($product->discounted_wholesale_price , 2);
+                                $price = round($product->discounted_wholesale_price, 2);
                             } else {
                                 $price = round($product->retail_price, 2);
                             }
