@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ReturnInvoices\Pages;
 
 use App\Models\Invoice;
 use App\Models\Product;
+use App\Models\InvoiceItem;
 use App\Services\StockService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
@@ -203,14 +204,39 @@ class CreateReturnInvoice extends CreateRecord
         //!!
         // Update inventory: add the returned quantity back to stock
         if ($product) {
+            // جلب بيانات البند الأصلي من الفاتورة الأصلية
+            $originalItem = \App\Models\InvoiceItem::where('invoice_id', $returnInvoice->original_invoice_id)
+                ->where('product_id', $product->id)
+                ->first();
+
+            // الفاتورة الأصلية
+            $originalInvoice = $returnInvoice->invoice ?? Invoice::find($returnInvoice->original_invoice_id);
+
+            // تحديد نوع الفاتورة (جملة أو قطاعي)
+            $invoiceType = $originalInvoice?->price_type; // مثال: 'wholesale' أو 'retail'
+
+
+            // استخراج الأسعار الأصلية
+            $costPrice = $originalItem->cost_price ?? $product->cost_price;
+            $wholesalePrice = $originalItem->wholesale_price ?? $product->wholesale_price;
+            $retailPrice = $originalItem->retail_price ?? $product->retail_price;
+            $discount = $originalItem->discount ?? 0;
+
+            // تجهيز الأسعار حسب نوع الفاتورة
+            if ($invoiceType === 'wholesale') {
+                $retailPrice = null; // نسيب التجزئة فاضي
+            } elseif ($invoiceType === 'retail') {
+                $wholesalePrice = null; // نسيب الجملة فاضي
+            }
+
+            // تسجيل حركة المرتجع
             $stockService->recordMovement(
                 product: $product,
                 movementType: 'sale_return',
                 quantity: $quantityReturned,
-                costPrice: $product->cost_price,
-                wholeSalePrice: $product->wholesale_price,
-                // discount : //!
-                retailPrice: $product->retail_price,
+                costPrice: $costPrice,
+                wholeSalePrice: $wholesalePrice,
+                retailPrice: $retailPrice,
                 referenceId: $returnInvoice->id,
                 referenceTable: 'return_invoices'
             );
