@@ -184,64 +184,59 @@ class CreateReturnInvoice extends CreateRecord
     {
         $quantityReturned = $this->getQuantityReturned($item);
 
-        // Safety check (though items are already validated)
         if ($quantityReturned <= 0) {
             return;
         }
 
         $product = Product::find($item['product_id']);
-        $price = $this->getProductPrice($item['product_id']);
+        if (! $product) {
+            return;
+        }
+
+        // جلب بيانات الفاتورة الأصلية والبند الأصلي
+        $originalInvoice = $returnInvoice->invoice ?? Invoice::find($returnInvoice->original_invoice_id);
+        $originalItem = \App\Models\InvoiceItem::where('invoice_id', $returnInvoice->original_invoice_id)
+            ->where('product_id', $product->id)
+            ->first();
+
+        // الأسعار الفعلية المستخدمة (مع fallback لجدول المنتجات)
+        $costPrice      = $originalItem->cost_price ?? $product->cost_price;
+        $wholesalePrice = $originalItem->wholesale_price ?? $product->wholesale_price;
+        $retailPrice    = $originalItem->retail_price ?? $product->retail_price;
+
+        // تحديد السعر بناءً على نوع الفاتورة
+        $invoiceType = $originalInvoice?->price_type; // 'wholesale' أو 'retail'
+
+        $price = match ($invoiceType) {
+            'wholesale' => $wholesalePrice,
+            'retail'    => $retailPrice,
+            default     => $retailPrice, // احتياطًا لو النوع غير محدد
+        };
+
         $subtotal = $quantityReturned * $price;
 
+        // إنشاء بند المرتجع
         $returnInvoice->items()->create([
-            'product_id' => $item['product_id'],
+            'product_id'        => $item['product_id'],
             'quantity_returned' => $quantityReturned,
-            'price' => $price,
-            'subtotal' => $subtotal,
+            'price'             => $price,
+            'subtotal'          => $subtotal,
         ]);
 
-        //! need edit
-        //!!
-        // Update inventory: add the returned quantity back to stock
-        if ($product) {
-            // جلب بيانات البند الأصلي من الفاتورة الأصلية
-            $originalItem = \App\Models\InvoiceItem::where('invoice_id', $returnInvoice->original_invoice_id)
-                ->where('product_id', $product->id)
-                ->first();
-
-            // الفاتورة الأصلية
-            $originalInvoice = $returnInvoice->invoice ?? Invoice::find($returnInvoice->original_invoice_id);
-
-            // تحديد نوع الفاتورة (جملة أو قطاعي)
-            $invoiceType = $originalInvoice?->price_type; // مثال: 'wholesale' أو 'retail'
-
-
-            // استخراج الأسعار الأصلية
-            $costPrice = $originalItem->cost_price ?? $product->cost_price;
-            $wholesalePrice = $originalItem->wholesale_price ?? $product->wholesale_price;
-            $retailPrice = $originalItem->retail_price ?? $product->retail_price;
-            $discount = $originalItem->discount ?? 0;
-
-            // تجهيز الأسعار حسب نوع الفاتورة
-            if ($invoiceType === 'wholesale') {
-                $retailPrice = null; // نسيب التجزئة فاضي
-            } elseif ($invoiceType === 'retail') {
-                $wholesalePrice = null; // نسيب الجملة فاضي
-            }
-
-            // تسجيل حركة المرتجع
-            $stockService->recordMovement(
-                product: $product,
-                movementType: 'sale_return',
-                quantity: $quantityReturned,
-                costPrice: $costPrice,
-                wholeSalePrice: $wholesalePrice,
-                retailPrice: $retailPrice,
-                referenceId: $returnInvoice->id,
-                referenceTable: 'return_invoices'
-            );
-        }
+        // تسجيل حركة المخزون
+        $stockService->recordMovement(
+            product: $product,
+            movementType: 'sale_return',
+            quantity: $quantityReturned,
+            costPrice: $costPrice,
+            wholeSalePrice: $invoiceType === 'wholesale' ? $wholesalePrice : null,
+            retailPrice: $invoiceType === 'retail' ? $retailPrice : null,
+            referenceId: $returnInvoice->id,
+            referenceTable: 'return_invoices'
+        );
     }
+
+
 
     protected function getRedirectUrl(): string
     {
