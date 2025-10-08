@@ -21,10 +21,12 @@ class ProductPurchasesTable
     {
         return $table
             ->modifyQueryUsing(
-                fn($query) =>
-                $query->with(['product', 'supplier'])
+                fn($query) => $query->with([
+                    'invoice',
+                    'product',
+                ])
             )
-            ->defaultSort('purchase_date', 'desc')
+            ->defaultSort('invoice.created_at', 'desc')
             ->recordUrl(null) // This disables row clicking
             ->recordAction(null) // prevent clickable row
             ->columns([
@@ -42,7 +44,7 @@ class ProductPurchasesTable
                     ->weight('semibold')
                     ->color('violet'),
 
-                TextColumn::make('supplier.name')
+                TextColumn::make('invoice.supplier.name')
                     ->label('المورد')
                     ->searchable(),
 
@@ -51,12 +53,12 @@ class ProductPurchasesTable
                     ->sortable()
                     ->alignCenter(),
 
-                TextColumn::make('purchase_price')
+                TextColumn::make('cost_price')
                     ->label('سعر الشراء')
                     ->suffix(' ج.م ')
                     ->sortable(),
 
-                TextColumn::make('total_cost')
+                TextColumn::make('subtotal')
                     ->label('التكلفة الإجمالية')
                     ->suffix(' ج.م ')
                     ->sortable(),
@@ -65,12 +67,12 @@ class ProductPurchasesTable
                 //         ->money('EGP'),
                 // ]),
 
-                TextColumn::make('purchase_date')
+                TextColumn::make('invoice.created_at')
                     ->label('تاريخ الشراء')
                     ->date('d/m/Y')
                     ->sortable(),
 
-                TextColumn::make('supplier_invoice_number')
+                TextColumn::make('invoice.invoice_number')
                     ->label('رقم فاتورة المورد')
                     ->toggleable(true),
             ])
@@ -78,78 +80,103 @@ class ProductPurchasesTable
                 SelectFilter::make('supplier_id')
                     ->label('المورد')
                     ->searchable()
-                    ->options(function () {
-                        // show only 15
-                        return Supplier::query()
+                    ->options(
+                        fn() =>
+                        Supplier::query()
                             ->latest()
                             ->limit(20)
-                            ->get()
-                            ->mapWithKeys(function ($supplier) {
-                                return [$supplier->id => $supplier->name];
-                            });
-                    })
-                    ->getSearchResultsUsing(function (string $search) {
-                        // results when search
-                        return Supplier::query()
+                            ->pluck('name', 'id')
+                    )
+                    ->getSearchResultsUsing(
+                        fn(string $search) =>
+                        Supplier::query()
                             ->where('name', 'like', "%{$search}%")
                             ->limit(50)
-                            ->get()
-                            ->mapWithKeys(function ($supplier) {
-                                return [$supplier->id => $supplier->name];
-                            });
-                    })
+                            ->pluck('name', 'id')
+                    )
                     ->getOptionLabelUsing(
                         fn($value): ?string =>
                         Supplier::find($value)?->name
                     )
+                    ->query(function ($query, $data) {
+                        // لو المستخدم اختار مورد فقط
+                        if (!empty($data['value'])) {
+                            $query->whereHas('invoice', function ($q) use ($data) {
+                                $q->where('supplier_id', $data['value']);
+                            });
+                        }
+                    })
                     ->placeholder('كل الموردين'),
 
                 SelectFilter::make('product_id')
                     ->label('المنتج')
+                    ->searchable()
                     ->options(
-                        fn() => Product::query()
+                        fn() =>
+                        Product::query()
                             ->latest()
                             ->limit(20)
                             ->pluck('name', 'id')
                     )
-                    ->searchable()
                     ->getSearchResultsUsing(
-                        fn(string $search) => Product::query()
+                        fn(string $search) =>
+                        Product::query()
                             ->where('name', 'like', "%{$search}%")
                             ->limit(50)
                             ->pluck('name', 'id')
                     )
                     ->getOptionLabelUsing(
-                        fn($value): ?string => Product::find($value)?->name
+                        fn($value): ?string =>
+                        Product::where('id', $value)->value('name')
                     )
+                    ->query(function ($query, $data) {
+                        if (!empty($data['value'])) {
+                            $query->where('product_id', $data['value']);
+                        }
+                    })
                     ->native(false)
-                    ->placeholder('اختر منتج'),
+                    ->placeholder('كل المنتجات'),
 
-                Filter::make('purchase_date')
+                Filter::make('invoice_date')
+                    ->columnSpan(2)
+                    ->label('تاريخ الفاتورة')
                     ->schema([
-                        Grid::make(2) // Use grid with 2 columns
-                            ->schema([
-                                DatePicker::make('from')
-                                    ->label('من تاريخ')
-                                    ->native(false)
-                                    ->placeholder('اختار تاريخ بدء الفلتر'),
-                                DatePicker::make('until')
-                                    ->label('إلى تاريخ')
-                                    ->native(false)
-                                    ->placeholder('اختار تاريخ نهاية الفلتر'),
-                            ]),
+                        Grid::make(2)->schema([
+                            DatePicker::make('from')
+                                ->label('من تاريخ')
+                                ->native(false)
+                                ->placeholder('اختار تاريخ البداية'),
+                            DatePicker::make('until')
+                                ->label('إلى تاريخ')
+                                ->native(false)
+                                ->placeholder('اختار تاريخ النهاية'),
+                        ]),
                     ])
-                    ->columnSpanfull()
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['from'] ?? null) {
+                            $indicators[] = 'من: ' . \Carbon\Carbon::parse($data['from'])->format('d/m/Y');
+                        }
+
+                        if ($data['until'] ?? null) {
+                            $indicators[] = 'إلى: ' . \Carbon\Carbon::parse($data['until'])->format('d/m/Y');
+                        }
+
+                        return $indicators;
+                    })
                     ->query(function ($query, array $data) {
-                        return $query
-                            ->when($data['from'], fn($q) => $q->whereDate('purchase_date', '>=', $data['from']))
-                            ->when($data['until'], fn($q) => $q->whereDate('purchase_date', '<=', $data['until']));
+                        return $query->whereHas('invoice', function ($q) use ($data) {
+                            $q
+                                ->when($data['from'] ?? null, fn($q, $date) => $q->whereDate('invoice_date', '>=', $date))
+                                ->when($data['until'] ?? null, fn($q, $date) => $q->whereDate('invoice_date', '<=', $date));
+                        });
                     }),
             ], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
             ->filtersFormColumns(2)
             ->recordActions([
-                EditAction::make(),
+                // EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
