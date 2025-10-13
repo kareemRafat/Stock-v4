@@ -147,6 +147,7 @@ class InvoiceForm
                         ->loadingMessage('تحميل المنتجات ...')
                         ->searchable()
                         ->preload()
+                        ->required()
                         ->options(function () {
                             return Product::limit(20)
                                 ->get()
@@ -155,8 +156,7 @@ class InvoiceForm
                         ->getSearchResultsUsing(function (string $search) {
                             return Product::query()
                                 ->where(function ($q) use ($search) {
-                                    $q->where('name', 'like', "%{$search}%")
-                                        ->orWhere('type', 'like', "%{$search}%");
+                                    $q->where('name', 'like', "%{$search}%");
                                 })
                                 ->limit(50)
                                 ->get()
