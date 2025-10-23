@@ -121,9 +121,9 @@ class InvoicesTable
             ->recordActions([
                 ViewAction::make()
                     ->label('عرض الفاتورة'),
-
-                ActionGroup::make([
                     PayInvoiceAction::make(),
+
+                /* ActionGroup::make([
                     EditAction::make()
                         ->extraAttributes(['class' => 'font-medium']),
                 ])
@@ -131,14 +131,14 @@ class InvoicesTable
                     ->button()
                     ->color('gray')
                     ->size('xs')
-                    ->tooltip('إجراءات إضافية'),
+                    ->tooltip('إجراءات إضافية'), */
 
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
+                /* BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
-                ]),
+                ]), */
             ]);
     }
 }
