@@ -25,9 +25,7 @@ class ViewReturnInvoice extends ViewRecord
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                ->url(function () {
-                    return ReturnInvoiceResource::getUrl('index');
-                }),
+                ->action(fn() => redirect(ReturnInvoiceResource::getUrl('index'))),
         ];
     }
 }

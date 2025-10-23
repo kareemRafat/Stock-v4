@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ReturnInvoices\Pages;
 
 use App\Models\Invoice;
 use App\Models\Product;
+use App\Models\InvoiceItem;
 use App\Services\StockService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
@@ -183,39 +184,59 @@ class CreateReturnInvoice extends CreateRecord
     {
         $quantityReturned = $this->getQuantityReturned($item);
 
-        // Safety check (though items are already validated)
         if ($quantityReturned <= 0) {
             return;
         }
 
         $product = Product::find($item['product_id']);
-        $price = $this->getProductPrice($item['product_id']);
+        if (! $product) {
+            return;
+        }
+
+        // جلب بيانات الفاتورة الأصلية والبند الأصلي
+        $originalInvoice = $returnInvoice->invoice ?? Invoice::find($returnInvoice->original_invoice_id);
+        $originalItem = \App\Models\InvoiceItem::where('invoice_id', $returnInvoice->original_invoice_id)
+            ->where('product_id', $product->id)
+            ->first();
+
+        // الأسعار الفعلية المستخدمة (مع fallback لجدول المنتجات)
+        $costPrice      = $originalItem->cost_price ?? $product->cost_price;
+        $wholesalePrice = $originalItem->wholesale_price ?? $product->wholesale_price;
+        $retailPrice    = $originalItem->retail_price ?? $product->retail_price;
+
+        // تحديد السعر بناءً على نوع الفاتورة
+        $invoiceType = $originalInvoice?->price_type; // 'wholesale' أو 'retail'
+
+        $price = match ($invoiceType) {
+            'wholesale' => $wholesalePrice,
+            'retail'    => $retailPrice,
+            default     => $retailPrice, // احتياطًا لو النوع غير محدد
+        };
+
         $subtotal = $quantityReturned * $price;
 
+        // إنشاء بند المرتجع
         $returnInvoice->items()->create([
-            'product_id' => $item['product_id'],
+            'product_id'        => $item['product_id'],
             'quantity_returned' => $quantityReturned,
-            'price' => $price,
-            'subtotal' => $subtotal,
+            'price'             => $price,
+            'subtotal'          => $subtotal,
         ]);
 
-        //! need edit
-        //!!
-        // Update inventory: add the returned quantity back to stock
-        if ($product) {
-            $stockService->recordMovement(
-                product: $product,
-                movementType: 'sale_return',
-                quantity: $quantityReturned,
-                costPrice: $product->cost_price,
-                wholeSalePrice: $product->wholesale_price,
-                // discount : //!
-                retailPrice: $product->retail_price,
-                referenceId: $returnInvoice->id,
-                referenceTable: 'return_invoices'
-            );
-        }
+        // تسجيل حركة المخزون
+        $stockService->recordMovement(
+            product: $product,
+            movementType: 'sale_return',
+            quantity: $quantityReturned,
+            costPrice: $costPrice,
+            wholeSalePrice: $invoiceType === 'wholesale' ? $wholesalePrice : null,
+            retailPrice: $invoiceType === 'retail' ? $retailPrice : null,
+            referenceId: $returnInvoice->id,
+            referenceTable: 'return_invoices'
+        );
     }
+
+
 
     protected function getRedirectUrl(): string
     {

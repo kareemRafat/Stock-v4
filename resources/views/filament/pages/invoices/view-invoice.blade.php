@@ -85,7 +85,7 @@
                             <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
                                 الخصم</th>
                             <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
-                                السعر</th>
+                                السعر للوحدة</th>
                             <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
                                 الإجمالي</th>
                         </tr>
@@ -103,50 +103,47 @@
                             @php
                                 $product = $item->product;
 
-                                // الأسعار من invoice_items (snapshot)
-                                $wholesalePrice = $item->wholesale_price ?? ($product->wholesale_price ?? 0);
-                                $retailPrice = $item->retail_price ?? ($product->retail_price ?? 0);
-                                $discountPercent = $item->discount_percent ?? ($product->discount ?? 0);
+                                $wholesalePrice = $item->wholesale_price ?? 0;
+                                $retailPrice = $item->retail_price ?? 0;
+                                $discountPercent = $item->discount ?? 0;
 
-                                // السعر المستخدم في الفاتورة (بعد الخصم للجملة)
-                                if ($isWholesale) {
-                                    $unitPriceBefore = $wholesalePrice;
-                                    $unitPriceAfter = $item->price ?? $wholesalePrice * (1 - $discountPercent / 100);
-                                } else {
-                                    $unitPriceBefore = $retailPrice;
-                                    $unitPriceAfter = $item->price ?? $retailPrice;
-                                }
+                                // السعر قبل الخصم
+                                $priceBeforeDiscount = $isWholesale
+                                    ? $wholesalePrice / (1 - $discountPercent / 100)
+                                    : $retailPrice;
+
+                                // السعر بعد الخصم (الفعلي)
+                                $unitPrice = $isWholesale ? $wholesalePrice : $retailPrice;
 
                                 // الإجماليات
-                                $lineTotalBefore = $unitPriceBefore * $item->quantity;
-                                $lineTotalAfter = $unitPriceAfter * $item->quantity;
-                                $lineDiscount = $lineTotalBefore - $lineTotalAfter;
+                                $lineTotalBefore = $priceBeforeDiscount * $item->quantity;
+                                $lineDiscount = $isWholesale ? $lineTotalBefore - $unitPrice * $item->quantity : 0;
+                                $lineTotal = $unitPrice * $item->quantity;
 
-                                // تراكم الإجماليات
                                 $totalBeforeSale += $lineTotalBefore;
-                                $totalAfterDiscount += $lineTotalAfter;
                                 $totalDiscounts += $lineDiscount;
+                                $totalAfterDiscount += $lineTotal;
                             @endphp
 
                             <tr class="border-t border-gray-400">
                                 <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
-                                    {{ $loop->iteration }}</td>
+                                    {{ $loop->iteration }}
+                                </td>
                                 <td class="py-2 px-4 text-gray-600 text-sm border border-gray-400">
-                                    {{ $product->name ?? '---' }}</td>
+                                    {{ $product->name ?? '---' }}
+                                </td>
                                 <td class="py-2 px-4 text-center text-gray-500 text-sm border border-gray-400">
-                                    {{ $item->quantity }} {{ $product->unit ?? '' }}</td>
-
+                                    {{ $item->quantity }} {{ $product->unit ?? '' }}
+                                </td>
                                 <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
                                     {{ $isWholesale ? number_format($discountPercent, 2) . ' %' : '-' }}
                                 </td>
-
                                 <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
-                                    {{ number_format($unitPriceAfter, 2) }}
+                                    {{ number_format($priceBeforeDiscount, 2) }}
                                 </td>
-
                                 <td
                                     class="py-2 px-4 text-right font-medium text-gray-600 text-sm border border-gray-400">
-                                    {{ number_format($lineTotalAfter, 2) }}
+                                    {{ number_format($lineTotal, 2) }}
                                 </td>
                             </tr>
                         @endforeach
@@ -181,6 +178,8 @@
                     </div>
                 </div>
             </div>
+
+
         </div>
     </div>
 

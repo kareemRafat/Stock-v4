@@ -27,7 +27,6 @@ class InvoiceForm
         return $schema
             ->components([
                 Wizard::make([
-
                     Step::make('Order')
                         ->icon(Heroicon::ShoppingBag)
                         ->completedIcon(Heroicon::HandThumbUp)
@@ -148,6 +147,7 @@ class InvoiceForm
                         ->loadingMessage('تحميل المنتجات ...')
                         ->searchable()
                         ->preload()
+                        ->required()
                         ->options(function () {
                             return Product::limit(20)
                                 ->get()
@@ -156,8 +156,7 @@ class InvoiceForm
                         ->getSearchResultsUsing(function (string $search) {
                             return Product::query()
                                 ->where(function ($q) use ($search) {
-                                    $q->where('name', 'like', "%{$search}%")
-                                        ->orWhere('type', 'like', "%{$search}%");
+                                    $q->where('name', 'like', "%{$search}%");
                                 })
                                 ->limit(50)
                                 ->get()
@@ -223,7 +222,7 @@ class InvoiceForm
                         ->afterStateUpdatedJs('
                         const price = parseFloat($get("cost_price")) || 0;
                         const quantity = parseFloat($state) || 0;
-                        const subtotal = Math.round(cost_price * quantity * 100) / 100;
+                        const subtotal = Math.round(price * quantity * 100) / 100;
 
                         $set("subtotal", subtotal);
 

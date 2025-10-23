@@ -69,11 +69,13 @@ class CreateInvoice extends CreateRecord
     }
     */
 
-
     protected function afterCreate(): void
     {
         // Inject the StockService manually (Filament doesn't do constructor DI here)
         $stockService = app(StockService::class);
+
+        // 'wholesale' or 'retail'
+        $invoicePriceType = $this->record->price_type;
 
         // 1️⃣ Update total amount
         $this->record->update([
@@ -87,11 +89,13 @@ class CreateInvoice extends CreateRecord
                 continue;
             }
 
+            $isWholesale = $this->record->price_type === 'wholesale';
+
             // the prices and discount in the time of invoice
             $costPrice      = $product->cost_price ?? 0;
-            $wholesalePrice = $product->discounted_wholesale_price ?? 0;
-            $retailPrice    = $product->retail_price ?? 0;
             $discountPercent = $product->discount ?? 0;
+            $wholesalePrice = $isWholesale ? ($product->discounted_wholesale_price ?? 0) : null;
+            $retailPrice = $isWholesale ? null : ($product->retail_price ?? 0);
 
 
             $item->update([
@@ -101,10 +105,7 @@ class CreateInvoice extends CreateRecord
                 'discount' => $discountPercent
             ]);
 
-            // use item (snapshot)
-            $costPrice      = $item->cost_price      ?? $product->production_price;
-            $wholesalePrice = $item->wholesale_price ?? $product->wholesale_price;
-            $retailPrice    = $item->retail_price    ?? $product->retail_price;
+
 
             // 3️⃣ Decrease stock via StockService
             $stockService->recordMovement(
@@ -112,8 +113,7 @@ class CreateInvoice extends CreateRecord
                 movementType: 'invoice_sale',
                 quantity: $item->quantity,
                 costPrice: $costPrice,
-                wholeSalePrice: $product->wholesale_price,
-                discount : $product->discount,
+                wholeSalePrice: $wholesalePrice,
                 retailPrice: $retailPrice,
                 referenceId: $this->record->id,
                 referenceTable: 'invoices',

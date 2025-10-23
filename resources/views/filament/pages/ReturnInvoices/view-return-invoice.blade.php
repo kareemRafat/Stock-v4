@@ -96,7 +96,7 @@
                                     الخصم</th>
                                 <th
                                     class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
-                                    السعر </th>
+                                    السعر شامل الخصم </th>
                                 <th
                                     class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
                                     الإجمالي</th>
@@ -111,53 +111,58 @@
 
                             @foreach ($this->record->items as $item)
                                 @php
-                                    // نوع السعر (جملة / قطاعي)
-                                    $unitPriceBeforeDiscount =
-                                        $this->record->price_type === 'wholesale'
-                                            ? $item->product->base_wholesale_price
-                                            : $item->product->base_retail_price;
+                                    // استدعاء البند الأصلي من الفاتورة الأصلية
+                                    $originalItem = \App\Models\InvoiceItem::where(
+                                        'invoice_id',
+                                        $this->record->original_invoice_id,
+                                    )
+                                        ->where('product_id', $item->product_id)
+                                        ->first();
 
-                                    $unitPriceAfterDiscount =
-                                        $this->record->price_type === 'wholesale'
-                                            ? $item->product->discounted_wholesale_price
-                                            : $item->product->discounted_retail_price;
+                                    // الفاتورة الأصلية
+                                    $originalInvoice = \App\Models\Invoice::find($this->record->original_invoice_id);
 
-                                    // إجمالي قبل الخصم للمنتج
-                                    $lineTotalBefore = $unitPriceBeforeDiscount * $item->quantity_returned;
+                                    // السعر الفعلي (هو المسجل فعلاً في الفاتورة الأصلية)
+                                    $unitPrice =
+                                        $originalInvoice?->price_type === 'wholesale'
+                                            ? $originalItem->wholesale_price ?? 0
+                                            : $originalItem->retail_price ?? 0;
 
-                                    // إجمالي بعد الخصم للمنتج
-                                    $lineTotalAfter = $unitPriceAfterDiscount * $item->quantity_returned;
+                                    // الخصم كما هو من الفاتورة الأصلية (لو موجود)
+                                    $discount = $originalItem->discount ?? 0;
 
-                                    // قيمة الخصم
-                                    $lineDiscount = $lineTotalBefore - $lineTotalAfter;
+                                    // الإجمالي = السعر * الكمية المرتجعة
+                                    $lineTotal = $unitPrice * $item->quantity_returned;
 
-                                    // إجماليات الفاتورة
-                                    $totalBeforeSale += $lineTotalBefore;
-                                    $totalAfterDiscount += $lineTotalAfter;
-                                    $totalDiscounts += $lineDiscount;
+                                    // تجميع الإجماليات
+                                    $totalBeforeSale += $lineTotal;
+                                    $totalAfterDiscount += $lineTotal; // نفس القيمة لأنه السعر النهائي بالفعل
                                 @endphp
 
                                 <tr class="border-t border-gray-400">
                                     <td class="py-2 px-4 text-right text-gray-600 text-sm border border-gray-400">
                                         {{ $loop->iteration }}
                                     </td>
+
                                     <td class="py-2 px-4 text-gray-600 text-sm border border-gray-400">
                                         {{ $item->product->name ?? '---' }}
                                     </td>
+
                                     <td class="py-2 px-4 text-center text-gray-600 text-sm border border-gray-400">
                                         {{ $item->quantity_returned }} {{ $item->product->unit ?? '---' }}
                                     </td>
+
                                     <td class="py-2 px-4 text-right text-gray-600 text-sm border border-gray-400">
-                                        {{ $item->product->discount > 0 ? $item->product->discount . ' %' : '---' }}
+                                        {{ $discount > 0 ? $discount . ' %' : '---' }}
                                     </td>
+
                                     <td class="py-2 px-4 text-right text-gray-600 text-sm border border-gray-400">
-                                        {{-- السعر الأساسي قبل الخصم --}}
-                                        {{ number_format($unitPriceBeforeDiscount, 2) }}
+                                        {{ number_format($unitPrice, 2) }}
                                     </td>
+
                                     <td
                                         class="py-2 px-4 text-right font-medium text-gray-600 text-sm border border-gray-400">
-                                        {{-- الإجمالي بعد الخصم --}}
-                                        {{ number_format($lineTotalAfter, 2) }}
+                                        {{ number_format($lineTotal, 2) }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -175,24 +180,32 @@
                 <div class="w-full">
                     <div class="space-y-2">
                         <div class="flex justify-between py-2 px-2">
-                            <span class="text-sm text-black">الإجمالي قبل الخصم:</span>
-                            <span
-                                class="font-medium text-sm text-black">{{ number_format($totalBeforeSale, 2) }}</span>
+                            <span class="text-sm text-black">إجمالي المرتجع:</span>
+                            <span class="font-medium text-sm text-black">
+                                {{ number_format($totalAfterDiscount, 2) }} ج.م
+                            </span>
                         </div>
-                        <div class="flex justify-between py-2 px-2">
-                            <span class="text-sm text-black">إجمالي الخصومات:</span>
-                            <span class="font-medium text-sm text-black">{{ number_format($totalDiscounts, 2) }}</span>
-                        </div>
+
+                        {{-- لو حابب تسيب الخصومات للعرض لكن تكون صفر --}}
+                        @if (!empty($showDiscounts))
+                            <div class="flex justify-between py-2 px-2">
+                                <span class="text-sm text-black">إجمالي الخصومات:</span>
+                                <span class="font-medium text-sm text-black">0.00</span>
+                            </div>
+                        @endif
+
                         <hr class="border-gray-400">
+
                         <div class="flex justify-between py-3 px-4 rounded-md">
-                            <span class="text-base font-medium">الإجمالي بعد الخصم:</span>
-                            <span class="text-base font-medium">
+                            <span class="text-base font-medium">الإجمالي النهائي:</span>
+                            <span class="text-base font-medium text-primary-700">
                                 {{ number_format($totalAfterDiscount, 2) }} ج.م
                             </span>
                         </div>
                     </div>
                 </div>
             </div>
+
 
 
         </div>

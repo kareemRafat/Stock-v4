@@ -73,6 +73,7 @@ class SupplierInvoiceForm
                             ->loadingMessage('تحميل المنتجات ...')
                             ->searchable()
                             ->preload()
+                            ->required()
                             ->options(function () {
                                 return \App\Models\Product::query()
                                     ->limit(20)
@@ -86,8 +87,7 @@ class SupplierInvoiceForm
                             ->getSearchResultsUsing(function (string $search) {
                                 return \App\Models\Product::query()
                                     ->where(function ($query) use ($search) {
-                                        $query->where('name', 'like', "%{$search}%")
-                                            ->orWhere('type', 'like', "%{$search}%");
+                                        $query->where('name', 'like', "%{$search}%");
                                     })
                                     ->limit(50)
                                     ->get()
