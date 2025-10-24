@@ -20,12 +20,14 @@ class Invoice extends Model
         'total_amount',
         'notes',
         'status',
+        'special_discount',
         'price_type',
         'created_at',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
+        'special_discount' => 'decimal:2',
     ];
 
     public function returnInvoices(): HasMany

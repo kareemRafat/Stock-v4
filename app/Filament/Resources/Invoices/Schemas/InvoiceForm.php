@@ -149,13 +149,15 @@ class InvoiceForm
                         ->preload()
                         ->required()
                         ->options(function () {
-                            return Product::limit(20)
+                            return Product::where('stock_quantity' , '>', 0 )
+                                ->limit(20)
                                 ->get()
                                 ->mapWithKeys(fn($p) => [$p->id => $p->name]);
                         })
                         ->getSearchResultsUsing(function (string $search) {
                             return Product::query()
                                 ->where(function ($q) use ($search) {
+                                    $q->where('stock_quantity' ,  '>' ,  0 );
                                     $q->where('name', 'like', "%{$search}%");
                                 })
                                 ->limit(50)
@@ -220,17 +222,17 @@ class InvoiceForm
                             };
                         })
                         ->afterStateUpdatedJs('
-                        const price = parseFloat($get("cost_price")) || 0;
-                        const quantity = parseFloat($state) || 0;
-                        const subtotal = Math.round(price * quantity * 100) / 100;
+                            const price = parseFloat($get("cost_price")) || 0;
+                            const quantity = parseFloat($state) || 0;
+                            const subtotal = Math.round(price * quantity * 100) / 100;
 
-                        $set("subtotal", subtotal);
+                            $set("subtotal", subtotal);
 
-                        // Recalculate total
-                        const items = $get("../../items") || [];
-                        const total = items.reduce((sum, item) => sum + (parseFloat(item.subtotal) || 0), 0);
-                        $set("../../total_amount", Math.round(total * 100) / 100);
-                    ')
+                            // Recalculate total
+                            const items = $get("../../items") || [];
+                            const total = items.reduce((sum, item) => sum + (parseFloat(item.subtotal) || 0), 0);
+                            $set("../../total_amount", Math.round(total * 100) / 100);
+                        ')
                         ->skipRenderAfterStateUpdated(),
 
                     TextInput::make('subtotal')
@@ -245,12 +247,14 @@ class InvoiceForm
                 ->minItems(1)
                 ->required(),
 
+
+
             ViewField::make('total_amount_display')
                 ->view('filament.partials.invoice-total')
                 ->live()
                 ->viewData(function ($get) {
                     $items = $get('items') ?? [];
-                    $total = collect($items)->sum('subtotal');
+                    $total = collect($items)->sum('subtotal') - $get('special_discount');
 
                     return ['total' => $total];
                 }),
@@ -258,6 +262,20 @@ class InvoiceForm
             Hidden::make('total_amount')
                 ->dehydrated()
                 ->default(0),
+
+
+            // special discount
+            TextInput::make('special_discount')
+                ->label('الخصم الخاص على اجمالي الفاتورة')
+                ->numeric()
+                ->minValue(0)
+                ->default(0)
+                ->live()
+                ->rules(['required', 'numeric', 'min:0'])
+                ->helperText('في حالة عدم وجود خصم يترك الحقل صفر')
+                ->suffix('ج.م')
+                ->columns(2),
+
         ];
     }
 }

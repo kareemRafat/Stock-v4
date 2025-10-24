@@ -51,6 +51,7 @@ class InvoicesTable
 
                 TextColumn::make('total_amount')
                     ->label('إجمالي الفاتورة')
+                    ->formatStateUsing(fn($record) => number_format($record->total_amount - $record->special_discount, 2) . ' جنيه')
                     ->suffix(' جنيه '),
 
                 TextColumn::make('createdDate')
@@ -121,7 +122,7 @@ class InvoicesTable
             ->recordActions([
                 ViewAction::make()
                     ->label('عرض الفاتورة'),
-                    PayInvoiceAction::make(),
+                PayInvoiceAction::make(),
 
                 /* ActionGroup::make([
                     EditAction::make()
@@ -138,7 +139,6 @@ class InvoicesTable
                 /* BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
-                ]), */
-            ]);
+                ]), */]);
     }
 }

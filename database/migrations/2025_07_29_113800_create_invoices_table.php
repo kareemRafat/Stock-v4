@@ -21,7 +21,6 @@ return new class extends Migration
             $table
                 ->decimal('special_discount', 10, 2)
                 ->default(0)
-                ->after('total_amount')
                 ->comment('خصم خاص على الفاتورة بالكامل');
             $table->text('notes')->nullable();
             $table->timestamps();

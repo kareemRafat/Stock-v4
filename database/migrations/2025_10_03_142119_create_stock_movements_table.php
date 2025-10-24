@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
+use App\Enums\MovementType;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -19,14 +20,9 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
-            $table->enum('movement_type', [
-                'opening_stock', // products insert
-                'purchase', // supplier invoices
-                'invoice_sale', // customer invoice
-                'purchase_return', // supplier Invoice Return
-                'sale_return', // customers Return
-                'adjustment', // manual update
-            ]);
+            //'opening_stock','purchase','invoice_sale', 'purchase_return','sale_return','adjustment','adjustment_in','adjustment_out'
+            $table->enum('movement_type', array_column(MovementType::cases(), 'value'))
+                ->comment('نوع حركة المخزون');
 
             // null when opening_stock
             $table->unsignedBigInteger('reference_id')->nullable(); // ID للفاتورة / العملية

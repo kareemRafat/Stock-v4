@@ -25,6 +25,9 @@ class OutsourcedProductionResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'الموردين';
 
+    //! remove from navigation
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 5;
 
     protected static ?string $modelLabel = 'اوردر تصنيع'; // Singular
