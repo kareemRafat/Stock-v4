@@ -19,7 +19,7 @@ class EditProduct extends EditRecord
         $record = $this->record;
 
         dd($record);
-
+        //! need atention
         if ($record->wasChanged('stock_quantity')) {
             $originalQty = $record->getOriginal('stock_quantity');
             $newQty = $record->stock_quantity;
@@ -42,6 +42,7 @@ class EditProduct extends EditRecord
                     retailPrice: $record->retail_price,
                     referenceId: $record->id,
                     referenceTable: 'products',
+                    //!! watch
                     createdAt: now(),
                 );
             }
