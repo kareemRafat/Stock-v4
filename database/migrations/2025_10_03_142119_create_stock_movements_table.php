@@ -40,8 +40,8 @@ return new class extends Migration
             $table->decimal('retail_price', 12, 2)->nullable()->comment('سعر البيع وقت العملية');
 
             // add stock_before و stock_after
-            $table->integer('stock_before')->comment('الرصيد قبل العملية');
-            $table->integer('stock_after')->comment('الرصيد بعد العملية');
+            $table->integer('stock_before')->nullable()->comment('الرصيد قبل العملية');
+            $table->integer('stock_after')->default(0)->comment('الرصيد بعد العملية');
 
             $table->timestamps();
 
