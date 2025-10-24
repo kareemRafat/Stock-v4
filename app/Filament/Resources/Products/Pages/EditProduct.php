@@ -14,17 +14,23 @@ class EditProduct extends EditRecord
 {
     protected static string $resource = ProductResource::class;
 
+    protected ?float $oldStockQuantity = null;
+
+    protected function beforeSave(): void
+    {
+        $this->oldStockQuantity = $this->record->stock_quantity;
+    }
+
     protected function afterSave(): void
     {
+        // when update only
         $record = $this->record;
 
-        dd($record);
-        //! need atention
-        if ($record->wasChanged('stock_quantity')) {
-            $originalQty = $record->getOriginal('stock_quantity');
-            $newQty = $record->stock_quantity;
-            $diff = $newQty - $originalQty;
-
+        $originalQty = $this->oldStockQuantity;
+        $newQty = $this->data['new_stock'];
+        $diff = $newQty - $originalQty;
+        // dd($diff);
+        if ($newQty) {
             if ($diff != 0) {
                 $movementType = $diff > 0
                     ? MovementType::ADJUSTMENT_IN
@@ -42,8 +48,7 @@ class EditProduct extends EditRecord
                     retailPrice: $record->retail_price,
                     referenceId: $record->id,
                     referenceTable: 'products',
-                    //!! watch
-                    createdAt: now(),
+                    createdAt: $record->created_at
                 );
             }
         }

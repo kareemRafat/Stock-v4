@@ -76,6 +76,7 @@ enum MovementType: string
             self::PURCHASE,
             self::SALE_RETURN,
             self::ADJUSTMENT_IN,
+            self::ADJUSTMENT_OUT,
             self::ADJUSTMENT,
         ];
     }
