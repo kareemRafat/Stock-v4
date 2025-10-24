@@ -21,7 +21,7 @@ class PayInvoiceAction
     public static function make(): Action
     {
         return Action::make('payInvoice')
-            ->label(fn($record) => $record->status === 'paid' ? 'خالص' : 'سداد الفاتورة')
+            ->label(fn($record) => $record->status === 'paid' ? 'خالص' : 'سداد ')
             ->disabled(fn($record) => $record->status === 'paid')
             ->modalSubmitActionLabel('تسديد فاتورة')
             ->modalHeading(
@@ -116,11 +116,11 @@ class PayInvoiceAction
     {
         if ($remaining > 0) {
             $customer->wallet()->create([
-                'type' => 'debit',
+                'type' => 'invoice',
                 'amount' => $remaining,
                 'invoice_id' => $record->id,
                 'invoice_number' => $record->invoice_number,
-                'notes' => 'مديونية متبقية من الفاتورة',
+                'notes' => 'مديونية متبقية على الفاتورة',
             ]);
         } elseif ($remaining < 0) {
             $customer->wallet()->create([

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Products\Pages;
 
+use App\Enums\MovementType;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Services\StockService;
@@ -34,7 +35,7 @@ class ListProducts extends ListRecords
                     if ($openingStock > 0) {
                         $stockService->recordMovement(
                             product: $product,
-                            movementType: 'opening_stock',
+                            movementType: MovementType::OPENING_STOCK,
                             quantity: $openingStock,
                             costPrice: $product->cost_price,
                             wholeSalePrice: $product->wholesale_price,

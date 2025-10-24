@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Invoices\Pages;
 
+use App\Enums\MovementType;
 use Filament\Actions\Action;
 use App\Services\StockService;
 use Filament\Schemas\Components\Section;
@@ -110,7 +111,7 @@ class CreateInvoice extends CreateRecord
             // 3️⃣ Decrease stock via StockService
             $stockService->recordMovement(
                 product: $product,
-                movementType: 'invoice_sale',
+                movementType: MovementType::INVOICE_SALE,
                 quantity: $item->quantity,
                 costPrice: $costPrice,
                 wholeSalePrice: $wholesalePrice,

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SupplierInvoices\Pages;
 
+use App\Enums\MovementType;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
@@ -35,7 +36,7 @@ class CreateSupplierInvoice extends CreateRecord
 
             $stockService->recordMovement(
                 product: $product,
-                movementType: 'purchase',
+                movementType: MovementType::PURCHASE,
                 quantity: $item->quantity,
                 costPrice: $item->cost_price,
                 wholeSalePrice: $item->wholesale_price,

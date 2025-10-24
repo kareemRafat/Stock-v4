@@ -3,20 +3,18 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Enums\MovementType;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
 
 class StockService
 {
-    public $input = ['opening_stock', 'purchase', 'sale_return', 'adjustment_in'];
-    public $output = ['invoice_sale', 'purchase_return', 'adjustment_out'];
-
     /**
      * add Stock Movement to StockMovement and update products stock
      */
     public function recordMovement(
         Product $product,
-        string $movementType,
+        MovementType $movementType,
         int $quantity,
         ?float $costPrice = null,
         ?float $wholeSalePrice = null,
@@ -35,7 +33,7 @@ class StockService
                 // dd($wholeSalePrice, $retailPrice);
 
                 // if the operation is insert input
-                if (in_array($movementType, $this->input)) {
+                if ($movementType->isInput()) {
                     $product->increment('stock_quantity', $quantity);
                     $qtyIn = $quantity;
                     $qtyOut = 0;

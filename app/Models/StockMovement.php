@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MovementType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,6 +22,10 @@ class StockMovement extends Model
         'wholesale_price',
         'retail_price',
         'created_at'
+    ];
+
+     protected $casts = [
+        'movement_type' => MovementType::class,
     ];
 
     /**

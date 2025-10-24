@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ReturnInvoices\Pages;
 
+use App\Enums\MovementType;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\InvoiceItem;
@@ -226,7 +227,7 @@ class CreateReturnInvoice extends CreateRecord
         // تسجيل حركة المخزون
         $stockService->recordMovement(
             product: $product,
-            movementType: 'sale_return',
+            movementType: MovementType::SALE_RETURN,
             quantity: $quantityReturned,
             costPrice: $costPrice,
             wholeSalePrice: $invoiceType === 'wholesale' ? $wholesalePrice : null,

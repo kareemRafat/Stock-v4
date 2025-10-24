@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ProductResource\Pages;
 
+use App\Enums\MovementType;
 use Filament\Actions;
 use App\Models\Product;
 use App\Models\Supplier;
@@ -138,7 +139,7 @@ class AddProducts extends Page
             // use stockService service to update stock
             $stockService->recordMovement(
                 product: $product,
-                movementType: 'opening_stock',
+                movementType: MovementType::OPENING_STOCK,
                 quantity: $stockQuantity,
                 costPrice: $product->cost_price,
                 wholeSalePrice: $product->wholesale_price,
