@@ -13,7 +13,7 @@ use App\Filament\Resources\Suppliers\Pages\EditSupplier;
 use App\Filament\Resources\Suppliers\Pages\ListSuppliers;
 use App\Filament\Resources\Suppliers\Schemas\SupplierForm;
 use App\Filament\Resources\Suppliers\Tables\SuppliersTable;
-use App\Filament\Resources\SupplierResource\Pages\SupplierWalletPage;
+use App\Filament\Resources\Suppliers\Pages\SupplierWalletPage;
 
 class SupplierResource extends Resource
 {

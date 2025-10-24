@@ -14,7 +14,7 @@ use App\Filament\Resources\SupplierInvoices\Pages\ListSupplierInvoices;
 use App\Filament\Resources\SupplierInvoices\Pages\CreateSupplierInvoice;
 use App\Filament\Resources\SupplierInvoices\Schemas\SupplierInvoiceForm;
 use App\Filament\Resources\SupplierInvoices\Tables\SupplierInvoicesTable;
-use App\Filament\Resources\SupplierInvoiceResource\Pages\ViewSupplierInvoice;
+use App\Filament\Resources\SupplierInvoices\Pages\ViewSupplierInvoice;
 
 class SupplierInvoiceResource extends Resource
 {

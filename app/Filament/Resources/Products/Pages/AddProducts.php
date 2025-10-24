@@ -1,21 +1,18 @@
 <?php
 
-namespace App\Filament\Resources\ProductResource\Pages;
+namespace App\Filament\Resources\Products\Pages;
 
 use App\Enums\MovementType;
 use Filament\Actions;
 use App\Models\Product;
 use App\Models\Supplier;
-use App\Models\StockMovement;
 use Filament\Resources\Pages\Page;
-use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Concerns\InteractsWithForms;
 use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Forms\Components\ClientDatetimeHidden;

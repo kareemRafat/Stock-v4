@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\SupplierResource\Pages;
+namespace App\Filament\Resources\Suppliers\Pages;
 
 use Filament\Tables;
 use Filament\Actions;

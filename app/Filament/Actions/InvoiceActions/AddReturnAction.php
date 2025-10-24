@@ -2,8 +2,9 @@
 
 namespace App\Filament\Actions\InvoiceActions;
 
-use Filament\Tables\Actions\Action;
-use App\Filament\Resources\ReturnInvoiceResource;
+
+use Filament\Actions\Action;
+use App\Filament\Resources\ReturnInvoices\ReturnInvoiceResource;
 
 class AddReturnAction
 {

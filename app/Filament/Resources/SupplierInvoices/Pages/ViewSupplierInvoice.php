@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\SupplierInvoiceResource\Pages;
+namespace App\Filament\Resources\SupplierInvoices\Pages;
 
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\TextSize;

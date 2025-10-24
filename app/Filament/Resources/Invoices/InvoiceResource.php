@@ -13,7 +13,7 @@ use App\Filament\Resources\Invoices\Pages\ListInvoices;
 use App\Filament\Resources\Invoices\Pages\CreateInvoice;
 use App\Filament\Resources\Invoices\Schemas\InvoiceForm;
 use App\Filament\Resources\Invoices\Tables\InvoicesTable;
-use App\Filament\Resources\InvoiceResource\Pages\ViewInvoice;
+use App\Filament\Resources\Invoices\Pages\ViewInvoice;
 
 
 class InvoiceResource extends Resource

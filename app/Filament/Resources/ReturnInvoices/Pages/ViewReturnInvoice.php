@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\InvoiceResource\Pages;
+namespace App\Filament\Resources\ReturnInvoices\Pages;
 
 use Filament\Actions;
 use App\Models\Invoice;

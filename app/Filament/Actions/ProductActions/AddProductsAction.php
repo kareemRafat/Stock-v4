@@ -2,7 +2,7 @@
 
 namespace App\Filament\Actions\ProductActions;
 
-use App\Filament\Resources\ProductResource\Pages\AddProducts;
+use App\Filament\Resources\Products\Pages\AddProducts;
 use Filament\Actions\Action;
 
 class AddProductsAction extends Action

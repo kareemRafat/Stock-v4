@@ -14,7 +14,7 @@ use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Schemas\ProductForm;
 use App\Filament\Resources\Products\Tables\ProductsTable;
-use App\Filament\Resources\ProductResource\Pages\AddProducts;
+use App\Filament\Resources\Products\Pages\AddProducts;
 
 class ProductResource extends Resource
 {

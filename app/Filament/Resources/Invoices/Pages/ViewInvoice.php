@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\InvoiceResource\Pages;
+namespace App\Filament\Resources\Invoices\Pages;
 
 use Filament\Actions;
-use App\Models\Invoice;
-use Illuminate\Support\Facades\Session;
 use Filament\Resources\Pages\ViewRecord;
 use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\ReturnInvoices\Pages\CreateReturnInvoice;
@@ -41,7 +39,7 @@ class ViewInvoice extends ViewRecord
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                // ->url(fn() => InvoiceResource::getUrl('index'))
+                // to refresh the full page
                 ->action(fn() => redirect(InvoiceResource::getUrl('index'))),
         ];
     }
