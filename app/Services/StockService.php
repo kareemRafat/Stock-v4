@@ -30,6 +30,8 @@ class StockService
             function ()
             use ($product, $movementType, $quantity, $costPrice, $wholeSalePrice, $retailPrice, $referenceId, $referenceTable, $discount, $createdAt) {
 
+                $stockBefore = $product->stock_quantity;
+
                 // dd($wholeSalePrice, $retailPrice);
 
                 // if the operation is insert input
@@ -45,6 +47,10 @@ class StockService
                     $qtyOut = $quantity;
                 }
 
+                // ✅ حفظ الرصيد بعد العملية (اجلب القيمة المحدثة)
+                $stockAfter = $product->fresh()->stock_quantity;
+
+                // تطبيق الخصم على سعر الجملة
                 if ($discount !== null && $wholeSalePrice !== null) {
                     $wholeSalePrice = $wholeSalePrice - ($wholeSalePrice * ($discount / 100));
                 }
@@ -55,6 +61,8 @@ class StockService
                     'movement_type'    => $movementType,
                     'qty_in'           => $qtyIn,
                     'qty_out'          => $qtyOut,
+                    'stock_before'     => $stockBefore,      // الرصيد قبل
+                    'stock_after'      => $stockAfter,       // الرصيد بعد
                     'cost_price'       => $costPrice ?? $product->cost_price,
                     'wholesale_price'  => $wholeSalePrice,
                     'retail_price'     => $retailPrice,

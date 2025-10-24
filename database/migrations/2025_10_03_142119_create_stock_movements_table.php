@@ -39,7 +39,15 @@ return new class extends Migration
             $table->decimal('wholesale_price', 10, 2)->nullable()->comment('سعر الجملة');
             $table->decimal('retail_price', 12, 2)->nullable()->comment('سعر البيع وقت العملية');
 
+            // add stock_before و stock_after
+            $table->integer('stock_before')->comment('الرصيد قبل العملية');
+            $table->integer('stock_after')->comment('الرصيد بعد العملية');
+
             $table->timestamps();
+
+            $table->index(['product_id', 'created_at']);
+            $table->index(['movement_type', 'created_at']);
+            $table->index(['reference_table', 'reference_id']);
         });
     }
 
