@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Invoices\Pages;
 
 use App\Enums\MovementType;
+use App\Filament\Actions\InvoiceActions\PrintInvoiceAction;
 use Filament\Actions\Action;
 use App\Services\StockService;
 use Filament\Schemas\Components\Section;
@@ -39,6 +40,7 @@ class CreateInvoice extends CreateRecord
     protected function getHeaderActions(): array
     {
         return [
+            PrintInvoiceAction::make(),
             Action::make('back')
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Actions\InvoiceActions;
 
-
 use Filament\Actions\Action;
 use App\Filament\Resources\ReturnInvoices\ReturnInvoiceResource;
 
