@@ -305,16 +305,25 @@
 
                     @foreach ($items as $item)
                         @php
-                            $unitPrice = $isWholesale ? $item['wholesale_price'] : $item['retail_price'];
-                            $priceBeforeDiscount =
-                                $item['discount'] > 0 ? $unitPrice / (1 - $item['discount'] / 100) : $unitPrice;
+                            // السعر الأصلي من الداتابيز (قبل الخصم)
+                            $originalPrice = $isWholesale ? $item['wholesale_price'] : $item['retail_price'];
 
-                            $lineTotalBeforeDiscount = $priceBeforeDiscount * $item['quantity'];
-                            $lineDiscount = $lineTotalBeforeDiscount - $item['subtotal'];
+                            if ($isWholesale && $item['discount'] > 0) {
+                                // السعر بعد الخصم
+                                $priceAfterDiscount = $originalPrice * (1 - $item['discount'] / 100);
+                                // الإجمالي بعد الخصم
+                                $lineTotalAfterDiscount = $priceAfterDiscount * $item['quantity'];
+                                // قيمة الخصم الفعلية
+                                $lineDiscount = $originalPrice * $item['quantity'] - $lineTotalAfterDiscount;
+                            } else {
+                                $priceAfterDiscount = $originalPrice;
+                                $lineTotalAfterDiscount = $originalPrice * $item['quantity'];
+                                $lineDiscount = 0;
+                            }
 
-                            $totalBeforeSale += $lineTotalBeforeDiscount;
+                            $totalBeforeSale += $originalPrice * $item['quantity'];
                             $totalDiscounts += $lineDiscount;
-                            $subtotal += $item['subtotal'];
+                            $subtotal += $lineTotalAfterDiscount;
                         @endphp
 
                         <tr>
@@ -322,8 +331,8 @@
                             <td>{{ $item['product_name'] }}</td>
                             <td class="text-center">{{ $item['quantity'] }} {{ $item['product_unit'] }}</td>
                             <td>{{ $item['discount'] > 0 ? number_format($item['discount'], 2) . '%' : '-' }}</td>
-                            <td>{{ number_format($unitPrice, 2) }}</td>
-                            <td>{{ number_format($item['subtotal'], 2) }}</td>
+                            <td>{{ number_format($originalPrice, 2) }}</td> <!-- سعر الوحدة قبل الخصم -->
+                            <td>{{ number_format($lineTotalAfterDiscount, 2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
