@@ -97,7 +97,7 @@ class SupplierWalletPage extends Page implements HasTable
                             }),
                     ]),
                 TextColumn::make('invoice.invoice_number')
-                    ->label('فاتورة')
+                    ->label('فاتورة المورد')
                     ->default('لا يوجد'),
                 TextColumn::make('notes')
                     ->label('ملاحظات')
@@ -106,17 +106,11 @@ class SupplierWalletPage extends Page implements HasTable
                 TextColumn::make('created_at')
                     ->label('التاريخ')
                     ->date('d-m-Y'),
+                TextColumn::make('time_only')
+                    ->label('الوقت')
+                    ->getStateUsing(fn($record) => $record->created_at->format('H:i')),
             ])
-            ->filters([
-                SelectFilter::make('type')
-                    ->label('نوع الحركة')
-                    ->options([
-                        'credit' => 'إيداع',
-                        'debit' => 'سحب',
-                        'invoice' => 'فاتورة',
-                    ])
-                    ->native(false),
-            ], layout: FiltersLayout::AboveContent)
+            ->filters([], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
             ->defaultSort('created_at', 'desc')
             ->paginated([10, 25, 50]);
