@@ -10,7 +10,7 @@ class SupplierWallet extends Model
     /** @use HasFactory<\Database\Factories\SupplierWalletFactory> */
     use HasFactory;
 
-    protected $fillable = ['supplier_id', 'type', 'amount', 'supplier_invoice_id', 'note' , 'created_at'];
+    protected $fillable = ['supplier_id', 'type', 'amount', 'supplier_invoice_id', 'note', 'created_at'];
 
     public function supplier()
     {

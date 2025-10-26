@@ -113,7 +113,8 @@ class SupplierInvoiceForm
                                 const subtotal = ($state ?? 0) * ($get('quantity') ?? 0);
                                 $set('subtotal', subtotal);
                             JS)
-                            ->skipRenderAfterStateUpdated(),
+                            ->skipRenderAfterStateUpdated()
+                            ->columnSpan(2),
 
                         TextInput::make('quantity')
                             ->label('الكمية')
@@ -131,8 +132,7 @@ class SupplierInvoiceForm
                                 }
                                 $set('total_placeholder', total + ' جنيه');
                             JS)
-                            ->skipRenderAfterStateUpdated()
-                            ->columnSpan(2),
+                            ->skipRenderAfterStateUpdated(),
 
                         TextInput::make('subtotal')
                             ->label('الإجمالي')
@@ -144,12 +144,13 @@ class SupplierInvoiceForm
                         TextInput::make('wholesale_price')
                             ->label('سعر الجملة الجديد قبل الخصم')
                             ->numeric()
-                            ->required(),
+                            ->required()
+                            ->columnSpan(2),
                         TextInput::make('retail_price')
                             ->label('سعر القطاعي الجديد')
                             ->numeric()
                             ->required()
-                            ->columnSpan(2)
+
                     ])
                     ->columns(5)
                     ->addActionLabel('إضافة صنف جديد')
@@ -166,6 +167,13 @@ class SupplierInvoiceForm
                         'class' => 'bg-primary-600 text-white border rounded-lg shadow-sm p-3'
                     ])
                     ->columnSpanFull(),
+
+                    TextInput::make('paid_amount')
+                        ->label('المبلغ المدفوع')
+                        ->numeric()
+                        ->prefix('جنيه')
+                        ->required()
+                        ->columnSpanFull()
             ]);
     }
 }

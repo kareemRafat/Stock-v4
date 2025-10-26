@@ -20,6 +20,9 @@ class CreateSupplierInvoice extends CreateRecord
 
     protected function afterCreate(): void
     {
+
+        dd($this->data);
+
         // to call StockService service - afterCreate can`t use dependancy injection
         $stockService = app(StockService::class);
         //  update products prices
