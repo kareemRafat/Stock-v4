@@ -83,8 +83,7 @@ class SuppliersTable
                     ->color('teal')
                     ->extraAttributes(['class' => 'font-semibold'])
                     ->url(fn($record) => route('filament.admin.resources.suppliers.wallet', $record))
-                    ->icon('heroicon-o-wallet')
-                    ->disabled(fn($record) => $record->balance == 0),
+                    ->icon('heroicon-o-wallet'),
                 EditAction::make(),
             ])
             ->toolbarActions([

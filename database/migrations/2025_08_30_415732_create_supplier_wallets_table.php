@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('supplier_wallets', function (Blueprint $table) {
             $table->id();
             $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['debit', 'invoice', 'credit']);
+            $table->enum('type', ['purchase', 'payment', 'purchase_return', 'adjustment']);
             $table->decimal('amount', 10, 2);
             $table->foreignId('supplier_invoice_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('return_invoice_id')->nullable()->constrained()->onDelete('set null');
             $table->text('note')->nullable();
             $table->timestamps();
         });

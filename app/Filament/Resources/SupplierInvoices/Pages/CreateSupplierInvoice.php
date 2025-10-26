@@ -4,9 +4,10 @@ namespace App\Filament\Resources\SupplierInvoices\Pages;
 
 use App\Enums\MovementType;
 use Filament\Actions\Action;
+use App\Models\SupplierWallet;
+use App\Services\StockService;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
-use App\Services\StockService;
 
 class CreateSupplierInvoice extends CreateRecord
 {
@@ -21,7 +22,41 @@ class CreateSupplierInvoice extends CreateRecord
     protected function afterCreate(): void
     {
 
-        dd($this->data);
+        $invoice = $this->record;
+        $supplierId = $invoice->supplier_id;
+
+        // paid amount
+        $paidAmount = (float) ($this->data['paid_amount'] ?? 0);
+
+        // total invoice amount
+        $invoiceTotal = $invoice->items->sum('subtotal');
+
+        // نموذج دفتر الأستاذ (Ledger Model)
+        // بيحصل تسجيل عمليتين .. الاولي بيبقى المبلغ الاجمالي للفاتورة كعملية شراء
+        // الثاني بيقى المبلغ المدفوع فعليا والفرق اللى بينهم بعد كدة بيحدد مديونية ولا ليك فلوس
+        // 2. تسجيل حركة الفاتورة (زيادة المديونية = موجب)
+        if ($invoiceTotal > 0) {
+            SupplierWallet::create([
+                'supplier_id' => $supplierId,
+                'type' => 'purchase', // نوع الحركة: شراء
+                'amount' => $invoiceTotal, // قيمة موجبة (دين عليك)
+                'supplier_invoice_id' => $invoice->id,
+                'note' => 'فاتورة مشتريات رقم: ' . $invoice->id . ' - إجمالي الفاتورة.',
+                'created_at' => $invoice->created_at,
+            ]);
+        }
+
+        // 3. تسجيل حركة الدفع (تخفيض المديونية = سالب)
+        if ($paidAmount > 0) {
+            SupplierWallet::create([
+                'supplier_id' => $supplierId,
+                'type' => 'payment', // نوع الحركة: دفع
+                'amount' => -1 * $paidAmount, // قيمة سالبة (تسديد للدين)
+                'supplier_invoice_id' => $invoice->id,
+                'note' => 'دفعة سداد من فاتورة المشتريات رقم: ' . $invoice->id,
+                'created_at' => $invoice->created_at,
+            ]);
+        }
 
         // to call StockService service - afterCreate can`t use dependancy injection
         $stockService = app(StockService::class);
@@ -29,7 +64,6 @@ class CreateSupplierInvoice extends CreateRecord
         foreach ($this->record->items as $item) {
             $product = $item->product;
             if ($product) {
-                // تحديث سعر الجملة والقطاعي لكل منتج حسب الفاتورة
                 $product->update([
                     'cost_price' => $item->cost_price,
                     'wholesale_price' => $item->wholesale_price,
@@ -43,7 +77,7 @@ class CreateSupplierInvoice extends CreateRecord
                 quantity: $item->quantity,
                 costPrice: $item->cost_price,
                 wholeSalePrice: $item->wholesale_price,
-                discount : $product->discount ,
+                discount: $product->discount,
                 retailPrice: $item->retail_price,
                 referenceId: $this->record->id,
                 referenceTable: 'supplier_invoices',

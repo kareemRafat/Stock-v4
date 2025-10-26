@@ -53,15 +53,15 @@ class SupplierWalletPage extends Page implements HasTable
                     ->label('نوع الحركة')
                     ->badge()
                     ->colors([
-                        'success' => 'credit',
-                        'danger' => 'debit',
-                        'warning' => 'invoice',
+                        'rose' => fn($record) => in_array($record->type, ['purchase', 'adjustment']),
+                        'success' => fn($record) => in_array($record->type, ['payment', 'purchase_return']),
                     ])
                     ->formatStateUsing(fn(string $state): string => match ($state) {
-                        'credit' => 'إيداع',
-                        'debit' => 'سحب',
-                        'invoice' => 'فاتورة',
-                        default => $state,
+                        'purchase'        => 'فاتورة مشتريات',
+                        'payment'         => 'دفعة سداد',
+                        'purchase_return' => 'مرتجع مشتريات',
+                        'adjustment'      => 'تسوية / رصيد إفتتاحي',
+                        default           => $state,
                     }),
                 TextColumn::make('amount')
                     ->label('المبلغ')
@@ -75,21 +75,26 @@ class SupplierWalletPage extends Page implements HasTable
                     ->weight('medium')
                     ->summarize([
                         Summarizer::make()
-                            ->using(
-                                fn(Builder $query) => $query->clone()->selectRaw("
-                                    SUM(
-                                        CASE
-                                            WHEN type = 'debit' THEN -amount
-                                            WHEN type = 'invoice' THEN -amount
-                                            WHEN type = 'credit' THEN amount
-                                            ELSE 0
-                                        END
-                                    ) as balance
-                                ")->value('balance') ?? 0
-                            )
+                            ->using(fn(Builder $query) => $query->sum('amount'))
                             ->label('الرصيد الكلي')
                             ->money('egp')
-                            ->formatStateUsing(fn($state) => number_format($state, 2) . ' ج.م'),
+                            ->formatStateUsing(fn($state) => number_format($state, 2) . ' ج.م')
+                            ->formatStateUsing(function ($state) {
+                                if ($state < 0) {
+                                    $color = 'success';
+                                    $displayAmount = abs($state);
+                                    $sign = '';
+                                } else {
+                                    $color = 'rose';
+                                    $displayAmount = $state;
+                                    $sign = '-';
+                                }
+                                return view('filament.tables.columns.colored-summary', [
+                                    'content' => number_format($displayAmount, 2) . ' ج.م',
+                                    'color' => $color,
+                                    'sign' => $sign,
+                                ]);
+                            }),
                     ]),
                 TextColumn::make('invoice.invoice_number')
                     ->label('فاتورة')

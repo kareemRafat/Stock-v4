@@ -34,17 +34,7 @@ class Supplier extends Model
         // use query fore better performance
         // calculate the balance based on the wallet transactions
         return $this->wallet()
-            ->selectRaw("
-                        SUM(
-                            CASE
-                                WHEN type = 'debit' THEN -amount
-                                WHEN type = 'invoice' THEN -amount
-                                WHEN type = 'credit' THEN amount
-                                ELSE 0
-                            END
-                        ) as balance
-                    ")
-            ->value('balance') ?? 0;
+            ->sum('amount');
     }
 
     /**
