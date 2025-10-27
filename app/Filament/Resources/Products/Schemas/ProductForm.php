@@ -65,7 +65,7 @@ class ProductForm
                     ->afterStateUpdatedJs('
                         $set("new_stock", $state);
                     ')
-                    ->dehydrated(false),
+                    ->dehydrated(fn($operation) => $operation === 'create'),
 
                 Hidden::make('new_stock')
                     ->label('الكمية الجديدة')

@@ -74,12 +74,6 @@ class ProductsTable
                     ->label('الخصم')
                     ->suffix(' %')
                     ->weight(FontWeight::Medium),
-                TextColumn::make('updated_at')
-                    ->date("d-m-Y")
-                    ->label('تاريخ التعديل')
-                    ->sortable()
-                    ->weight(FontWeight::Medium)
-                    ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->deferColumnManager(false)
             ->filters([
