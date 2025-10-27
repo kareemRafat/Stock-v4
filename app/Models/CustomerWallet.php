@@ -17,8 +17,11 @@ class CustomerWallet extends Model
         'type',
         'amount',
         'invoice_id',
+        'invoice_number',
+        'return_invoice_id',
         'notes',
-        'created_at'
+        'created_at',
+
     ];
 
     public function customer()

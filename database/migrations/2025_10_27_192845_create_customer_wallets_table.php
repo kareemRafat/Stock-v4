@@ -14,13 +14,18 @@ return new class extends Migration
         Schema::create('customer_wallets', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['debit', 'invoice', 'credit']);
-            // adjastment: تعديل رصيد العميل بشكل يدوي
+            $table->enum('type', [
+                'sale',            // فاتورة بيع (تأثير موجب +)
+                'payment',         // دفعة سداد (تأثير سالب -)
+                'sale_return',     // مرتجع مبيعات (تأثير سالب -)
+                'adjustment'       // تسوية يدوية
+            ]);
             $table->decimal('amount', 10, 2);
             $table->foreignId('invoice_id')->nullable()->constrained()->onDelete('set null');
             $table->string('invoice_number')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->foreignId('return_invoice_id')->nullable()->constrained()->onDelete('set null');
         });
     }
 

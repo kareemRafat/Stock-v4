@@ -30,24 +30,26 @@ class PayInvoiceAction
                     ->required()
                     ->default(0)
                     ->dehydrated()
-                    ->helperText('فى حالة تبقى مبلغ سيتم اضافته الى محفظة العميل - وفي حالة وجود مديونية للعميل سيتم سحب المديونية من الرصيد')
+                    ->helperText('المبلغ المدفوع نقداً/ببطاقة. إذا كان المبلغ أكبر من الفاتورة، يضاف الباقي لرصيد العميل.')
                     ->columnSpan(1),
                 Toggle::make('removeFromWallet')
-                    ->label('خصم من محفظة العميل')
+                    ->label('استخدام الرصيد المتاح للعميل') // تم تغيير التسمية لتكون أوضح
                     ->default(false)
                     ->dehydrated(fn($state) => $state !== null)
-                    ->helperText('خصم من رصيد العميل وفي حالة وجود باقي يتم اضافته الى المديونية ')
+                    ->helperText('استخدام رصيد العميل الحالي (إن وجد) لتغطية المتبقي من الفاتورة.')
                     ->columnSpan(2)
                     ->inline(false)
-                    ->disabled(fn($record) => $record->customer->balance <= 0),
+                    // تعطيل إذا كان الرصيد لا يكفي (الرصيد السالب يعني له رصيد)
+                    ->disabled(fn($record) => $record->customer->balance >= 0),
                 TextEntry::make('customer.balance')
                     ->label('رصيد المحفظة الحالي')
                     ->formatStateUsing(function ($record) {
-                        return number_format($record->customer->balance ?? 0, 2) . ' ج.م';
+                        return number_format(abs($record->customer->balance ?? 0), 2) . ' ج.م';
                     })
                     ->extraAttributes(function ($record) {
                         $balance = $record?->customer?->balance ?? 0;
-                        $color = $balance > 0 ? '#16a34a' : ($balance < 0 ? '#dc2626' : '#1f2937');
+                        // السالب يعني رصيد للعميل (أخضر)، والموجب يعني مديونية على العميل (أحمر)
+                        $color = $balance < 0 ? '#16a34a' : ($balance > 0 ? '#dc2626' : '#1f2937');
                         return ['style' => "color: {$color}; font-weight: 700;"];
                     }),
                 // get js date
@@ -58,16 +60,44 @@ class PayInvoiceAction
                     return self::notifyError('حدث خطأ: لم يتم إدخال مبلغ أو اختيار السداد من الرصيد');
                 }
 
+                // يجب التأكد من أن حقل الفاتورة (sale) تم إضافته بالفعل
+                // $record->customer->wallet()->create([
+                //     'type' => 'sale',
+                //     'amount' => $record->total_amount, // الموجب يمثل دين على العميل
+                //     'invoice_id' => $record->id,
+                // ]);
+
                 DB::transaction(function () use ($data, $record) {
                     $customer = $record->customer;
                     $paid = $data['paid'] ?? 0;
                     $total = $record->total_amount;
 
-                    $walletUsed = self::useWalletIfRequested($customer, $record, $paid, $total, $data);
-                    $remaining = self::calculateRemaining($paid, $total, $walletUsed);
+                    // 1. حساب المبلغ المتبقي للسداد بعد الدفعة النقدية
+                    $amountToCover = $total - $paid;
 
-                    self::handleRemaining($customer, $record, $remaining);
-                    self::updateInvoiceStatus($record, $remaining);
+                    // 2. استخدام المحفظة لسداد المتبقي (إن طلب العميل)
+                    $walletAmountUsed = self::useWalletIfRequested($customer, $record, $amountToCover, $data);
+
+                    // 3. حساب المبلغ الفائض أو المتبقي (مديونية) بعد السداد النقدي واستخدام المحفظة
+                    $remainingDebt = $amountToCover - $walletAmountUsed;
+
+                    // 4. تسجيل حركة الدفعة النقدية (إن وجدت)
+                    if ($paid > 0) {
+                        // type: payment | amount: سالب (-) لأنها تخفض مديونية العميل
+                        $customer->wallet()->create([
+                            'type' => 'payment',
+                            'amount' => -$paid, // قيمة سالبة دائماً
+                            'invoice_id' => $record->id,
+                            'notes' => 'دفعة نقدية/بطاقة لسداد جزء من الفاتورة',
+                            'created_at' => $data['created_at'] ?? now(),
+                        ]);
+                    }
+
+                    // 5. التعامل مع الفائض أو المتبقي
+                    self::handleRemaining($customer, $record, $remainingDebt, $total);
+
+                    // 6. تحديث حالة الفاتورة (يجب أن تعتمد على الرصيد المتبقي وليس فقط تحديث paid)
+                    self::updateInvoiceStatus($record, $remainingDebt);
 
                     self::notifySuccess('تمت عملية التسديد بنجاح');
                 });
@@ -77,65 +107,71 @@ class PayInvoiceAction
             ->icon(fn($record) => $record->status === 'paid' ? 'heroicon-s-check-circle' : 'heroicon-s-banknotes');
     }
 
-    protected static function useWalletIfRequested($customer, $record, $paid, $total, $data): float
+    // ************* الدوال المساعدة المُعدلة *************
+
+    protected static function useWalletIfRequested($customer, $record, float $amountToCover, array $data): float
     {
         $walletAmountUsed = 0;
 
-        if (!empty($data['removeFromWallet']) && $data['removeFromWallet']) {
-            $remaining = $total - $paid;
-            $availableBalance = $customer->balance;
+        if (!empty($data['removeFromWallet']) && $data['removeFromWallet'] && $amountToCover > 0) {
 
-            if ($remaining > 0) {
-                $walletAmountUsed = min($availableBalance, $remaining);
+            // الرصيد للعميل هو قيمة سالبة في الـ balance
+            $availableBalance = abs($customer->balance);
 
-                if ($walletAmountUsed > 0) {
-                    $customer->wallet()->create([
-                        'type' => 'debit',
-                        'amount' => $walletAmountUsed,
-                        'invoice_id' => $record->id,
-                        'invoice_number' => $record->invoice_number,
-                        'notes' => 'خصم من المحفظة لسداد الفاتورة',
-                    ]);
-                }
+            // المبلغ الذي سنستخدمه هو الأقل بين (الرصيد المتاح) و (المبلغ المتبقي تغطيته)
+            $walletAmountUsed = min($availableBalance, $amountToCover);
+
+            if ($walletAmountUsed > 0) {
+                // تسجيل الحركة كدفعة (payment)، والقيمة سالبة (-) لأنها تخفض المديونية
+                // ملاحظة: بما أن هذه الحركة تسدد فاتورة، يجب أن تكون قيمة المبلغ **سالبة** لتعكس أنها دفعة.
+                $customer->wallet()->create([
+                    'type' => 'payment',
+                    'amount' => -$walletAmountUsed, // سالب ليعكس أنه سداد من الرصيد
+                    'invoice_id' => $record->id,
+                    'notes' => 'خصم من رصيد العميل المتاح لسداد المتبقي من الفاتورة',
+                    'created_at' => $data['created_at'] ?? now(),
+                ]);
             }
         }
 
         return $walletAmountUsed;
     }
 
-    protected static function calculateRemaining($paid, $total, $walletUsed): float
+    protected static function handleRemaining($customer, $record, float $remainingDebt, float $totalInvoice): void
     {
-        return $total - ($paid + $walletUsed);
-    }
+        // remainingDebt > 0 : يعني ما زال هناك مديونية على العميل (لم تسدد الفاتورة بالكامل)
+        if ($remainingDebt > 0) {
+            // لا حاجة لإنشاء حركة محفظة جديدة هنا!
+            // المديونية المتبقية هي الفرق بين إجمالي حركة sale (تم تسجيلها مسبقاً) وحركات payment
+            // فقط نتأكد من عدم تحديث حالة الفاتورة إلى 'paid'
 
-    protected static function handleRemaining($customer, $record, float $remaining): void
-    {
-        if ($remaining > 0) {
+        }
+        // remainingDebt < 0 : يعني هناك فائض دفع (دفع العميل أكثر من اللازم)
+        elseif ($remainingDebt < 0) {
+
+            // المبلغ الفائض هو القيمة المطلقة لـ remainingDebt
+            $excessAmount = abs($remainingDebt);
+
+            // نسجل الحركة كدفعة (payment) إضافية بقيمة سالبة
             $customer->wallet()->create([
-                'type' => 'invoice',
-                'amount' => $remaining,
+                'type' => 'payment',
+                'amount' => -$excessAmount, // سالب ليعكس أنه رصيد للعميل
                 'invoice_id' => $record->id,
-                'invoice_number' => $record->invoice_number,
-                'notes' => 'مديونية متبقية على الفاتورة',
-            ]);
-        } elseif ($remaining < 0) {
-            $customer->wallet()->create([
-                'type' => 'credit',
-                'amount' => abs($remaining),
-                'invoice_id' => $record->id,
-                'invoice_number' => $record->invoice_number,
-                'notes' => 'رصيد زائد من الفاتورة',
+                'notes' => 'رصيد زائد ناتج عن سداد مبلغ أكبر من المطلوب',
             ]);
         }
     }
 
-    protected static function updateInvoiceStatus($record, float $remaining): void
+    protected static function updateInvoiceStatus($record, float $remainingDebt): void
     {
-
-        $record->update(['status' => 'paid']);
+        // إذا كان المبلغ المتبقي للسداد يساوي أو أقل من الصفر (تم تغطية الدين بالكامل أو حدث فائض)
+        if ($remainingDebt <= 0) {
+            $record->update(['status' => 'paid']);
+        }
     }
 
-    protected static function notifyError(string $message)
+
+    protected static function notifyError(string $message) // <-- إضافة static
     {
         Notification::make()
             ->title($message)
@@ -143,7 +179,7 @@ class PayInvoiceAction
             ->send();
     }
 
-    protected static function notifySuccess(string $message)
+    protected static function notifySuccess(string $message) // <-- إضافة static
     {
         Notification::make()
             ->title($message)

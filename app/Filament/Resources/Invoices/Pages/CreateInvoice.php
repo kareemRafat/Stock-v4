@@ -74,6 +74,7 @@ class CreateInvoice extends CreateRecord
 
     protected function afterCreate(): void
     {
+
         // Inject the StockService manually (Filament doesn't do constructor DI here)
         $stockService = app(StockService::class);
 
@@ -122,6 +123,21 @@ class CreateInvoice extends CreateRecord
                 referenceTable: 'invoices',
                 createdAt: $this->record->created_at
             );
+        }
+
+        // قيمة الفاتورة الكلية لتسجيلها في المحفظة
+        $totalAmount = $this->record->total_amount;
+
+        // 4️⃣ تسجيل حركة المديونية في محفظة العميل (SALE)
+        if ($totalAmount > 0) {
+            $this->record->customer->wallet()->create([
+                'type'           => 'sale',
+                'amount'         => $totalAmount, // قيمة موجبة (+) تعني مديونية على العميل
+                'invoice_id'     => $this->record->id,
+                'invoice_number' => $this->record->invoice_number,
+                'notes'          => 'فاتورة مبيعات جديدة رقم: ' . $this->record->invoice_number,
+                'created_at'     => $this->record->created_at, // استخدام نفس تاريخ الفاتورة
+            ]);
         }
 
         $this->dispatch('$refresh');
