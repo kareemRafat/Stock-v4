@@ -41,7 +41,7 @@ class CreateSupplierInvoice extends CreateRecord
                 'type' => 'purchase', // نوع الحركة: شراء
                 'amount' => $invoiceTotal, // قيمة موجبة (دين عليك)
                 'supplier_invoice_id' => $invoice->id,
-                'note' => 'فاتورة مشتريات رقم: ' . $invoice->id . ' - إجمالي الفاتورة.',
+                'note' => 'فاتورة مشتريات ',
                 'created_at' => $invoice->created_at,
             ]);
         }
@@ -53,7 +53,7 @@ class CreateSupplierInvoice extends CreateRecord
                 'type' => 'payment', // نوع الحركة: دفع
                 'amount' => -1 * $paidAmount, // قيمة سالبة (تسديد للدين)
                 'supplier_invoice_id' => $invoice->id,
-                'note' => 'دفعة سداد من فاتورة المشتريات رقم: ' . $invoice->id,
+                'note' => 'دفعة سداد من فاتورة المشتريات ',
                 'created_at' => $invoice->created_at,
             ]);
         }

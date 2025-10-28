@@ -50,15 +50,21 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->label('نوع الحركة')
                     ->badge()
                     ->colors([
-                        'success' => 'credit',
-                        'danger' => 'debit',
-                        'warning' => 'invoice',
+                        // تزيد مديونية العميل
+                        'danger'  => 'sale',
+
+                        // تخفض مديونية العميلإيجابية للعميل)
+                        'success' => fn(string $state): bool => in_array($state, ['payment', 'sale_return']),
+
+                        // 'warning' (أصفر): للتسويات أو الأرصدة الافتتاحية
+                        'warning' => 'adjustment',
                     ])
                     ->formatStateUsing(fn(string $state): string => match ($state) {
-                        'credit' => 'إيداع',
-                        'debit' => 'سحب',
-                        'invoice' => 'فاتورة',
-                        default => $state,
+                        'sale'          => 'فاتورة مبيعات',
+                        'payment'       => 'دفعة سداد',
+                        'sale_return'   => 'مرتجع مبيعات',
+                        'adjustment'    => 'تسوية رصيد',
+                        default         => $state,
                     })
                     ->weight('medium'),
 
@@ -75,25 +81,45 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ])
                     ->summarize([
                         Summarizer::make()
-                            ->using(
-                                fn(Builder $query) => $query->clone()->selectRaw("
-                                    SUM(
-                                        CASE
-                                            WHEN type = 'debit' THEN -amount
-                                            WHEN type = 'invoice' THEN -amount
-                                            WHEN type = 'credit' THEN amount
-                                            ELSE 0
-                                        END
-                                    ) as balance
-                                ")->value('balance') ?? 0
-                            )
                             ->label('الرصيد الكلي')
-                            ->money('egp')
-                            ->formatStateUsing(fn($state) => number_format($state, 2) . ' ج.م'),
+
+                            // 1. التعديل: حساب الرصيد باستخدام SUM المباشر
+                            ->using(fn(Builder $query) => $query->sum('amount'))
+
+                            // 2. التعديل: استخدام formatStateUsing للتحقق من الإشارة وعرض Blade View
+                            ->formatStateUsing(function ($state) {
+
+                                // الرصيد الموجب (state > 0) يعني مديونية على العميل (دين لك)
+                                if ($state > 0) {
+                                    $color = 'success'; // أحمر (مديونية على العميل)
+                                    $displayAmount = $state;
+                                    $sign = '+';
+
+                                    // الرصيد السالب (state < 0) يعني رصيد دائن للعميل (دين عليك)
+                                } elseif ($state < 0) {
+                                    $color = 'rose'; // أخضر (رصيد دائن للعميل)
+                                    $displayAmount = abs($state); // عرض القيمة المطلقة
+                                    $sign = '-';
+
+                                    // الرصيد صفر
+                                } else {
+                                    $color = 'gray';
+                                    $displayAmount = 0;
+                                    $sign = '';
+                                }
+
+                                return view('filament.tables.columns.colored-summary', [
+                                    'content' => number_format($displayAmount, 2) . ' ج.م',
+                                    'color' => $color,
+                                    'sign' => $sign,
+                                    'wallet_type' => 'customer',
+                                ]);
+                            }),
                     ]),
 
                 TextColumn::make('invoice.invoice_number')
                     ->label('سحب بالفاتورة')
+                    ->searchable()
                     ->default('لايوجد')
                     ->weight('medium'),
 

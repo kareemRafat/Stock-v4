@@ -18,6 +18,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\Customers\CustomerResource;
 use App\Filament\Actions\InvoiceActions\PayInvoiceAction;
 
 class InvoicesTable
@@ -38,7 +39,10 @@ class InvoicesTable
 
                 TextColumn::make('customer.name')
                     ->label('اسم العميل')
-                    ->searchable(),
+                    ->searchable()
+                    ->url(fn(Invoice $record): ?string => $record->customer_id ?
+                        CustomerResource::getUrl('view', ['record' => $record->customer_id]) : null)
+                    ->openUrlInNewTab(),
 
                 TextColumn::make('price_type')
                     ->label('نوع الفاتورة')

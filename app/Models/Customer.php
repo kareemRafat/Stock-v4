@@ -30,21 +30,15 @@ class Customer extends Model
         return $this->hasMany(CustomerWallet::class);
     }
 
+    /**
+     * Get the current balance of the customer's wallet.
+     * Positive value: Customer owes you (مديونية).
+     * Negative value: You owe the customer (رصيد دائن).
+     */
     public function getBalanceAttribute()
     {
         // use query fore better performance
         // calculate the balance based on the wallet transactions
-        return $this->wallet()
-            ->selectRaw("
-                        SUM(
-                            CASE
-                                WHEN type = 'debit' THEN -amount
-                                WHEN type = 'invoice' THEN -amount
-                                WHEN type = 'credit' THEN amount
-                                ELSE 0
-                            END
-                        ) as balance
-                    ")
-            ->value('balance') ?? 0;
+        return $this->wallet()->sum('amount') ?? 0;
     }
 }

@@ -93,22 +93,25 @@ class SupplierWalletPage extends Page implements HasTable
                                     'content' => number_format($displayAmount, 2) . ' ج.م',
                                     'color' => $color,
                                     'sign' => $sign,
+                                    'wallet_type' => 'supplier',
                                 ]);
                             }),
                     ]),
                 TextColumn::make('invoice.invoice_number')
                     ->label('فاتورة المورد')
+                    ->searchable()
                     ->default('لا يوجد'),
-                TextColumn::make('notes')
+                TextColumn::make('note')
                     ->label('ملاحظات')
                     ->default('لايوجد')
                     ->limit(40),
                 TextColumn::make('created_at')
                     ->label('التاريخ')
+                    ->sortable()
                     ->date('d-m-Y'),
                 TextColumn::make('time_only')
                     ->label('الوقت')
-                    ->getStateUsing(fn($record) => $record->created_at->format('H:i')),
+                    ->getStateUsing(fn($record) => $record->created_at->format('h:i a')),
             ])
             ->filters([], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
