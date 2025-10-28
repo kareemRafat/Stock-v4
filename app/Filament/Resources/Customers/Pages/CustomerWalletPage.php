@@ -57,13 +57,13 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                         'success' => fn(string $state): bool => in_array($state, ['payment', 'sale_return']),
 
                         // 'warning' (أصفر): للتسويات أو الأرصدة الافتتاحية
-                        'warning' => 'adjustment',
+                        'warning' => 'credit_use',
                     ])
                     ->formatStateUsing(fn(string $state): string => match ($state) {
                         'sale'          => 'فاتورة مبيعات',
                         'payment'       => 'دفعة سداد',
                         'sale_return'   => 'مرتجع مبيعات',
-                        'adjustment'    => 'تسوية رصيد',
+                        'credit_use'    => 'تسوية رصيد',
                         default         => $state,
                     })
                     ->weight('medium'),
@@ -81,27 +81,32 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ])
                     ->summarize([
                         Summarizer::make()
-                            ->label('الرصيد الكلي')
 
-                            // 1. التعديل: حساب الرصيد باستخدام SUM المباشر
-                            ->using(fn(Builder $query) => $query->sum('amount'))
+                            ->visible(function (\Filament\Tables\Table $table): bool {
+                                // hide summarize when search
+                                $livewire = $table->getLivewire();
+                                $search = $livewire->search ?? $livewire->tableSearch ?? null;
 
-                            // 2. التعديل: استخدام formatStateUsing للتحقق من الإشارة وعرض Blade View
+                                return blank($search);
+                            })
+                            ->using(
+                                fn(Builder $query) => $query
+                                    ->where('type', '!=', 'credit_use') // استثناء نوع حركة التسوية
+                                    ->sum('amount')
+                            )
+
+                            // ... (formatStateUsing لتصحيح الألوان كما اتفقنا)
                             ->formatStateUsing(function ($state) {
 
-                                // الرصيد الموجب (state > 0) يعني مديونية على العميل (دين لك)
+                                // تصحيح الألوان (rose للمديونية، success للرصيد الدائن)
                                 if ($state > 0) {
-                                    $color = 'success'; // أحمر (مديونية على العميل)
+                                    $color = 'rose';
                                     $displayAmount = $state;
                                     $sign = '+';
-
-                                    // الرصيد السالب (state < 0) يعني رصيد دائن للعميل (دين عليك)
                                 } elseif ($state < 0) {
-                                    $color = 'rose'; // أخضر (رصيد دائن للعميل)
-                                    $displayAmount = abs($state); // عرض القيمة المطلقة
+                                    $color = 'success';
+                                    $displayAmount = abs($state);
                                     $sign = '-';
-
-                                    // الرصيد صفر
                                 } else {
                                     $color = 'gray';
                                     $displayAmount = 0;
@@ -137,16 +142,7 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->label('وقت الإضافة')
                     ->weight('medium'),
             ])
-            ->filters([
-                SelectFilter::make('type')
-                    ->label('نوع الحركة')
-                    ->options([
-                        'credit' => 'إيداع',
-                        'debit' => 'سحب',
-                        'invoice' => 'فاتورة',
-                    ])
-                    ->native(false),
-            ], layout: FiltersLayout::AboveContent)
+            ->filters([], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
             ->defaultSort('created_at', 'desc')
             ->paginated([10, 25, 50]);

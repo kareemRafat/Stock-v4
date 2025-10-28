@@ -57,10 +57,10 @@ class CustomersTable
                     )
                     ->color(
                         fn($state) =>
-                        // الموجب (مديونية لك) -> أخضر (success)
-                        // السالب (دين عليك/رصيد للعميل) -> أحمر (rose)
-                        $state < 0 ? 'rose' : ($state > 0 ? 'success' : 'gray')
+                        $state > 0 ? 'rose' : ($state < 0 ? 'success' : 'gray')
                     )
+                    ->tooltip('ملاحظة: الرصيد (أحمر) يمثل مديونية على العميل . الرصيد (أخضر) يمثل رصيداً دائناً للعميل .')
+                    ->url(fn($record) => route('filament.admin.resources.customers.wallet', $record))
                     ->weight(FontWeight::Medium),
                 TextColumn::make('created_at')
                     ->label('تاريخ التسجيل')

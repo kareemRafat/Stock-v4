@@ -135,7 +135,7 @@ class CreateInvoice extends CreateRecord
                 'amount'         => $totalAmount, // قيمة موجبة (+) تعني مديونية على العميل
                 'invoice_id'     => $this->record->id,
                 'invoice_number' => $this->record->invoice_number,
-                'notes'          => 'فاتورة مبيعات جديدة : ',
+                'notes'          => 'فاتورة مبيعات جديدة ',
                 'created_at'     => $this->record->created_at, // استخدام نفس تاريخ الفاتورة
             ]);
         }

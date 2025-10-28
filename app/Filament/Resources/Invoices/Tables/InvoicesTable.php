@@ -55,7 +55,7 @@ class InvoicesTable
 
                 TextColumn::make('total_amount')
                     ->label('إجمالي الفاتورة')
-                    ->formatStateUsing(fn($record) => number_format($record->total_amount - $record->special_discount, 2) . ' جنيه')
+                    ->formatStateUsing(fn($record) => number_format($record->total_amount - $record->special_discount, 2))
                     ->suffix(' جنيه '),
 
                 TextColumn::make('createdDate')

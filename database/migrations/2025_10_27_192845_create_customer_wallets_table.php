@@ -18,7 +18,8 @@ return new class extends Migration
                 'sale',            // فاتورة بيع (تأثير موجب +)
                 'payment',         // دفعة سداد (تأثير سالب -)
                 'sale_return',     // مرتجع مبيعات (تأثير سالب -)
-                'adjustment'       // تسوية يدوية
+                'adjustment',       // تسوية يدوية
+                'credit_use'
             ]);
             $table->decimal('amount', 10, 2);
             $table->foreignId('invoice_id')->nullable()->constrained()->onDelete('set null');
