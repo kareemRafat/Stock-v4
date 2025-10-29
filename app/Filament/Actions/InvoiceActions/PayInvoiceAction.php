@@ -111,7 +111,7 @@ class PayInvoiceAction
                             'type' => 'payment',
                             'amount' => -$paid,
                             'invoice_id' => $record->id,
-                            'notes' => 'دفعة نقدية/بطاقة لسداد جزء من الفاتورة',
+                            'notes' => 'دفعة نقدية لسداد جزء من الفاتورة',
                             'created_at' => $data['created_at'] ?? now(),
                         ]);
                     }
@@ -136,8 +136,6 @@ class PayInvoiceAction
             ->extraAttributes(['class' => 'font-medium'])
             ->icon(fn($record) => $record->status === 'paid' ? 'heroicon-s-check-circle' : 'heroicon-s-banknotes');
     }
-
-    // ************* الدوال المساعدة المُعدلة *************
 
     /**
      * يحسب الرصيد الدائن المتاح للعميل (القيمة السالبة) باستثناء حركات الفاتورة الحالية.
