@@ -34,7 +34,7 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
     {
         return $table
             ->query($this->customer->wallet()->getQuery())
-            ->emptyStateHeading('لا توجد حركات رصيد للعملاء')
+            ->emptyStateHeading('لا توجد حركات رصيد للعميل')
             ->columns([
                 TextColumn::make('index')
                     ->label('#')
@@ -50,88 +50,101 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->label('نوع الحركة')
                     ->badge()
                     ->colors([
-                        // تزيد مديونية العميل
+                        // مدين (على العميل) - أحمر
                         'danger'  => 'sale',
 
-                        // تخفض مديونية العميلإيجابية للعميل)
+                        // دائن (من العميل) - أخضر
                         'success' => fn(string $state): bool => in_array($state, ['payment', 'sale_return']),
 
-                        // 'warning' (أصفر): للتسويات أو الأرصدة الافتتاحية
-                        'warning' => 'credit_use',
+                        // تسويات - برتقالي
+                        'warning' => fn(string $state): bool => in_array($state, ['adjustment', 'credit_use']),
                     ])
                     ->formatStateUsing(fn(string $state): string => match ($state) {
                         'sale'          => 'فاتورة مبيعات',
                         'payment'       => 'دفعة سداد',
                         'sale_return'   => 'مرتجع مبيعات',
-                        'credit_use'    => 'تسوية رصيد',
+                        'credit_use'    => 'خصم من الرصيد',
+                        'adjustment'    => 'تسوية يدوية',
                         default         => $state,
                     })
                     ->weight('medium'),
 
                 TextColumn::make('amount')
-                    ->label('الكمية')
+                    ->label('المبلغ')
                     ->numeric(locale: 'en')
                     ->suffix(' ج.م')
                     ->weight('medium')
                     ->formatStateUsing(fn($state) => number_format((float) $state, 2, '.', ','))
-                    ->colors([
-                        'success' => fn($record) => $record->type === 'credit',
-                        'rose'  => fn($record) => $record->type === 'debit',
-                        'warning' => fn($record) => $record->type === 'invoice',
-                    ])
+                    ->color(function ($record) {
+                        // مدين (فواتير) - أحمر
+                        if ($record->type === 'sale') {
+                            return 'danger';
+                        }
+                        // دائن (مدفوعات ومرتجعات) - أخضر
+                        if (in_array($record->type, ['payment', 'sale_return', 'credit_use'])) {
+                            return 'success';
+                        }
+                        // تسويات - برتقالي
+                        return 'warning';
+                    })
                     ->summarize([
                         Summarizer::make()
-
+                            ->label('الرصيد النهائي')
                             ->visible(function (\Filament\Tables\Table $table): bool {
-                                // hide summarize when search
+                                // إخفاء الملخص عند البحث
                                 $livewire = $table->getLivewire();
                                 $search = $livewire->search ?? $livewire->tableSearch ?? null;
-
                                 return blank($search);
                             })
-                            ->using(
-                                fn(Builder $query) => $query
-                                    ->where('type', '!=', 'credit_use') // استثناء نوع حركة التسوية
-                                    ->sum('amount')
-                            )
-
-                            // ... (formatStateUsing لتصحيح الألوان كما اتفقنا)
+                            ->using(fn() => $this->customer->calculateBalance()) // ⬅️ استخدم دالة الموديل مباشرة
                             ->formatStateUsing(function ($state) {
-
-                                // تصحيح الألوان (rose للمديونية، success للرصيد الدائن)
                                 if ($state > 0) {
+                                    // مديونية على العميل (أحمر)
                                     $color = 'rose';
                                     $displayAmount = $state;
                                     $sign = '+';
+                                    $label = 'مديونية على العميل';
                                 } elseif ($state < 0) {
+                                    // رصيد دائن للعميل (أخضر)
                                     $color = 'success';
                                     $displayAmount = abs($state);
                                     $sign = '-';
+                                    $label = 'رصيد دائن للعميل';
                                 } else {
+                                    // متوازن (رمادي)
                                     $color = 'gray';
                                     $displayAmount = 0;
                                     $sign = '';
+                                    $label = 'متوازن';
                                 }
 
                                 return view('filament.tables.columns.colored-summary', [
-                                    'content' => number_format($displayAmount, 2) . ' ج.م',
+                                    'content' => number_format($displayAmount, 2, '.', ',') . ' ج.م',
                                     'color' => $color,
                                     'sign' => $sign,
+                                    'label' => $label,
                                     'wallet_type' => 'customer',
                                 ]);
                             }),
                     ]),
 
                 TextColumn::make('invoice.invoice_number')
-                    ->label('سحب بالفاتورة')
+                    ->label('رقم الفاتورة')
                     ->searchable()
-                    ->default('لايوجد')
-                    ->weight('medium'),
+                    ->default('لا يوجد')
+                    ->weight('medium')
+                    ->url(
+                        fn($record) => $record->invoice_id
+                            ? route('filament.admin.resources.invoices.view', ['record' => $record->invoice_id])
+                            : null
+                    )
+                    ->color(fn($record) => $record->invoice_id ? 'primary' : 'gray'),
 
                 TextColumn::make('notes')
                     ->label('ملاحظات الحركة')
-                    ->default('لايوجد')
+                    ->default('لا يوجد')
                     ->limit(40)
+                    ->tooltip(fn($record) => $record->notes)
                     ->weight('medium'),
 
                 TextColumn::make('createdDate')
@@ -142,10 +155,21 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->label('وقت الإضافة')
                     ->weight('medium'),
             ])
-            ->filters([], layout: FiltersLayout::AboveContent)
+            ->filters([
+                SelectFilter::make('type')
+                    ->label('نوع الحركة')
+                    ->options([
+                        'sale'          => 'فاتورة مبيعات',
+                        'payment'       => 'دفعة سداد',
+                        'sale_return'   => 'مرتجع مبيعات',
+                        'credit_use'    => 'خصم من الرصيد',
+                        'adjustment'    => 'تسوية يدوية',
+                    ])
+                    ->multiple(),
+            ], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
             ->defaultSort('created_at', 'desc')
-            ->paginated([10, 25, 50]);
+            ->paginated([10, 25, 50, 100]);
     }
 
     public static function getRouteName(?Panel $panel = null): string
@@ -153,10 +177,6 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
         return static::generateRouteName('wallet', $panel);
     }
 
-    public function getHeading(): string
-    {
-        return 'حركات رصيد العميل';
-    }
 
     public function getBreadcrumb(): string
     {
@@ -165,7 +185,7 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
 
     public function getTitle(): string
     {
-        return ' رصيد العميل';
+        return 'رصيد العميل: ' . $this->customer->name;
     }
 
     protected function getHeaderActions(): array

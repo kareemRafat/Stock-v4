@@ -87,12 +87,12 @@ class Invoice extends Model
         return number_format($value, 2, '.', '');
     }
 
-    protected function createdAt(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => $value ? Carbon::parse($value)->format('Y-m-d h:i:s A') : null,
-        );
-    }
+    // protected function createdAt(): Attribute
+    // {
+    //     return Attribute::make(
+    //         get: fn($value) => $value ? Carbon::parse($value)->format('Y-m-d h:i:s A') : null,
+    //     );
+    // }
 
     protected function createdDate(): Attribute
     {

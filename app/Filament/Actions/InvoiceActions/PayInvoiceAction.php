@@ -16,114 +16,95 @@ class PayInvoiceAction
     public static function make(): Action
     {
         return Action::make('payInvoice')
-            ->label(fn($record) => $record->status === 'paid' ? 'خالص' : 'سداد ')
+            ->label(fn($record) => $record->status === 'paid' ? 'خالص' : 'سداد')
             ->disabled(fn($record) => $record->status === 'paid')
             ->modalSubmitActionLabel('تسديد فاتورة')
             ->modalHeading(
                 fn(Model $record) => new HtmlString('تسديد فاتورة العميل: ' . "<span style='color: #3b82f6 !important'>{$record->customer->name}</span>")
             )
             ->schema([
+                // حقل المبلغ المدفوع
                 TextInput::make('paid')
                     ->label('المبلغ المدفوع')
                     ->numeric()
                     ->required()
                     ->default(0)
                     ->dehydrated()
-                    ->helperText('المبلغ المدفوع نقداً/ببطاقة. إذا كان المبلغ أكبر من الفاتورة، يضاف الباقي لرصيد العميل.')
+                    ->helperText('المبلغ المدفوع نقداً.')
                     ->columnSpan(1),
 
-                //  Show balance for the customer
-                TextEntry::make('id')
+                // عرض الرصيد الدائن المتاح
+                TextEntry::make('available_credit')
                     ->label('رصيد المحفظة الدائن الحالي')
-                    ->formatStateUsing(function ($record) {
-                        $customer = $record->customer;
-
-                        // حساب الرصيد باستثناء حركات الفاتورة الحالية
-                        $balance = $customer->wallet()
-                            ->where('invoice_id', '!=', $record->id)
-                            ->sum('amount');
-
-                        if ($balance < 0) {
-                            return number_format(abs($balance), 2) . ' ج.م';
+                    ->state(fn($record) => $record->customer->getAvailableCreditBalance($record->created_at))
+                    ->formatStateUsing(function ($state) {
+                        if ($state > 0) {
+                            return number_format($state, 2) . ' ج.م';
                         }
-
                         return 'لا يوجد رصيد دائن للعميل';
                     })
-                    ->extraAttributes(function ($record) {
-                        $balance = $record->customer->wallet()
-                            ->where('invoice_id', '!=', $record->id)
-                            ->sum('amount');
+                    ->color(fn($state) => $state > 0 ? 'success' : 'gray')
+                    ->weight('semibold'),
 
-                        if ($balance < 0) {
-                            $color = '#16a34a'; // أخضر: رصيد دائن متاح
-                        } else {
-                            $color = '#1f2937'; // رمادي/أسود
-                        }
-
-                        return ['style' => "color: {$color}"];
-                    }),
-
-                TextEntry::make('id')
+                // عرض المبلغ المطلوب سداده
+                TextEntry::make('required_payment')
                     ->label('المبلغ المطلوب سداده نقداً')
-                    ->formatStateUsing(function ($record) {
+                    ->state(function ($record) {
                         $total = $record->total_amount;
-
-                        // جلب الرصيد الدائن المتاح (قيمة موجبة)
-                        $availableCredit = self::getAvailableCreditBalance($record);
-
-                        // المبلغ المتبقي للسداد = الإجمالي - الرصيد الدائن المتاح
-                        $requiredPayment = max(0, $total - $availableCredit);
-
-                        // نضمن عرض القيمة الموجبة لتجنب اللبس
-                        return number_format($requiredPayment, 2) . ' ج.م';
+                        $availableCredit = $record->customer->getAvailableCreditBalance($record->created_at);
+                        return max(0, $total - $availableCredit);
                     })
-                    ->extraAttributes(['class' => 'text-rose-600'])
+                    ->formatStateUsing(fn($state) => number_format($state, 2) . ' ج.م')
+                    ->color('danger')
+                    ->weight('semibold')
                     ->columnSpan(1),
 
-                // get js date
                 ClientDatetimeHidden::make('created_at'),
             ])
             ->action(function (array $data, Model $record) {
-                // **تم حذف فحص removeFromWallet**
-                if (($data['paid'] ?? 0) <= 0 && self::getAvailableCreditBalance($record) >= 0) {
-                    // فحص إذا كان المبلغ المدفوع صفر والرصيد الدائن المتاح صفر، نمنع العملية
+                // التحقق من وجود مبلغ للسداد
+                $paid = $data['paid'] ?? 0;
+                $availableCredit = $record->customer->getAvailableCreditBalance($record->created_at);
+
+                if ($paid <= 0 && $availableCredit <= 0) {
                     return self::notifyError('حدث خطأ: يجب إدخال مبلغ نقدي أو توفر رصيد دائن كافٍ للعميل.');
                 }
 
-
                 DB::transaction(function () use ($data, $record) {
                     $customer = $record->customer;
-                    $paid = $data['paid'] ?? 0; // المبلغ المدفوع نقداً/بطاقة: 864.00
-                    $total = $record->total_amount; // قيمة الفاتورة الكلية: 882.00
+                    $paid = $data['paid'] ?? 0;
+                    $total = $record->total_amount;
 
-                    // 1. حساب الرصيد الدائن المتاح للعميل قبل هذه الفاتورة
-                    $availableCredit = self::getAvailableCreditBalance($record);
+                    // 1. حساب الرصيد الدائن المتاح قبل الفاتورة
+                    $availableCredit = $customer->getAvailableCreditBalance($record->created_at);
 
                     // 2. المبلغ الذي سيتم تغطيته من الرصيد الدائن
-                    $amountToUseFromCredit = min($availableCredit, $total - $paid);
+                    $amountToUseFromCredit = min($availableCredit, max(0, $total - $paid));
 
-                    // 3. المبلغ المتبقي للسداد بعد الدفعة النقدية واستخدام الرصيد
+                    // 3. المبلغ المتبقي للسداد
                     $remainingDebt = $total - $paid - $amountToUseFromCredit;
 
-                    // 4. تسجيل حركة الدفعة النقدية فقط (كما اتفقنا -864.00)
+                    // 4. تسجيل حركة الدفعة النقدية (دائن)
                     if ($paid > 0) {
                         $customer->wallet()->create([
                             'type' => 'payment',
-                            'amount' => -$paid,
+                            'amount' => $paid,
                             'invoice_id' => $record->id,
-                            'notes' => 'دفعة نقدية لسداد جزء من الفاتورة',
-                            'created_at' => $data['created_at'] ?? now(),
+                            'invoice_number' => $record->invoice_number,
+                            'notes' => 'سداد نقدي للفاتورة ',
+                            'created_at' => $data['created_at'],
                         ]);
                     }
 
-                    // 5. إلغاء الرصيد الدائن السابق (+18.00)
+                    // 5. استخدام الرصيد الدائن (دائن)
                     if ($amountToUseFromCredit > 0) {
                         $customer->wallet()->create([
                             'type' => 'credit_use',
-                            'amount' => $amountToUseFromCredit, // قيمة موجبة لخصمها من الرصيد السالب
+                            'amount' => $amountToUseFromCredit,
                             'invoice_id' => $record->id,
-                            'notes' => 'خصم من الرصيد',
-                            'created_at' => $data['created_at'] ?? now(),
+                            'invoice_number' => $record->invoice_number,
+                            'notes' => 'خصم من الرصيد الدائن للفاتورة',
+                            'created_at' => $data['created_at'],
                         ]);
                     }
 
@@ -137,30 +118,14 @@ class PayInvoiceAction
             ->icon(fn($record) => $record->status === 'paid' ? 'heroicon-s-check-circle' : 'heroicon-s-banknotes');
     }
 
-    /**
-     * يحسب الرصيد الدائن المتاح للعميل (القيمة السالبة) باستثناء حركات الفاتورة الحالية.
-     * @return float القيمة المطلقة للرصيد الدائن (موجبة) أو 0.0 إذا كان الرصيد مديونية أو صفر.
-     */
-    protected static function getAvailableCreditBalance($record): float
-    {
-        $customer = $record->customer;
-        // حساب الرصيد باستثناء حركات الفاتورة الحالية
-        $balance = $customer->wallet()
-            ->where('invoice_id', '!=', $record->id)
-            ->sum('amount');
-
-        // إذا كان سالب (أي دائن)، نُعيد القيمة المطلقة (الموجبة)
-        return $balance < 0 ? abs($balance) : 0.0;
-    }
-
     protected static function updateInvoiceStatus($record, float $remainingDebt): void
     {
-        // إذا كان المبلغ المتبقي للسداد يساوي أو أقل من الصفر (تم تغطية الدين بالكامل أو حدث فائض)
         if ($remainingDebt <= 0) {
             $record->update(['status' => 'paid']);
+        } else {
+            $record->update(['status' => 'partial']);
         }
     }
-
 
     protected static function notifyError(string $message)
     {

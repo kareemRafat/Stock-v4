@@ -103,3 +103,61 @@ Route::get('/monthly-financial-report', function () {
         ],
     ]);
 });
+
+
+
+Route::get('debug-balance', function () {
+    $customer = \App\Models\Customer::find(6); // غير الـ ID
+
+    $sales = $customer->wallet()
+        ->where('type', 'sale')
+        ->get(['amount', 'invoice_number', 'created_at']);
+
+    $payments = $customer->wallet()
+        ->where('type', 'payment')
+        ->get(['amount', 'invoice_number', 'created_at']);
+
+    $creditUses = $customer->wallet()
+        ->where('type', 'credit_use')
+        ->get(['amount', 'invoice_number', 'created_at']);
+
+    $debits = $customer->wallet()->where('type', 'sale')->sum('amount');
+    $credits = $customer->wallet()->whereIn('type', ['payment', 'sale_return', 'adjustment'])->sum('amount');
+
+    return [
+        'sales' => $sales,
+        'payments' => $payments,
+        'credit_uses' => $creditUses,
+        'total_debits' => $debits,
+        'total_credits' => $credits,
+        'balance' => $debits - $credits,
+    ];
+});
+
+
+Route::get('test-balance', function () {
+    $invoice = \App\Models\Invoice::find(1); // الفاتورة #1 (11:34 pm)
+    $customer = $invoice->customer;
+
+    // كل الحركات
+    $allTransactions = $customer->wallet()
+        ->orderBy('created_at')
+        ->get(['id', 'type', 'amount', 'invoice_number', 'created_at']);
+
+    // الحركات قبل الفاتورة
+    $beforeInvoice = $customer->wallet()
+        ->where('created_at', '<', $invoice->created_at->format('Y-m-d H:i:s'))
+        ->get(['id', 'type', 'amount', 'invoice_number', 'created_at']);
+
+    // حساب الرصيد
+    $balance = $customer->calculateBalance($invoice->created_at);
+    $availableCredit = $customer->getAvailableCreditBalance($invoice->created_at);
+
+    return [
+        'invoice_date' => $invoice->created_at->format('Y-m-d H:i:s'),
+        'all_transactions' => $allTransactions,
+        'before_invoice' => $beforeInvoice,
+        'balance' => $balance,
+        'available_credit' => $availableCredit,
+    ];
+});
