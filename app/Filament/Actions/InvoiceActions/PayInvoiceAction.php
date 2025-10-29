@@ -43,12 +43,12 @@ class PayInvoiceAction
                         }
                         return 'لا يوجد رصيد دائن للعميل';
                     })
-                    ->color(fn($state) => $state > 0 ? 'success' : 'gray')
+                    ->color(fn($state) => $state > 0 ? 'success' : 'indigo')
                     ->weight('semibold'),
 
                 // عرض المبلغ المطلوب سداده
                 TextEntry::make('required_payment')
-                    ->label('المبلغ المطلوب سداده نقداً')
+                    ->label(' المبلغ المطلوب سداده نقداً شامل الرصيد ')
                     ->state(function ($record) {
                         $total = $record->total_amount;
                         $availableCredit = $record->customer->getAvailableCreditBalance($record->created_at);
@@ -122,9 +122,10 @@ class PayInvoiceAction
     {
         if ($remainingDebt <= 0) {
             $record->update(['status' => 'paid']);
-        } else {
-            $record->update(['status' => 'partial']);
         }
+        // else {
+        //     $record->update(['status' => 'partial']);
+        // }
     }
 
     protected static function notifyError(string $message)

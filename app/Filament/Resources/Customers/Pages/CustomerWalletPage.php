@@ -24,10 +24,12 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
     protected string $view = 'filament.pages.customers.customer-wallet-page';
 
     public Customer $customer;
+    public $balance ;
 
     public function mount(int $record): void
     {
         $this->customer = Customer::findOrFail($record);
+        $this->balance =  $this->customer->balance ;
     }
 
     public function table(Table $table): Table
@@ -86,7 +88,8 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                         }
                         // تسويات - برتقالي
                         return 'warning';
-                    })
+                    }),
+                    /*
                     ->summarize([
                         Summarizer::make()
                             ->label('الرصيد النهائي')
@@ -127,6 +130,8 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                                 ]);
                             }),
                     ]),
+                    */
+
 
                 TextColumn::make('invoice.invoice_number')
                     ->label('رقم الفاتورة')
@@ -144,7 +149,6 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->label('ملاحظات الحركة')
                     ->default('لا يوجد')
                     ->limit(40)
-                    ->tooltip(fn($record) => $record->notes)
                     ->weight('medium'),
 
                 TextColumn::make('createdDate')
@@ -156,16 +160,7 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->weight('medium'),
             ])
             ->filters([
-                SelectFilter::make('type')
-                    ->label('نوع الحركة')
-                    ->options([
-                        'sale'          => 'فاتورة مبيعات',
-                        'payment'       => 'دفعة سداد',
-                        'sale_return'   => 'مرتجع مبيعات',
-                        'credit_use'    => 'خصم من الرصيد',
-                        'adjustment'    => 'تسوية يدوية',
-                    ])
-                    ->multiple(),
+
             ], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
             ->defaultSort('created_at', 'desc')
