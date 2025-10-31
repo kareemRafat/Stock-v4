@@ -45,6 +45,102 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
+    public function returns()
+    {
+        return $this->hasMany(\App\Models\ReturnInvoice::class, 'original_invoice_id');
+    }
+
+    /**
+     * حساب المبلغ المطلوب سداده نقداً
+     * بعد خصم: (الخصم الخاص + المرتجعات + رصيد العميل المتاح)
+     *
+     * @return float
+     */
+    public function getAmountDueAttribute(): float
+    {
+        // استخدام relationLoaded
+        $subtotal = $this->relationLoaded('items')
+            ? $this->items->sum('subtotal')
+            : $this->items()->sum('subtotal');
+
+        $afterSpecialDiscount = $subtotal - $this->special_discount;
+        $totalReturns = $this->calculateReturnsWithDiscount();
+        $afterReturns = $afterSpecialDiscount - $totalReturns;
+
+        // استخدام relationLoaded للعميل
+        $availableCredit = $this->relationLoaded('customer')
+            ? $this->customer->getAvailableCreditBalance($this->created_at)
+            : ($this->customer->getAvailableCreditBalance($this->created_at) ?? 0);
+
+        $amountDue = $afterReturns - $availableCredit;
+
+        return max(0, $amountDue);
+    }
+
+    /**
+     * حساب قيمة المرتجعات مع تطبيق نسبة الخصم الخاص
+     *
+     * @return float
+     */
+    public function calculateReturnsWithDiscount(): float
+    {
+        // استخدام query واحد بدل loop
+        $returnsTotal = \App\Models\ReturnInvoiceItem::query()
+            ->whereHas('returnInvoice', function ($q) {
+                $q->where('original_invoice_id', $this->id);
+            })
+            ->selectRaw('SUM(price * quantity_returned) as total')
+            ->value('total') ?? 0;
+
+        if ($returnsTotal == 0) {
+            return 0;
+        }
+
+        // استخدام relationLoaded للتحقق من الـ eager loading
+        $subtotal = $this->relationLoaded('items')
+            ? $this->items->sum('subtotal')  // من الـ memory
+            : $this->items()->sum('subtotal'); // query جديد
+
+        $specialDiscountRatio = $subtotal > 0
+            ? ($this->special_discount / $subtotal)
+            : 0;
+
+        return $returnsTotal * (1 - $specialDiscountRatio);
+    }
+
+    /**
+     * الحصول على تفاصيل الحساب (للعرض)
+     *
+     * @return array
+     */
+    public function getPaymentBreakdown(): array
+    {
+        $subtotal = $this->items()->sum('subtotal');
+        $specialDiscount = $this->special_discount;
+        $afterSpecialDiscount = $subtotal - $specialDiscount;
+        $totalReturns = $this->calculateReturnsWithDiscount();
+        $afterReturns = $afterSpecialDiscount - $totalReturns;
+        $availableCredit = $this->customer->getAvailableCreditBalance($this->created_at) ?? 0;
+        $amountDue = max(0, $afterReturns - $availableCredit);
+
+        return [
+            'subtotal' => $subtotal,
+            'special_discount' => $specialDiscount,
+            'after_special_discount' => $afterSpecialDiscount,
+            'total_returns' => $totalReturns,
+            'after_returns' => $afterReturns,
+            'available_credit' => $availableCredit,
+            'amount_due' => $amountDue,
+        ];
+    }
+
+
+
+
+
+
+    //////////////////////
+
     protected static function booted(): void
     {
         static::saved(function ($invoice) {
@@ -86,13 +182,6 @@ class Invoice extends Model
     {
         return number_format($value, 2, '.', '');
     }
-
-    // protected function createdAt(): Attribute
-    // {
-    //     return Attribute::make(
-    //         get: fn($value) => $value ? Carbon::parse($value)->format('Y-m-d h:i:s A') : null,
-    //     );
-    // }
 
     protected function createdDate(): Attribute
     {

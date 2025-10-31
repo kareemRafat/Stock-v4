@@ -37,25 +37,31 @@ class Customer extends Model
      */
     public function calculateBalance($beforeDate = null)
     {
-        $query = $this->wallet();
+        static $cache = [];
 
-        if ($beforeDate) {
-            // استخدام where مباشرة
-            $query->where('created_at', '<', $beforeDate);
+        $cacheKey = $this->id . '_' . ($beforeDate ? (string)$beforeDate : 'current');
+
+        if (!isset($cache[$cacheKey])) {
+            $query = $this->wallet();
+
+            if ($beforeDate) {
+                $query->where('created_at', '<', $beforeDate);
+            }
+
+            \Log::debug('Calculating balance for customer', ['customer_id' => $this->id]);
+
+            $cache[$cacheKey] = $query
+                ->selectRaw('
+                COALESCE(SUM(CASE
+                    WHEN type = "sale" THEN amount
+                    WHEN type IN ("payment", "sale_return", "adjustment") THEN -amount
+                    ELSE 0
+                END), 0) as balance
+            ')
+                ->value('balance') ?? 0;
         }
 
-        // المدين (على العميل) - الفواتير
-        $debits = $query->clone()
-            ->where('type', 'sale')
-            ->sum('amount');
-
-        // الدائن (من العميل) - المدفوعات والمرتجعات
-        $credits = $query->clone()
-            ->whereIn('type', ['payment', 'sale_return', 'adjustment'])
-            ->sum('amount');
-
-        // الرصيد = المدين - الدائن
-        return $debits - $credits;
+        return $cache[$cacheKey];
     }
 
     /**

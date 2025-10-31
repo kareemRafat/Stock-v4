@@ -23,7 +23,6 @@ class PayInvoiceAction
                 fn(Model $record) => new HtmlString('تسديد فاتورة العميل: ' . "<span style='color: #3b82f6 !important'>{$record->customer->name}</span>")
             )
             ->schema([
-
                 // حقل المبلغ المدفوع
                 TextInput::make('paid')
                     ->label('المبلغ المدفوع')
@@ -37,7 +36,16 @@ class PayInvoiceAction
                 // عرض الرصيد الدائن المتاح
                 TextEntry::make('available_credit')
                     ->label('رصيد المحفظة الدائن الحالي')
-                    ->state(fn($record) => $record->customer->getAvailableCreditBalance($record->created_at))
+                    ->state(function ($record) {
+                        // static cache
+                        static $cachedBalance = null;
+
+                        if ($cachedBalance === null) {
+                            $cachedBalance = $record->customer->getAvailableCreditBalance($record->created_at);
+                        }
+
+                        return $cachedBalance;
+                    })
                     ->formatStateUsing(function ($state) {
                         if ($state > 0) {
                             return number_format($state, 2) . ' ج.م';
@@ -49,23 +57,28 @@ class PayInvoiceAction
 
                 // عرض المبلغ المطلوب سداده
                 TextEntry::make('required_payment')
-                    ->label(' المبلغ المطلوب سداده نقداً شامل الرصيد ')
+                    ->label('المبلغ المطلوب سداده نقداً ')
                     ->state(function ($record) {
-                        $total = $record->total_amount;
-                        $availableCredit = $record->customer->getAvailableCreditBalance($record->created_at);
-                        return max(0, $total - $availableCredit);
+                        return $record->amount_due;
                     })
                     ->formatStateUsing(fn($state) => number_format($state, 2) . ' ج.م')
                     ->color('danger')
                     ->weight('semibold')
-                    ->columnSpan(1),
+                    ->columnSpan(1)
+                    ->helperText("بعد خصم المرتجعات واضافة الرصيد إن وجد"),
 
                 ClientDatetimeHidden::make('created_at'),
             ])
             ->action(function (array $data, Model $record) {
                 // التحقق من وجود مبلغ للسداد
                 $paid = $data['paid'] ?? 0;
-                $availableCredit = $record->customer->getAvailableCreditBalance($record->created_at);
+
+                // static cache
+                static $availableCredit = null;
+
+                if ($availableCredit === null) {
+                    $availableCredit = $record->customer->getAvailableCreditBalance($record->created_at);
+                }
 
                 if ($paid <= 0 && $availableCredit <= 0) {
                     return self::notifyError('حدث خطأ: يجب إدخال مبلغ نقدي أو توفر رصيد دائن كافٍ للعميل.');
