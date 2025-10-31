@@ -23,6 +23,7 @@ class PayInvoiceAction
                 fn(Model $record) => new HtmlString('تسديد فاتورة العميل: ' . "<span style='color: #3b82f6 !important'>{$record->customer->name}</span>")
             )
             ->schema([
+
                 // حقل المبلغ المدفوع
                 TextInput::make('paid')
                     ->label('المبلغ المدفوع')

@@ -54,11 +54,13 @@ class SupplierWalletPage extends Page implements HasTable
                     ->colors([
                         'rose' => fn($record) => in_array($record->type, ['purchase', 'adjustment']),
                         'success' => fn($record) => in_array($record->type, ['payment', 'purchase_return']),
+                        'warning' => fn($record) => in_array($record->type, ['debt_payment']),
                     ])
                     ->formatStateUsing(fn(string $state): string => match ($state) {
                         'purchase'        => 'فاتورة مشتريات',
                         'payment'         => 'دفعة سداد',
                         'purchase_return' => 'مرتجع مشتريات',
+                        'debt_payment' => 'سداد مديونية',
                         'adjustment'      => 'تسوية / رصيد إفتتاحي',
                         default           => $state,
                     }),
@@ -84,9 +86,6 @@ class SupplierWalletPage extends Page implements HasTable
                             ? SupplierInvoiceResource::getUrl('view', ['record' => $record->supplier_invoice_id])
                             : null
                     ),
-
-
-
 
                 TextColumn::make('note')
                     ->label('ملاحظات')
@@ -123,12 +122,23 @@ class SupplierWalletPage extends Page implements HasTable
 
     protected function getHeaderActions(): array
     {
+        $fallbackUrl = SupplierResource::getUrl('index');
+        $previousUrl = url()->previous();
+        $currentUrl = url()->current();
+
+        if ($previousUrl !== $currentUrl && !str_contains($previousUrl, '/login')) {
+            $url = $previousUrl;
+        } else {
+            $url = $fallbackUrl;
+        }
+
         return [
             Actions\Action::make('back')
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                ->url(fn() => SupplierResource::getUrl('index')),
+                // تم تحديث هذا السطر لاستخدام المنطق الاحتياطي الجديد
+                ->url(fn() => $url),
         ];
     }
 }

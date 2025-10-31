@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Suppliers\Tables;
 
-use App\Models\Supplier;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -11,6 +10,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
+use App\Filament\Actions\SupplierActions\PayDebtAction;
 
 class SuppliersTable
 {
@@ -60,6 +60,7 @@ class SuppliersTable
                     ->extraAttributes(['class' => 'font-semibold'])
                     ->url(fn($record) => route('filament.admin.resources.suppliers.wallet', $record))
                     ->icon('heroicon-o-wallet'),
+                PayDebtAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

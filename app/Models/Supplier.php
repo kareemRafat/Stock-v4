@@ -34,12 +34,12 @@ class Supplier extends Model
     {
         return $this->wallet()
             ->selectRaw('
-                SUM(CASE
-                    WHEN type IN ("purchase", "adjustment") THEN amount
-                    WHEN type IN ("payment", "purchase_return") THEN -amount
-                    ELSE 0
-                END) as balance
-            ')
+            SUM(CASE
+                WHEN type IN ("purchase", "adjustment") THEN amount
+                WHEN type IN ("payment", "purchase_return", "debt_payment") THEN -amount
+                ELSE 0
+            END) as balance
+        ')
             ->value('balance') ?? 0;
     }
 
