@@ -165,47 +165,45 @@ class CreateReturnInvoice extends CreateRecord
     private function createReturnInvoiceWithItems(array $data, array $validItems): Model
     {
         return DB::transaction(function () use ($data, $validItems) {
-            // Create the return invoice
             $returnInvoice = static::getModel()::create($data);
-
-            // use stock service class
             $stockService = app(StockService::class);
 
-            //حساب القيمة الفعلية للمرتجع
+            // 🔹 جلب بيانات الفاتورة الأصلية
+            $originalInvoice = Invoice::with('items')->find($returnInvoice->original_invoice_id);
+            $invoiceType = $originalInvoice?->price_type;
+
+            // 🔹 حساب نسبة الخصم الخاص من الفاتورة الأصلية
+            $specialDiscount = $originalInvoice?->special_discount ?? 0;
+            $originalSubtotal = $originalInvoice?->items->sum('subtotal') ?? 0;
+
+            // نسبة الخصم الخاص (%)
+            $specialDiscountRatio = $originalSubtotal > 0
+                ? ($specialDiscount / $originalSubtotal)
+                : 0;
+
             $totalReturnAmount = 0;
-            $originalInvoice = Invoice::find($returnInvoice->original_invoice_id);
-            $invoiceType = $originalInvoice?->price_type; // 'wholesale' أو 'retail'
 
             foreach ($validItems as $item) {
-                $this->createReturnInvoiceItem($returnInvoice, $item, $stockService);
-
-                // حساب قيمة هذا الصنف المرتجع
-                $quantityReturned = $this->getQuantityReturned($item);
-                $product = Product::find($item['product_id']);
-
-                if ($product && $quantityReturned > 0) {
-                    if ($invoiceType === 'wholesale') {
-                        // سعر الجملة مع الخصم
-                        $price = $product->wholesale_price;
-                        $discount = $product->discount ?? 0;
-                        $priceAfterDiscount = $price - ($price * $discount / 100);
-                        $totalReturnAmount += $quantityReturned * $priceAfterDiscount;
-                    } else {
-                        // سعر القطاعي بدون خصم
-                        $totalReturnAmount += $quantityReturned * $product->retail_price;
-                    }
-                }
+                $this->createReturnInvoiceItem(
+                    $returnInvoice,
+                    $item,
+                    $stockService,
+                    $invoiceType,
+                    $specialDiscountRatio
+                );
             }
 
-            //إضافة حركة المرتجع في محفظة العميل
+            $totalReturnAmount = $returnInvoice->items()->sum('subtotal');
+
+            // 🔹 تسجيل المرتجع في المحفظة بالقيمة الصحيحة (شاملة الخصم الخاص)
             if ($totalReturnAmount > 0 && $returnInvoice->customer_id) {
-                \App\Models\CustomerWallet::create([
+                CustomerWallet::create([
                     'customer_id' => $returnInvoice->customer_id,
                     'type' => 'sale_return',
-                    'amount' => $totalReturnAmount, // القيمة الفعلية حسب النوع والخصم
+                    'amount' => $totalReturnAmount,
                     'invoice_id' => $returnInvoice->original_invoice_id,
                     'return_invoice_id' => $returnInvoice->id,
-                    'notes' => 'فاتورة مرتجع ' . $returnInvoice->return_invoice_number ,
+                    'notes' => 'فاتورة مرتجع ' . $returnInvoice->return_invoice_number,
                     'created_at' => $returnInvoice->created_at ?? now(),
                 ]);
             }
@@ -217,8 +215,13 @@ class CreateReturnInvoice extends CreateRecord
     /**
      * Create a single return invoice item and update inventory
      */
-    private function createReturnInvoiceItem(Model $returnInvoice, array $item, StockService $stockService): void
-    {
+    private function createReturnInvoiceItem(
+        Model $returnInvoice,
+        array $item,
+        StockService $stockService,
+        ?string $invoiceType,
+        float $specialDiscountRatio
+    ): void {
         $quantityReturned = $this->getQuantityReturned($item);
 
         if ($quantityReturned <= 0) {
@@ -226,38 +229,34 @@ class CreateReturnInvoice extends CreateRecord
         }
 
         $product = Product::find($item['product_id']);
-        if (! $product) {
+        if (!$product) {
             return;
         }
 
-        // جلب بيانات الفاتورة الأصلية والبند الأصلي
-        $originalInvoice = $returnInvoice->invoice ?? Invoice::find($returnInvoice->original_invoice_id);
-        $originalItem = \App\Models\InvoiceItem::where('invoice_id', $returnInvoice->original_invoice_id)
+        $originalItem = InvoiceItem::where('invoice_id', $returnInvoice->original_invoice_id)
             ->where('product_id', $product->id)
             ->first();
 
-        // الأسعار الفعلية المستخدمة (مع fallback لجدول المنتجات)
         $costPrice      = $originalItem->cost_price ?? $product->cost_price;
         $wholesalePrice = $originalItem->wholesale_price ?? $product->wholesale_price;
         $retailPrice    = $originalItem->retail_price ?? $product->retail_price;
 
-        // تحديد السعر بناءً على نوع الفاتورة
-        $invoiceType = $originalInvoice?->price_type; // 'wholesale' أو 'retail'
-
         $price = match ($invoiceType) {
             'wholesale' => $wholesalePrice,
             'retail'    => $retailPrice,
-            default     => $retailPrice, // احتياطًا لو النوع غير محدد
+            default     => $retailPrice,
         };
 
-        $subtotal = $quantityReturned * $price;
+        // حساب السعر بعد تطبيق نسبة الخصم الخاص
+        $subtotalBeforeDiscount = $quantityReturned * $price;
+        $subtotalAfterDiscount = $subtotalBeforeDiscount * (1 - $specialDiscountRatio);
 
         // إنشاء بند المرتجع
         $returnInvoice->items()->create([
             'product_id'        => $item['product_id'],
             'quantity_returned' => $quantityReturned,
             'price'             => $price,
-            'subtotal'          => $subtotal,
+            'subtotal'          => $subtotalAfterDiscount,
         ]);
 
         // تسجيل حركة المخزون
@@ -272,8 +271,6 @@ class CreateReturnInvoice extends CreateRecord
             referenceTable: 'return_invoices'
         );
     }
-
-
 
     protected function getRedirectUrl(): string
     {
