@@ -29,12 +29,18 @@ class Supplier extends Model
     }
 
 
+    // حساب الرصيد
     public function getBalanceAttribute()
     {
-        // use query fore better performance
-        // calculate the balance based on the wallet transactions
         return $this->wallet()
-            ->sum('amount');
+            ->selectRaw('
+                SUM(CASE
+                    WHEN type IN ("purchase", "adjustment") THEN amount
+                    WHEN type IN ("payment", "purchase_return") THEN -amount
+                    ELSE 0
+                END) as balance
+            ')
+            ->value('balance') ?? 0;
     }
 
     /**

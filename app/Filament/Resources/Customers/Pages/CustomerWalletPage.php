@@ -89,49 +89,6 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                         // تسويات - برتقالي
                         return 'warning';
                     }),
-                    /*
-                    ->summarize([
-                        Summarizer::make()
-                            ->label('الرصيد النهائي')
-                            ->visible(function (\Filament\Tables\Table $table): bool {
-                                // إخفاء الملخص عند البحث
-                                $livewire = $table->getLivewire();
-                                $search = $livewire->search ?? $livewire->tableSearch ?? null;
-                                return blank($search);
-                            })
-                            ->using(fn() => $this->customer->calculateBalance()) // ⬅️ استخدم دالة الموديل مباشرة
-                            ->formatStateUsing(function ($state) {
-                                if ($state > 0) {
-                                    // مديونية على العميل (أحمر)
-                                    $color = 'rose';
-                                    $displayAmount = $state;
-                                    $sign = '+';
-                                    $label = 'مديونية على العميل';
-                                } elseif ($state < 0) {
-                                    // رصيد دائن للعميل (أخضر)
-                                    $color = 'success';
-                                    $displayAmount = abs($state);
-                                    $sign = '-';
-                                    $label = 'رصيد دائن للعميل';
-                                } else {
-                                    // متوازن (رمادي)
-                                    $color = 'gray';
-                                    $displayAmount = 0;
-                                    $sign = '';
-                                    $label = 'متوازن';
-                                }
-
-                                return view('filament.tables.columns.colored-summary', [
-                                    'content' => number_format($displayAmount, 2, '.', ',') . ' ج.م',
-                                    'color' => $color,
-                                    'sign' => $sign,
-                                    'label' => $label,
-                                    'wallet_type' => 'customer',
-                                ]);
-                            }),
-                    ]),
-                    */
-
 
                 TextColumn::make('invoice.invoice_number')
                     ->label('رقم الفاتورة')

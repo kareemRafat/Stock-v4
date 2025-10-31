@@ -6,14 +6,13 @@ use Filament\Tables;
 use Filament\Actions;
 use App\Models\Supplier;
 use Filament\Tables\Table;
+use App\Models\SupplierWallet;
 use Filament\Resources\Pages\Page;
-use Illuminate\Database\Query\Builder;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Enums\FiltersLayout;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Columns\Summarizers\Summarizer;
 use App\Filament\Resources\Suppliers\SupplierResource;
+use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
 
 class SupplierWalletPage extends Page implements HasTable
 {
@@ -72,35 +71,23 @@ class SupplierWalletPage extends Page implements HasTable
                         'rose'  => fn($record) => $record->type === 'debit',
                         'warning' => fn($record) => $record->type === 'invoice',
                     ])
-                    ->weight('medium')
-                    ->summarize([
-                        Summarizer::make()
-                            ->using(fn(Builder $query) => $query->sum('amount'))
-                            ->label('الرصيد الكلي')
-                            ->money('egp')
-                            ->formatStateUsing(fn($state) => number_format($state, 2) . ' ج.م')
-                            ->formatStateUsing(function ($state) {
-                                if ($state < 0) {
-                                    $color = 'success';
-                                    $displayAmount = abs($state);
-                                    $sign = '';
-                                } else {
-                                    $color = 'rose';
-                                    $displayAmount = $state;
-                                    $sign = '-';
-                                }
-                                return view('filament.tables.columns.colored-summary', [
-                                    'content' => number_format($displayAmount, 2) . ' ج.م',
-                                    'color' => $color,
-                                    'sign' => $sign,
-                                    'wallet_type' => 'supplier',
-                                ]);
-                            }),
-                    ]),
+                    ->weight('medium'),
+
                 TextColumn::make('invoice.invoice_number')
                     ->label('فاتورة المورد')
                     ->searchable()
-                    ->default('لا يوجد'),
+                    ->default('لا يوجد')
+                    ->tooltip('عرض تفاصيل الفاتورة')
+                    ->url(
+                        fn(SupplierWallet $record): ?string =>
+                        $record->supplier_invoice_id
+                            ? SupplierInvoiceResource::getUrl('view', ['record' => $record->supplier_invoice_id])
+                            : null
+                    ),
+
+
+
+
                 TextColumn::make('note')
                     ->label('ملاحظات')
                     ->default('لايوجد')

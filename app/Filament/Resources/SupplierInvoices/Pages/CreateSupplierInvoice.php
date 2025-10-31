@@ -34,24 +34,22 @@ class CreateSupplierInvoice extends CreateRecord
         // نموذج دفتر الأستاذ (Ledger Model)
         // بيحصل تسجيل عمليتين .. الاولي بيبقى المبلغ الاجمالي للفاتورة كعملية شراء
         // الثاني بيقى المبلغ المدفوع فعليا والفرق اللى بينهم بعد كدة بيحدد مديونية ولا ليك فلوس
-        // 2. تسجيل حركة الفاتورة (زيادة المديونية = موجب)
         if ($invoiceTotal > 0) {
             SupplierWallet::create([
                 'supplier_id' => $supplierId,
                 'type' => 'purchase', // نوع الحركة: شراء
-                'amount' => $invoiceTotal, // قيمة موجبة (دين عليك)
+                'amount' => $invoiceTotal,
                 'supplier_invoice_id' => $invoice->id,
                 'note' => 'فاتورة مشتريات ',
                 'created_at' => $invoice->created_at,
             ]);
         }
 
-        // 3. تسجيل حركة الدفع (تخفيض المديونية = سالب)
         if ($paidAmount > 0) {
             SupplierWallet::create([
                 'supplier_id' => $supplierId,
                 'type' => 'payment', // نوع الحركة: دفع
-                'amount' => -1 * $paidAmount, // قيمة سالبة (تسديد للدين)
+                'amount' => $paidAmount,
                 'supplier_invoice_id' => $invoice->id,
                 'note' => 'دفعة سداد من فاتورة المشتريات ',
                 'created_at' => $invoice->created_at,

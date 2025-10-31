@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\SupplierInvoices\Tables;
 
+use App\Filament\Resources\Suppliers\SupplierResource;
 use App\Models\Supplier;
+use App\Models\SupplierInvoice;
 use Filament\Tables\Table;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -32,7 +34,10 @@ class SupplierInvoicesTable
                 TextColumn::make('supplier.name')
                     ->label('اسم المورد')
                     ->weight('medium')
-                    ->searchable(),
+                    ->searchable()
+                    ->tooltip("حركة رصيد العميل")
+                    ->url(fn(SupplierInvoice $record): ?string => $record->supplier_id ?
+                        SupplierResource::getUrl('wallet', ['record' => $record->supplier_id]) : null),
 
                 TextColumn::make('total_amount')
                     ->label('إجمالي الفاتورة')
