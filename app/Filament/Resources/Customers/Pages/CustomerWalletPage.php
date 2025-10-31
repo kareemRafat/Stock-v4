@@ -52,13 +52,14 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->label('نوع الحركة')
                     ->badge()
                     ->colors([
-                        // مدين (على العميل) - أحمر
+                        //مدين
                         'danger'  => 'sale',
 
-                        // دائن (من العميل) - أخضر
-                        'success' => fn(string $state): bool => in_array($state, ['payment', 'sale_return']),
+                        //دائن
+                        'success' => fn(string $state): bool => in_array($state, ['payment']),
+                        'teal' => fn(string $state): bool => in_array($state, ['sale_return']),
 
-                        // تسويات - برتقالي
+                        // تسويات
                         'warning' => fn(string $state): bool => in_array($state, ['adjustment', 'credit_use']),
                     ])
                     ->formatStateUsing(fn(string $state): string => match ($state) {
@@ -78,15 +79,15 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->weight('medium')
                     ->formatStateUsing(fn($state) => number_format((float) $state, 2, '.', ','))
                     ->color(function ($record) {
-                        // مدين (فواتير) - أحمر
+                        //مدين
                         if ($record->type === 'sale') {
                             return 'danger';
                         }
-                        // دائن (مدفوعات ومرتجعات) - أخضر
+                        //دائن
                         if (in_array($record->type, ['payment', 'sale_return', 'credit_use'])) {
                             return 'success';
                         }
-                        // تسويات - برتقالي
+                        // تسويات
                         return 'warning';
                     }),
 

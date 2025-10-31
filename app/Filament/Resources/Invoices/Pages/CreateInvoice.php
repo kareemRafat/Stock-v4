@@ -60,18 +60,6 @@ class CreateInvoice extends CreateRecord
         ];
     }
 
-    //! for testing
-    /*
-    public function create(bool $another = false): void
-    {
-        $data = $this->form->getRawState();
-
-        dd($data);
-
-        parent::create($another);
-    }
-    */
-
     protected function afterCreate(): void
     {
 
@@ -109,8 +97,6 @@ class CreateInvoice extends CreateRecord
                 'discount' => $discountPercent
             ]);
 
-
-
             // 3️⃣ Decrease stock via StockService
             $stockService->recordMovement(
                 product: $product,
@@ -125,8 +111,9 @@ class CreateInvoice extends CreateRecord
             );
         }
 
+
         // قيمة الفاتورة الكلية لتسجيلها في المحفظة
-        $totalAmount = $this->record->total_amount;
+        $totalAmount = $this->record->total_amount - $this->data['special_discount'];
 
         // 4️⃣ تسجيل حركة المديونية في محفظة العميل (SALE)
         if ($totalAmount > 0) {

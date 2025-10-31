@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\ReturnInvoices\Pages;
 
-use App\Enums\MovementType;
 use App\Models\Invoice;
 use App\Models\Product;
+use App\Enums\MovementType;
 use App\Models\InvoiceItem;
+use App\Models\CustomerWallet;
 use App\Services\StockService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
@@ -170,8 +171,43 @@ class CreateReturnInvoice extends CreateRecord
             // use stock service class
             $stockService = app(StockService::class);
 
+            //حساب القيمة الفعلية للمرتجع
+            $totalReturnAmount = 0;
+            $originalInvoice = Invoice::find($returnInvoice->original_invoice_id);
+            $invoiceType = $originalInvoice?->price_type; // 'wholesale' أو 'retail'
+
             foreach ($validItems as $item) {
                 $this->createReturnInvoiceItem($returnInvoice, $item, $stockService);
+
+                // حساب قيمة هذا الصنف المرتجع
+                $quantityReturned = $this->getQuantityReturned($item);
+                $product = Product::find($item['product_id']);
+
+                if ($product && $quantityReturned > 0) {
+                    if ($invoiceType === 'wholesale') {
+                        // سعر الجملة مع الخصم
+                        $price = $product->wholesale_price;
+                        $discount = $product->discount ?? 0;
+                        $priceAfterDiscount = $price - ($price * $discount / 100);
+                        $totalReturnAmount += $quantityReturned * $priceAfterDiscount;
+                    } else {
+                        // سعر القطاعي بدون خصم
+                        $totalReturnAmount += $quantityReturned * $product->retail_price;
+                    }
+                }
+            }
+
+            //إضافة حركة المرتجع في محفظة العميل
+            if ($totalReturnAmount > 0 && $returnInvoice->customer_id) {
+                \App\Models\CustomerWallet::create([
+                    'customer_id' => $returnInvoice->customer_id,
+                    'type' => 'sale_return',
+                    'amount' => $totalReturnAmount, // القيمة الفعلية حسب النوع والخصم
+                    'invoice_id' => $returnInvoice->original_invoice_id,
+                    'return_invoice_id' => $returnInvoice->id,
+                    'notes' => 'فاتورة مرتجع ' . $returnInvoice->return_invoice_number ,
+                    'created_at' => $returnInvoice->created_at ?? now(),
+                ]);
             }
 
             return $returnInvoice;
