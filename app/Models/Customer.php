@@ -48,8 +48,6 @@ class Customer extends Model
                 $query->where('created_at', '<', $beforeDate);
             }
 
-            \Log::debug('Calculating balance for customer', ['customer_id' => $this->id]);
-
             $cache[$cacheKey] = $query
                 ->selectRaw('
                 COALESCE(SUM(CASE
