@@ -6,9 +6,10 @@
     {{-- total customer balance --}}
     <div class="border-t border-gray-200 dark:border-gray-500 pt-4 text-base">
         <div>
-            <span class="font-medium">إجمالي الرصيد:  </span>
-            <span class="{{ $customer->balance > 0 ? 'text-rose-600' : ($customer->balance == 0 ? 'text-gray-500' : 'text-success-600') }}  font-semibold">
-                {{ abs(number_format($customer->balance, 2)) }} ج.م
+            <span class="font-medium">إجمالي الرصيد: </span>
+            <span
+                class="{{ $customer->balance > 0 ? 'text-rose-600' : ($customer->balance == 0 ? 'text-gray-500' : 'text-success-600') }}  font-semibold">
+                {{ number_format(abs($customer->balance), 2) }} ج.م
             </span>
         </div>
 
