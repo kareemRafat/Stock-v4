@@ -47,7 +47,7 @@ class CustomersTable
                     ->copyable()
                     ->label('رقم التواصل')
                     ->weight(FontWeight::Medium),
-                TextColumn::make('balance')
+                TextColumn::make('balance_sum')
                     ->label('رصيد العميل')
                     ->formatStateUsing(
                         fn($state) =>
@@ -59,7 +59,15 @@ class CustomersTable
                         fn($state) =>
                         $state > 0 ? 'rose' : ($state < 0 ? 'success' : 'gray')
                     )
-                    ->tooltip('ملاحظة: الرصيد (أحمر) يمثل مديونية على العميل . الرصيد (أخضر) يمثل رصيداً دائناً للعميل .')
+                    ->tooltip(function ($state) {
+                        if ($state > 0) {
+                            return 'مديونية على العميل';
+                        } elseif ($state < 0) {
+                            return 'رصيد دائن للعميل';
+                        } else {
+                            return 'حساب متوازن';
+                        }
+                    })
                     ->url(fn($record) => route('filament.admin.resources.customers.wallet', $record))
                     ->weight(FontWeight::Medium),
                 TextColumn::make('created_at')

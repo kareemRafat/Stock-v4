@@ -8,12 +8,11 @@ use App\Models\Customer;
 use Filament\Tables\Table;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\DB;
 use Filament\Support\Icons\Heroicon;
-use Filament\Infolists\Components\TextEntry;
-use App\Filament\Resources\Customers\Pages\EditCustomer;
+use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\Customers\Pages;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
-use App\Filament\Resources\Customers\Pages\CreateCustomer;
 use App\Filament\Resources\Customers\Schemas\CustomerForm;
 use App\Filament\Resources\Customers\Tables\CustomersTable;
 
@@ -61,5 +60,19 @@ class CustomerResource extends Resource
             // 'create' => CreateCustomer::route('/create'),
             // 'edit' => EditCustomer::route('/{record}/edit'),
         ];
+    }
+
+    // Eager Loading Balance for the customer
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->addSelect([
+                'balance_sum' => DB::table('customer_wallets')
+                    ->selectRaw('COALESCE(SUM(CASE
+                    WHEN type = "sale" THEN amount
+                    WHEN type IN ("payment", "sale_return", "adjustment") THEN -amount
+                    ELSE 0 END), 0)')
+                    ->whereColumn('customer_wallets.customer_id', 'customers.id')
+            ]);
     }
 }

@@ -79,31 +79,31 @@ class ViewCustomer extends ViewRecord
 
                             TextEntry::make('balance')
                                 ->label('رصيد العميل')
+                                ->state(fn($record) => $record->calculateBalance())
                                 ->placeholder('لا يوجد')
                                 ->icon('heroicon-o-banknotes')
                                 ->formatStateUsing(function ($state) {
                                     if ($state == 0) {
-                                        return '0 ج.م';
+                                        return '0.00 ج.م (حساب متوازن)';
                                     }
 
-                                    $formatted = number_format(abs($state), 2) . ' ج.م';
-                                    return $state > 0
-                                        ? "{$formatted} (مديونية مستحقة عليك)"
-                                        : "{$formatted} (رصيد دائن للعميل)";
+                                    $formatted = number_format(abs($state), 2, '.', ',') . ' ج.م';
+
+                                    if ($state > 0) {
+                                        return "{$formatted} (مديونية على العميل)";
+                                    } else {
+                                        return "{$formatted} (للعميل)";
+                                    }
                                 })
                                 ->color(function ($state) {
-                                    if ($state > 0) {
-                                        return 'rose'; // مديونية مستحقة عليك
-                                    } elseif ($state < 0) {
-                                        return 'success'; // رصيد دائن للعميل
-                                    } else {
-                                        return 'gray';
-                                    }
+                                    if ($state > 0) return 'danger';
+                                    if ($state < 0) return 'success';
+                                    return 'success';
                                 })
                                 ->weight('semibold')
                                 ->url(fn($record) => route('filament.admin.resources.customers.wallet', $record))
                                 ->openUrlInNewTab(false)
-                                ->extraAttributes(['class' => 'cursor-pointer hover:underline']),
+                                ->tooltip('اضغط لعرض حركات المحفظة'),
                         ])
                     ])
                     ->columnSpanFull()
