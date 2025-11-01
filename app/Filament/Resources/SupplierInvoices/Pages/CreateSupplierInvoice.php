@@ -15,9 +15,9 @@ class CreateSupplierInvoice extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        // send this ['refresh' => 1] to listSupplierInvoice mount()
+        return $this->getResource()::getUrl('index', ['refresh' => 1]);
     }
-
 
     protected function afterCreate(): void
     {
@@ -88,8 +88,6 @@ class CreateSupplierInvoice extends CreateRecord
             ->body("تم إضافة {$this->record->items->count()} منتج وتحديث المخزن")
             ->success()
             ->send();
-
-        $this->dispatch('$refresh');
     }
 
     protected function getHeaderActions(): array

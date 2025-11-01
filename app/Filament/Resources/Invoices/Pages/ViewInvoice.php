@@ -39,8 +39,9 @@ class ViewInvoice extends ViewRecord
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                // to refresh the full page
-                ->action(fn() => redirect(InvoiceResource::getUrl('index'))),
+                // to refresh the full page in filament
+                ->extraAttributes(['wire:navigate' => true]) // very important
+                ->url(InvoiceResource::getUrl('index'))
         ];
     }
 

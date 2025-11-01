@@ -55,7 +55,6 @@ class SupplierInvoiceResource extends Resource
             'index' => ListSupplierInvoices::route('/'),
             'create' => CreateSupplierInvoice::route('/create'),
             'view' => ViewSupplierInvoice::route('/{record}'),
-            // 'edit' => EditSupplierInvoice::route('/{record}/edit'),
         ];
     }
 }

@@ -3,12 +3,8 @@
 namespace App\Filament\Resources\ReturnInvoices\Pages;
 
 use Filament\Actions;
-use App\Models\Invoice;
-use Illuminate\Support\Facades\Session;
 use Filament\Resources\Pages\ViewRecord;
-use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\ReturnInvoices\ReturnInvoiceResource;
-use App\Filament\Resources\ReturnInvoices\Pages\CreateReturnInvoice;
 
 class ViewReturnInvoice extends ViewRecord
 {
@@ -25,7 +21,9 @@ class ViewReturnInvoice extends ViewRecord
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                ->action(fn() => redirect(ReturnInvoiceResource::getUrl('index'))),
+                // Refresh the table on index page
+                ->extraAttributes(['wire:navigate' => true]) // very important
+                ->url(ReturnInvoiceResource::getUrl('index'))
         ];
     }
 }

@@ -127,7 +127,7 @@ class CreateInvoice extends CreateRecord
             ]);
         }
 
-        $this->dispatch('$refresh');
+        // $this->dispatch('$refresh');
     }
 
     protected function getRedirectUrl(): string

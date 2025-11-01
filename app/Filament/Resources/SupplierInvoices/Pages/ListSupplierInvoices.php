@@ -17,4 +17,13 @@ class ListSupplierInvoices extends ListRecords
                 ->createAnother(false),
         ];
     }
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        if (request()->has('refresh')) {
+            $this->dispatch('$refresh');
+        }
+    }
 }
