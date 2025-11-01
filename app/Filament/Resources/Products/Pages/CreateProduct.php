@@ -2,10 +2,8 @@
 
 namespace App\Filament\Resources\Products\Pages;
 
-use App\Models\StockMovement;
-use Illuminate\Database\Eloquent\Model;
-use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\Products\ProductResource;
+use Filament\Resources\Pages\CreateRecord;
 
 class CreateProduct extends CreateRecord
 {

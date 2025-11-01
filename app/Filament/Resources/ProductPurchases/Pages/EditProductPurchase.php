@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\ProductPurchases\Pages;
 
-use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\Auth;
-use Filament\Resources\Pages\EditRecord;
 use App\Filament\Resources\ProductPurchases\ProductPurchaseResource;
+use Filament\Actions\DeleteAction;
+use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Auth;
 
 class EditProductPurchase extends EditRecord
 {
@@ -15,7 +15,7 @@ class EditProductPurchase extends EditRecord
     {
         return [
             DeleteAction::make()
-                ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
         ];
     }
 }

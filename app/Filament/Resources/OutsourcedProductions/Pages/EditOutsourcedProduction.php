@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\OutsourcedProductions\Pages;
 
-use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\Auth;
-use Filament\Resources\Pages\EditRecord;
 use App\Filament\Resources\OutsourcedProductions\OutsourcedProductionResource;
+use Filament\Actions\DeleteAction;
+use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Auth;
 
 class EditOutsourcedProduction extends EditRecord
 {
@@ -15,7 +15,7 @@ class EditOutsourcedProduction extends EditRecord
     {
         return [
             DeleteAction::make()
-                ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
         ];
     }
 }

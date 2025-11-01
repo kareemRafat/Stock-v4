@@ -2,17 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Models\City;
-use App\Models\User;
-use App\Models\Invoice;
-use App\Models\Product;
 use App\Models\Customer;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\Supplier;
-use App\Models\InvoiceItem;
 use App\Models\CustomerWallet;
-use Illuminate\Database\Seeder;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\OutsourcedProduction;
+use App\Models\Product;
+use App\Models\Supplier;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -27,7 +26,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@admin.com',
             'username' => 'kareem',
             'password' => bcrypt('12345678'),
-            'role' => 'admin'
+            'role' => 'admin',
         ]);
 
         User::factory()->create([
@@ -35,7 +34,7 @@ class DatabaseSeeder extends Seeder
             'username' => 'eman',
             'email' => 'eman@admin.com',
             'password' => bcrypt('12345678'),
-            'role' => 'employee'
+            'role' => 'employee',
         ]);
 
         // supplier seeders

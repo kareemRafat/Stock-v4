@@ -2,14 +2,14 @@
 
 namespace App\Filament\Resources\ReturnInvoices\Schemas;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Select;
+use App\Filament\Forms\Components\ClientDatetimeHidden;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use App\Filament\Forms\Components\ClientDatetimeHidden;
+use Filament\Schemas\Schema;
 
 class ReturnInvoiceForm
 {
@@ -88,7 +88,7 @@ class ReturnInvoiceForm
                     ])
                     ->columns(4)
                     ->columnSpanFull()
-                    ->addable(false)
+                    ->addable(false),
             ]);
     }
 }

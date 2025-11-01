@@ -10,7 +10,7 @@ class SupplierInvoice extends Model
     /** @use HasFactory<\Database\Factories\SupplierInvoiceFactory> */
     use HasFactory;
 
-    protected $fillable = ['supplier_id', 'invoice_date', 'total_amount', 'invoice_number', 'notes' , 'created_at'];
+    protected $fillable = ['supplier_id', 'invoice_date', 'total_amount', 'invoice_number', 'notes', 'created_at'];
 
     public function supplier()
     {

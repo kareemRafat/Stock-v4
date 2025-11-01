@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\ReturnInvoices\Pages;
 
+use App\Filament\Resources\ReturnInvoices\ReturnInvoiceResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
-use App\Filament\Resources\ReturnInvoices\ReturnInvoiceResource;
 
 class ViewReturnInvoice extends ViewRecord
 {
@@ -23,7 +23,7 @@ class ViewReturnInvoice extends ViewRecord
                 ->color('gray')
                 // Refresh the table on index page
                 ->extraAttributes(['wire:navigate' => true]) // very important
-                ->url(ReturnInvoiceResource::getUrl('index'))
+                ->url(ReturnInvoiceResource::getUrl('index')),
         ];
     }
 }

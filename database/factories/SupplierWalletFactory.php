@@ -18,15 +18,15 @@ class SupplierWalletFactory extends Factory
      */
     public function definition(): array
     {
-        $type   = $this->faker->randomElement(['debit', 'invoice', 'credit']);
+        $type = $this->faker->randomElement(['debit', 'invoice', 'credit']);
         $amount = $this->faker->randomFloat(2, 100, 2000);
 
         return [
-            'supplier_id'         => Supplier::factory(),
-            'type'                => $type,
-            'amount'              => $amount,
+            'supplier_id' => Supplier::factory(),
+            'type' => $type,
+            'amount' => $amount,
             'supplier_invoice_id' => SupplierInvoice::factory(),
-            'note'                => $this->faker->sentence(),
+            'note' => $this->faker->sentence(),
         ];
     }
 }

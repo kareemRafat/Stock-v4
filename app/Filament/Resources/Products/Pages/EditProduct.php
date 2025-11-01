@@ -3,12 +3,12 @@
 namespace App\Filament\Resources\Products\Pages;
 
 use App\Enums\MovementType;
-use Livewire\Attributes\On;
-use Filament\Actions\Action;
-use App\Services\StockService;
-use Filament\Resources\Pages\EditRecord;
-use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Actions\ProductActions\AddStockAction;
+use App\Filament\Resources\Products\ProductResource;
+use App\Services\StockService;
+use Filament\Actions\Action;
+use Filament\Resources\Pages\EditRecord;
+use Livewire\Attributes\On;
 
 class EditProduct extends EditRecord
 {

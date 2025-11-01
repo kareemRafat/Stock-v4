@@ -9,11 +9,11 @@ use App\Filament\Resources\OutsourcedProductions\Schemas\OutsourcedProductionFor
 use App\Filament\Resources\OutsourcedProductions\Tables\OutsourcedProductionsTable;
 use App\Models\OutsourcedProduction;
 use BackedEnum;
-use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class OutsourcedProductionResource extends Resource
 {
@@ -21,11 +21,11 @@ class OutsourcedProductionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
 
-     protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::BuildingOffice2;
+    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::BuildingOffice2;
 
     protected static string|UnitEnum|null $navigationGroup = 'الموردين';
 
-    //! remove from navigation
+    // ! remove from navigation
     protected static bool $shouldRegisterNavigation = false;
 
     protected static ?int $navigationSort = 5;

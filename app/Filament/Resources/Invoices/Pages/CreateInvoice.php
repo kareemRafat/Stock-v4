@@ -4,14 +4,14 @@ namespace App\Filament\Resources\Invoices\Pages;
 
 use App\Enums\MovementType;
 use App\Filament\Actions\InvoiceActions\PrintInvoiceAction;
-use Filament\Actions\Action;
-use App\Services\StockService;
-use Filament\Schemas\Components\Section;
-use Filament\Resources\Pages\CreateRecord;
-use Filament\Schemas\Components\Wizard\Step;
-use Filament\Resources\Pages\Concerns\HasWizard;
 use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\Invoices\Schemas\InvoiceForm;
+use App\Services\StockService;
+use Filament\Actions\Action;
+use Filament\Resources\Pages\Concerns\HasWizard;
+use Filament\Resources\Pages\CreateRecord;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Wizard\Step;
 
 class CreateInvoice extends CreateRecord
 {
@@ -33,7 +33,7 @@ class CreateInvoice extends CreateRecord
                     Section::make()
                         ->schema(InvoiceForm::getInvoiceItemsInfo()),
                 ])
-                ->label('اصناف الفاتورة')
+                ->label('اصناف الفاتورة'),
         ];
     }
 
@@ -84,17 +84,16 @@ class CreateInvoice extends CreateRecord
             $isWholesale = $this->record->price_type === 'wholesale';
 
             // the prices and discount in the time of invoice
-            $costPrice      = $product->cost_price ?? 0;
+            $costPrice = $product->cost_price ?? 0;
             $discountPercent = $product->discount ?? 0;
             $wholesalePrice = $isWholesale ? ($product->discounted_wholesale_price ?? 0) : null;
             $retailPrice = $isWholesale ? null : ($product->retail_price ?? 0);
 
-
             $item->update([
-                'cost_price'      => $costPrice,
+                'cost_price' => $costPrice,
                 'wholesale_price' => $wholesalePrice, // added after discount
-                'retail_price'    => $retailPrice,
-                'discount' => $discountPercent
+                'retail_price' => $retailPrice,
+                'discount' => $discountPercent,
             ]);
 
             // 3️⃣ Decrease stock via StockService
@@ -111,19 +110,18 @@ class CreateInvoice extends CreateRecord
             );
         }
 
-
         // قيمة الفاتورة الكلية لتسجيلها في المحفظة
         $totalAmount = $this->record->total_amount - $this->data['special_discount'];
 
         // 4️⃣ تسجيل حركة المديونية في محفظة العميل (SALE)
         if ($totalAmount > 0) {
             $this->record->customer->wallet()->create([
-                'type'           => 'sale',
-                'amount'         => $totalAmount, // قيمة موجبة (+) تعني مديونية على العميل
-                'invoice_id'     => $this->record->id,
+                'type' => 'sale',
+                'amount' => $totalAmount, // قيمة موجبة (+) تعني مديونية على العميل
+                'invoice_id' => $this->record->id,
                 'invoice_number' => $this->record->invoice_number,
-                'notes'          => 'فاتورة مبيعات جديدة ',
-                'created_at'     => $this->record->created_at, // استخدام نفس تاريخ الفاتورة
+                'notes' => 'فاتورة مبيعات جديدة ',
+                'created_at' => $this->record->created_at, // استخدام نفس تاريخ الفاتورة
             ]);
         }
 

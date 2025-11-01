@@ -4,16 +4,16 @@ namespace App\Filament\Resources\ProductPurchases\Tables;
 
 use App\Models\Product;
 use App\Models\Supplier;
-use Filament\Tables\Table;
-use Filament\Actions\EditAction;
-use Filament\Tables\Filters\Filter;
 use Filament\Actions\BulkActionGroup;
-use Filament\Schemas\Components\Grid;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Schemas\Components\Grid;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
-use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 
 class ProductPurchasesTable
 {
@@ -21,7 +21,7 @@ class ProductPurchasesTable
     {
         return $table
             ->modifyQueryUsing(
-                fn($query) => $query->with([
+                fn ($query) => $query->with([
                     'invoice',
                     'product',
                 ])
@@ -33,7 +33,7 @@ class ProductPurchasesTable
                 TextColumn::make('index')
                     ->label('#')
                     ->state(
-                        fn($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
+                        fn ($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
                             + $rowLoop->iteration
                     )
                     ->sortable(false)
@@ -81,26 +81,23 @@ class ProductPurchasesTable
                     ->label('المورد')
                     ->searchable()
                     ->options(
-                        fn() =>
-                        Supplier::query()
+                        fn () => Supplier::query()
                             ->latest()
                             ->limit(20)
                             ->pluck('name', 'id')
                     )
                     ->getSearchResultsUsing(
-                        fn(string $search) =>
-                        Supplier::query()
+                        fn (string $search) => Supplier::query()
                             ->where('name', 'like', "%{$search}%")
                             ->limit(50)
                             ->pluck('name', 'id')
                     )
                     ->getOptionLabelUsing(
-                        fn($value): ?string =>
-                        Supplier::find($value)?->name
+                        fn ($value): ?string => Supplier::find($value)?->name
                     )
                     ->query(function ($query, $data) {
                         // لو المستخدم اختار مورد فقط
-                        if (!empty($data['value'])) {
+                        if (! empty($data['value'])) {
                             $query->whereHas('invoice', function ($q) use ($data) {
                                 $q->where('supplier_id', $data['value']);
                             });
@@ -112,25 +109,22 @@ class ProductPurchasesTable
                     ->label('المنتج')
                     ->searchable()
                     ->options(
-                        fn() =>
-                        Product::query()
+                        fn () => Product::query()
                             ->latest()
                             ->limit(20)
                             ->pluck('name', 'id')
                     )
                     ->getSearchResultsUsing(
-                        fn(string $search) =>
-                        Product::query()
+                        fn (string $search) => Product::query()
                             ->where('name', 'like', "%{$search}%")
                             ->limit(50)
                             ->pluck('name', 'id')
                     )
                     ->getOptionLabelUsing(
-                        fn($value): ?string =>
-                        Product::where('id', $value)->value('name')
+                        fn ($value): ?string => Product::where('id', $value)->value('name')
                     )
                     ->query(function ($query, $data) {
-                        if (!empty($data['value'])) {
+                        if (! empty($data['value'])) {
                             $query->where('product_id', $data['value']);
                         }
                     })
@@ -156,11 +150,11 @@ class ProductPurchasesTable
                         $indicators = [];
 
                         if ($data['from'] ?? null) {
-                            $indicators[] = 'من: ' . \Carbon\Carbon::parse($data['from'])->format('d/m/Y');
+                            $indicators[] = 'من: '.\Carbon\Carbon::parse($data['from'])->format('d/m/Y');
                         }
 
                         if ($data['until'] ?? null) {
-                            $indicators[] = 'إلى: ' . \Carbon\Carbon::parse($data['until'])->format('d/m/Y');
+                            $indicators[] = 'إلى: '.\Carbon\Carbon::parse($data['until'])->format('d/m/Y');
                         }
 
                         return $indicators;
@@ -168,8 +162,8 @@ class ProductPurchasesTable
                     ->query(function ($query, array $data) {
                         return $query->whereHas('invoice', function ($q) use ($data) {
                             $q
-                                ->when($data['from'] ?? null, fn($q, $date) => $q->whereDate('invoice_date', '>=', $date))
-                                ->when($data['until'] ?? null, fn($q, $date) => $q->whereDate('invoice_date', '<=', $date));
+                                ->when($data['from'] ?? null, fn ($q, $date) => $q->whereDate('invoice_date', '>=', $date))
+                                ->when($data['until'] ?? null, fn ($q, $date) => $q->whereDate('invoice_date', '<=', $date));
                         });
                     }),
             ], layout: FiltersLayout::AboveContent)

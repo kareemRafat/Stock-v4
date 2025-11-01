@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
@@ -23,7 +23,7 @@ class Product extends Model
         'supplier_id',
         'wholesale_price',
         'retail_price',
-        'created_at'
+        'created_at',
     ];
 
     protected $casts = [
@@ -45,6 +45,7 @@ class Product extends Model
             if ($this->discount > 0) {
                 $price -= ($price * $this->discount / 100);
             }
+
             return round($price, 2);
         });
     }
@@ -137,6 +138,7 @@ class Product extends Model
     public function getLastPurchasePriceAttribute(): float
     {
         $lastPurchase = $this->purchases()->latest('purchase_date')->first();
+
         return $lastPurchase ? $lastPurchase->purchase_price : 0;
     }
 
@@ -146,6 +148,7 @@ class Product extends Model
     public function getLastPurchaseDateAttribute(): ?string
     {
         $lastPurchase = $this->purchases()->latest('purchase_date')->first();
+
         return $lastPurchase ? $lastPurchase->purchase_date->format('Y-m-d') : null;
     }
 
@@ -157,7 +160,6 @@ class Product extends Model
         return round($this->stock_quantity * $this->average_cost, 2);
     }
 
-
     /**
      * هامش الربح (%)
      */
@@ -166,6 +168,7 @@ class Product extends Model
         if ($this->average_cost > 0) {
             return round((($this->final_price - $this->average_cost) / $this->average_cost) * 100, 2);
         }
+
         return 0;
     }
 
@@ -199,6 +202,7 @@ class Product extends Model
         if ($this->discount > 0) {
             return round($this->price * (1 - $this->discount / 100), 2);
         }
+
         return $this->price;
     }
 
@@ -208,7 +212,7 @@ class Product extends Model
     public function updateAverageCost(): void
     {
         $this->update([
-            'cost_price' => $this->average_cost
+            'cost_price' => $this->average_cost,
         ]);
     }
 
@@ -227,8 +231,10 @@ class Product extends Model
     {
         if ($this->stock_quantity >= $quantity) {
             $this->decrement('stock_quantity', $quantity);
+
             return true;
         }
+
         return false;
     }
 }

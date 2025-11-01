@@ -2,25 +2,25 @@
 
 namespace App\Filament\Actions\InvoiceActions;
 
+use App\Filament\Forms\Components\ClientDatetimeHidden;
 use Filament\Actions\Action;
+use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
-use Illuminate\Database\Eloquent\Model;
-use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
-use App\Filament\Forms\Components\ClientDatetimeHidden;
-use Filament\Infolists\Components\TextEntry;
 
 class PayInvoiceAction
 {
     public static function make(): Action
     {
         return Action::make('payInvoice')
-            ->label(fn($record) => $record->status === 'paid' ? 'خالص' : 'سداد')
-            ->disabled(fn($record) => $record->status === 'paid')
+            ->label(fn ($record) => $record->status === 'paid' ? 'خالص' : 'سداد')
+            ->disabled(fn ($record) => $record->status === 'paid')
             ->modalSubmitActionLabel('تسديد فاتورة')
             ->modalHeading(
-                fn(Model $record) => new HtmlString('تسديد فاتورة العميل: ' . "<span style='color: #3b82f6 !important'>{$record->customer->name}</span>")
+                fn (Model $record) => new HtmlString('تسديد فاتورة العميل: '."<span style='color: #3b82f6 !important'>{$record->customer->name}</span>")
             )
             ->schema([
                 // حقل المبلغ المدفوع
@@ -48,11 +48,12 @@ class PayInvoiceAction
                     })
                     ->formatStateUsing(function ($state) {
                         if ($state > 0) {
-                            return number_format($state, 2) . ' ج.م';
+                            return number_format($state, 2).' ج.م';
                         }
+
                         return 'لا يوجد رصيد دائن للعميل';
                     })
-                    ->color(fn($state) => $state > 0 ? 'success' : 'indigo')
+                    ->color(fn ($state) => $state > 0 ? 'success' : 'indigo')
                     ->weight('semibold'),
 
                 // عرض المبلغ المطلوب سداده
@@ -61,11 +62,11 @@ class PayInvoiceAction
                     ->state(function ($record) {
                         return $record->amount_due;
                     })
-                    ->formatStateUsing(fn($state) => number_format($state, 2) . ' ج.م')
+                    ->formatStateUsing(fn ($state) => number_format($state, 2).' ج.م')
                     ->color('danger')
                     ->weight('semibold')
                     ->columnSpan(1)
-                    ->helperText("بعد خصم المرتجعات واضافة الرصيد إن وجد"),
+                    ->helperText('بعد خصم المرتجعات واضافة الرصيد إن وجد'),
 
                 ClientDatetimeHidden::make('created_at'),
             ])
@@ -127,9 +128,9 @@ class PayInvoiceAction
                     self::notifySuccess('تمت عملية التسديد بنجاح');
                 });
             })
-            ->color(fn($record) => $record->status === 'paid' ? 'gray' : 'rose')
+            ->color(fn ($record) => $record->status === 'paid' ? 'gray' : 'rose')
             ->extraAttributes(['class' => 'font-medium'])
-            ->icon(fn($record) => $record->status === 'paid' ? 'heroicon-s-check-circle' : 'heroicon-s-banknotes');
+            ->icon(fn ($record) => $record->status === 'paid' ? 'heroicon-s-check-circle' : 'heroicon-s-banknotes');
     }
 
     protected static function updateInvoiceStatus($record, float $remainingDebt): void

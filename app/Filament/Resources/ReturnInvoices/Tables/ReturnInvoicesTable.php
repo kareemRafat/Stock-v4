@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\ReturnInvoices\Tables;
 
-use Filament\Tables\Table;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
-use Illuminate\Support\Facades\Auth;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class ReturnInvoicesTable
 {
@@ -32,7 +32,7 @@ class ReturnInvoicesTable
                     ->label('فاتورة المبيعات')
                     ->color('orange')
                     ->searchable()
-                    ->url(fn($record) => url("/invoices/{$record->original_invoice_id}"))
+                    ->url(fn ($record) => url("/invoices/{$record->original_invoice_id}"))
                     ->openUrlInNewTab(),
 
                 TextColumn::make('items_count')
@@ -58,7 +58,7 @@ class ReturnInvoicesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->extraAttributes(['class' => 'font-semibold'])
-                        ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                        ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
                 ]),
             ]);
     }

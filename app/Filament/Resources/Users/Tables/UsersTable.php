@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
-use Filament\Tables\Table;
-use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 
 class UsersTable
 {
@@ -32,7 +32,7 @@ class UsersTable
 
                 TextColumn::make('role')
                     ->label('الوظيفة')
-                    ->formatStateUsing(fn($state, $record) => $record->role->name === 'ADMIN' ? 'ادمن' : 'موظف')
+                    ->formatStateUsing(fn ($state, $record) => $record->role->name === 'ADMIN' ? 'ادمن' : 'موظف')
                     ->weight(FontWeight::Medium),
 
                 TextColumn::make('status')
@@ -40,13 +40,13 @@ class UsersTable
                     ->badge()
                     ->colors([
                         'success' => 'active',
-                        'danger'  => 'inactive',
+                        'danger' => 'inactive',
                     ])
-                    ->formatStateUsing(fn($state) => $state === 'active' ? 'مفعل' : 'غير مفعل'),
+                    ->formatStateUsing(fn ($state) => $state === 'active' ? 'مفعل' : 'غير مفعل'),
 
                 TextColumn::make('created_at')
                     ->label('تاريخ التسجيل')
-                    ->date("d-m-Y")
+                    ->date('d-m-Y')
                     ->sortable(),
             ])
             ->filters([

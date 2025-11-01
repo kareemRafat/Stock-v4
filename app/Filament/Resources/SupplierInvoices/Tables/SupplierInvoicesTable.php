@@ -5,15 +5,15 @@ namespace App\Filament\Resources\SupplierInvoices\Tables;
 use App\Filament\Resources\Suppliers\SupplierResource;
 use App\Models\Supplier;
 use App\Models\SupplierInvoice;
-use Filament\Tables\Table;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
-use Illuminate\Support\Facades\Auth;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class SupplierInvoicesTable
 {
@@ -29,14 +29,14 @@ class SupplierInvoicesTable
                     ->searchable()
                     ->color('indigo')
                     ->weight('medium')
-                    ->formatStateUsing(fn($state) => strtoupper($state)),
+                    ->formatStateUsing(fn ($state) => strtoupper($state)),
 
                 TextColumn::make('supplier.name')
                     ->label('اسم المورد')
                     ->weight('medium')
                     ->searchable()
-                    ->tooltip("حركة رصيد العميل")
-                    ->url(fn(SupplierInvoice $record): ?string => $record->supplier_id ?
+                    ->tooltip('حركة رصيد العميل')
+                    ->url(fn (SupplierInvoice $record): ?string => $record->supplier_id ?
                         SupplierResource::getUrl('wallet', ['record' => $record->supplier_id]) : null),
 
                 TextColumn::make('total_amount')
@@ -48,22 +48,21 @@ class SupplierInvoicesTable
                     ->label('تاريخ الفاتورة')
                     ->weight('medium')
                     ->color('primary')
-                    ->date("d/m/Y")
+                    ->date('d/m/Y')
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('supplier_id')
                     ->label('المورد')
                     ->options(
-                        fn() => Supplier::query()
+                        fn () => Supplier::query()
                             ->latest()
                             ->limit(10)
                             ->pluck('name', 'id')
                     )
                     ->searchable()
                     ->getSearchResultsUsing(
-                        fn(string $search) =>
-                        Supplier::query()
+                        fn (string $search) => Supplier::query()
                             ->where('name', 'like', "%{$search}%")
                             ->limit(50)
                             ->pluck('name', 'id')
@@ -81,7 +80,7 @@ class SupplierInvoicesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->extraAttributes(['class' => 'font-semibold'])
-                        ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                        ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
                 ]),
             ]);
     }

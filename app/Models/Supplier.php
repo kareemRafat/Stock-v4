@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Supplier extends Model
 {
@@ -27,7 +27,6 @@ class Supplier extends Model
     {
         return $this->hasMany(ProductPurchase::class);
     }
-
 
     // حساب الرصيد
     public function getBalanceAttribute()
@@ -65,6 +64,7 @@ class Supplier extends Model
     public function getLastPurchaseDateAttribute(): ?string
     {
         $lastPurchase = $this->purchases()->latest('purchase_date')->first();
+
         return $lastPurchase ? $lastPurchase->purchase_date->format('Y-m-d') : null;
     }
 
@@ -74,6 +74,7 @@ class Supplier extends Model
     public function getAveragePurchaseValueAttribute(): float
     {
         $count = $this->total_purchases_count;
+
         return $count > 0 ? round($this->total_purchases_value / $count, 2) : 0;
     }
 

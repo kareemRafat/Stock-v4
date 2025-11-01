@@ -4,12 +4,12 @@ namespace App\Filament\Resources\SupplierInvoices\Schemas;
 
 use App\Filament\Forms\Components\ClientDatetimeHidden;
 use App\Models\Supplier;
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Schema;
 
 class SupplierInvoiceForm
 {
@@ -80,7 +80,7 @@ class SupplierInvoiceForm
                                     ->get()
                                     ->mapWithKeys(function ($product) {
                                         return [
-                                            $product->id => $product->name
+                                            $product->id => $product->name,
                                         ];
                                     });
                             })
@@ -93,12 +93,13 @@ class SupplierInvoiceForm
                                     ->get()
                                     ->mapWithKeys(function ($product) {
                                         return [
-                                            $product->id => $product->name
+                                            $product->id => $product->name,
                                         ];
                                     });
                             })
                             ->getOptionLabelUsing(function ($value) {
                                 $product = \App\Models\Product::find($value);
+
                                 return $product ? $product->name : '';
                             })
                             ->live()
@@ -149,7 +150,7 @@ class SupplierInvoiceForm
                         TextInput::make('retail_price')
                             ->label('سعر القطاعي الجديد')
                             ->numeric()
-                            ->required()
+                            ->required(),
 
                     ])
                     ->columns(5)
@@ -161,19 +162,19 @@ class SupplierInvoiceForm
                     ->live() // allow frontend updates
                     ->state(function ($get) {
                         return collect($get('items') ?? [])
-                            ->sum(fn($item) => (int) ($item['subtotal'] ?? 0)) . ' جنيه';
+                            ->sum(fn ($item) => (int) ($item['subtotal'] ?? 0)).' جنيه';
                     })
                     ->extraAttributes([
-                        'class' => 'bg-primary-600 text-white border rounded-lg shadow-sm p-3'
+                        'class' => 'bg-primary-600 text-white border rounded-lg shadow-sm p-3',
                     ])
                     ->columnSpanFull(),
 
-                    TextInput::make('paid_amount')
-                        ->label('المبلغ المدفوع')
-                        ->numeric()
-                        ->prefix('جنيه')
-                        ->required()
-                        ->columnSpanFull()
+                TextInput::make('paid_amount')
+                    ->label('المبلغ المدفوع')
+                    ->numeric()
+                    ->prefix('جنيه')
+                    ->required()
+                    ->columnSpanFull(),
             ]);
     }
 }

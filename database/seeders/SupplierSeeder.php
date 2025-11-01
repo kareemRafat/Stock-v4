@@ -1,12 +1,14 @@
 <?php
+
 // database/seeders/SupplierSeeder.php
+
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Supplier;
 use App\Models\SupplierInvoice;
 use App\Models\SupplierInvoiceItem;
 use App\Models\SupplierWallet;
+use Illuminate\Database\Seeder;
 
 class SupplierSeeder extends Seeder
 {

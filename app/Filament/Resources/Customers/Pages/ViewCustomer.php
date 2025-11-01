@@ -2,16 +2,16 @@
 
 namespace App\Filament\Resources\Customers\Pages;
 
-use Filament\Actions;
-use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Auth;
-use Filament\Schemas\Components\Grid;
-use Illuminate\Support\Facades\Session;
-use Filament\Resources\Pages\ViewRecord;
-use Filament\Schemas\Components\Section;
-use Filament\Infolists\Components\TextEntry;
 use App\Filament\Resources\Customers\CustomerResource;
+use Filament\Actions;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\URL;
 
 class ViewCustomer extends ViewRecord
 {
@@ -24,12 +24,12 @@ class ViewCustomer extends ViewRecord
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                ->url(fn() => Session::get('previous_url') ?? CustomerResource::getUrl('index')),
+                ->url(fn () => Session::get('previous_url') ?? CustomerResource::getUrl('index')),
             Actions\DeleteAction::make()
                 ->label('حذف')
                 ->icon('heroicon-o-trash')
                 ->color('danger')
-                ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin')
+                ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin')
                 ->extraAttributes(['class' => 'font-semibold']),
         ];
     }
@@ -79,7 +79,7 @@ class ViewCustomer extends ViewRecord
 
                             TextEntry::make('balance')
                                 ->label('رصيد العميل')
-                                ->state(fn($record) => $record->calculateBalance())
+                                ->state(fn ($record) => $record->calculateBalance())
                                 ->placeholder('لا يوجد')
                                 ->icon('heroicon-o-banknotes')
                                 ->formatStateUsing(function ($state) {
@@ -87,7 +87,7 @@ class ViewCustomer extends ViewRecord
                                         return '0.00 ج.م (حساب متوازن)';
                                     }
 
-                                    $formatted = number_format(abs($state), 2, '.', ',') . ' ج.م';
+                                    $formatted = number_format(abs($state), 2, '.', ',').' ج.م';
 
                                     if ($state > 0) {
                                         return "{$formatted} (مديونية على العميل)";
@@ -96,15 +96,20 @@ class ViewCustomer extends ViewRecord
                                     }
                                 })
                                 ->color(function ($state) {
-                                    if ($state > 0) return 'danger';
-                                    if ($state < 0) return 'success';
+                                    if ($state > 0) {
+                                        return 'danger';
+                                    }
+                                    if ($state < 0) {
+                                        return 'success';
+                                    }
+
                                     return 'success';
                                 })
                                 ->weight('semibold')
-                                ->url(fn($record) => route('filament.admin.resources.customers.wallet', $record))
+                                ->url(fn ($record) => route('filament.admin.resources.customers.wallet', $record))
                                 ->openUrlInNewTab(false)
                                 ->tooltip('اضغط لعرض حركات المحفظة'),
-                        ])
+                        ]),
                     ])
                     ->columnSpanFull()
                     ->collapsible(),

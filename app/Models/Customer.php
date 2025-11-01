@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 class Customer extends Model
 {
@@ -17,7 +16,7 @@ class Customer extends Model
         'address',
         'city',
         'governorate',
-        'status'
+        'status',
     ];
 
     public function invoices()
@@ -32,16 +31,17 @@ class Customer extends Model
 
     /**
      * حساب الرصيد الإجمالي للعميل
-     * @param mixed $beforeDate التاريخ المراد حساب الرصيد قبله (اختياري)
+     *
+     * @param  mixed  $beforeDate  التاريخ المراد حساب الرصيد قبله (اختياري)
      * @return float الرصيد (موجب = مديونية، سالب = رصيد دائن)
      */
     public function calculateBalance($beforeDate = null)
     {
         static $cache = [];
 
-        $cacheKey = $this->id . '_' . ($beforeDate ? (string)$beforeDate : 'current');
+        $cacheKey = $this->id.'_'.($beforeDate ? (string) $beforeDate : 'current');
 
-        if (!isset($cache[$cacheKey])) {
+        if (! isset($cache[$cacheKey])) {
             $query = $this->wallet();
 
             if ($beforeDate) {
@@ -64,7 +64,8 @@ class Customer extends Model
 
     /**
      * الحصول على الرصيد الدائن المتاح فقط
-     * @param mixed $beforeDate التاريخ المراد حساب الرصيد قبله
+     *
+     * @param  mixed  $beforeDate  التاريخ المراد حساب الرصيد قبله
      * @return float القيمة الموجبة للرصيد الدائن أو 0
      */
     public function getAvailableCreditBalance($beforeDate = null)

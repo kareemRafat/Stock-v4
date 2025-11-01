@@ -2,17 +2,17 @@
 
 namespace App\Filament\Resources\ReturnInvoices\Pages;
 
-use App\Models\Invoice;
-use App\Models\Product;
 use App\Enums\MovementType;
-use App\Models\InvoiceItem;
+use App\Filament\Resources\ReturnInvoices\ReturnInvoiceResource;
 use App\Models\CustomerWallet;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\Product;
 use App\Services\StockService;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
-use App\Filament\Resources\ReturnInvoices\ReturnInvoiceResource;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class CreateReturnInvoice extends CreateRecord
 {
@@ -27,9 +27,9 @@ class CreateReturnInvoice extends CreateRecord
         $this->originalInvoiceId = request()->query('original_invoice');
 
         // Generate return number once
-        $time = (int)(microtime(true) * 1000000);
+        $time = (int) (microtime(true) * 1000000);
         $sixDigits = $time % 1000000;
-        $returnNumber = 'RET-' . str_pad($sixDigits, 6, '0', STR_PAD_LEFT);
+        $returnNumber = 'RET-'.str_pad($sixDigits, 6, '0', STR_PAD_LEFT);
 
         if ($this->originalInvoiceId) {
             $originalInvoice = Invoice::with('items.product')->find($this->originalInvoiceId);
@@ -105,8 +105,8 @@ class CreateReturnInvoice extends CreateRecord
     private function getValidReturnItems(array $items): array
     {
         return array_filter($items, function ($item) {
-            return (!empty($item['return_all']) && $item['return_all']) ||
-                (!empty($item['quantity_returned']) && $item['quantity_returned'] > 0);
+            return (! empty($item['return_all']) && $item['return_all']) ||
+                (! empty($item['quantity_returned']) && $item['quantity_returned'] > 0);
         });
     }
 
@@ -143,7 +143,7 @@ class CreateReturnInvoice extends CreateRecord
      */
     private function getQuantityReturned(array $item): int
     {
-        if (!empty($item['return_all']) && $item['return_all']) {
+        if (! empty($item['return_all']) && $item['return_all']) {
             return $item['quantity'];
         }
 
@@ -156,6 +156,7 @@ class CreateReturnInvoice extends CreateRecord
     private function getProductPrice($productId): float
     {
         $product = Product::find($productId);
+
         return $product->cost_price ?? 0;
     }
 
@@ -203,7 +204,7 @@ class CreateReturnInvoice extends CreateRecord
                     'amount' => $totalReturnAmount,
                     'invoice_id' => $returnInvoice->original_invoice_id,
                     'return_invoice_id' => $returnInvoice->id,
-                    'notes' => 'فاتورة مرتجع ' . $returnInvoice->return_invoice_number,
+                    'notes' => 'فاتورة مرتجع '.$returnInvoice->return_invoice_number,
                     'created_at' => $returnInvoice->created_at ?? now(),
                 ]);
             }
@@ -229,7 +230,7 @@ class CreateReturnInvoice extends CreateRecord
         }
 
         $product = Product::find($item['product_id']);
-        if (!$product) {
+        if (! $product) {
             return;
         }
 
@@ -237,14 +238,14 @@ class CreateReturnInvoice extends CreateRecord
             ->where('product_id', $product->id)
             ->first();
 
-        $costPrice      = $originalItem->cost_price ?? $product->cost_price;
+        $costPrice = $originalItem->cost_price ?? $product->cost_price;
         $wholesalePrice = $originalItem->wholesale_price ?? $product->wholesale_price;
-        $retailPrice    = $originalItem->retail_price ?? $product->retail_price;
+        $retailPrice = $originalItem->retail_price ?? $product->retail_price;
 
         $price = match ($invoiceType) {
             'wholesale' => $wholesalePrice,
-            'retail'    => $retailPrice,
-            default     => $retailPrice,
+            'retail' => $retailPrice,
+            default => $retailPrice,
         };
 
         // حساب السعر بعد تطبيق نسبة الخصم الخاص
@@ -253,10 +254,10 @@ class CreateReturnInvoice extends CreateRecord
 
         // إنشاء بند المرتجع
         $returnInvoice->items()->create([
-            'product_id'        => $item['product_id'],
+            'product_id' => $item['product_id'],
             'quantity_returned' => $quantityReturned,
-            'price'             => $price,
-            'subtotal'          => $subtotalAfterDiscount,
+            'price' => $price,
+            'subtotal' => $subtotalAfterDiscount,
         ]);
 
         // تسجيل حركة المخزون

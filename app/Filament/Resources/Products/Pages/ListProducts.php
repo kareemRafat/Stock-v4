@@ -3,13 +3,12 @@
 namespace App\Filament\Resources\Products\Pages;
 
 use App\Enums\MovementType;
+use App\Filament\Actions\ProductActions\AddProductsAction;
+use App\Filament\Resources\Products\ProductResource;
 use App\Models\Product;
-use App\Models\StockMovement;
 use App\Services\StockService;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
-use App\Filament\Resources\Products\ProductResource;
-use App\Filament\Actions\ProductActions\AddProductsAction;
 
 class ListProducts extends ListRecords
 {
@@ -39,7 +38,7 @@ class ListProducts extends ListRecords
                             quantity: $openingStock,
                             costPrice: $product->cost_price,
                             wholeSalePrice: $product->wholesale_price,
-                            discount : $product->discount ,
+                            discount : $product->discount,
                             retailPrice: $product->retail_price,
                             referenceId: $product->id,
                             referenceTable: 'products'

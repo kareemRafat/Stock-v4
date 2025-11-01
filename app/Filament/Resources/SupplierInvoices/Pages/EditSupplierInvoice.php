@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\SupplierInvoices\Pages;
 
-use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\Auth;
-use Filament\Resources\Pages\EditRecord;
 use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
+use Filament\Actions\DeleteAction;
+use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Auth;
 
 class EditSupplierInvoice extends EditRecord
 {
@@ -15,7 +15,7 @@ class EditSupplierInvoice extends EditRecord
     {
         return [
             DeleteAction::make()
-                ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
         ];
     }
 }

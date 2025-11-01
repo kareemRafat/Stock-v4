@@ -3,20 +3,20 @@
 namespace App\Filament\Resources\Products\Pages;
 
 use App\Enums\MovementType;
-use Filament\Actions;
+use App\Filament\Forms\Components\ClientDatetimeHidden;
+use App\Filament\Resources\Products\ProductResource;
 use App\Models\Product;
 use App\Models\Supplier;
-use Filament\Resources\Pages\Page;
-use Filament\Forms\Components\Select;
-use Filament\Schemas\Components\Grid;
+use App\Services\StockService;
+use Filament\Actions;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
 use Filament\Forms\Concerns\InteractsWithForms;
-use App\Filament\Resources\Products\ProductResource;
-use App\Filament\Forms\Components\ClientDatetimeHidden;
-use App\Services\StockService;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\Page;
+use Filament\Schemas\Components\Grid;
 
 class AddProducts extends Page
 {
@@ -103,7 +103,7 @@ class AddProducts extends Page
                             ->options(function () {
                                 return Supplier::limit(10)->pluck('name', 'id')->toArray();
                             })
-                            ->getOptionLabelUsing(fn($value) => Supplier::find($value)?->name)
+                            ->getOptionLabelUsing(fn ($value) => Supplier::find($value)?->name)
                             ->getSearchResultsUsing(function ($search) {
                                 return Supplier::where('name', 'like', "%{$search}%")
                                     ->pluck('name', 'id')
@@ -114,13 +114,13 @@ class AddProducts extends Page
                             ->label('الوصف')
                             ->columnSpanFull(),
 
-                        ClientDatetimeHidden::make('created_at')
+                        ClientDatetimeHidden::make('created_at'),
                     ]),
                 ])
                 ->label('منتجات جديدة')
                 ->collapsible()
                 ->columnSpanFull()
-                ->itemLabel(fn(array $state): ?string => $state['name'] ?: 'منتج جديد'),
+                ->itemLabel(fn (array $state): ?string => $state['name'] ?: 'منتج جديد'),
         ];
     }
 
@@ -161,6 +161,7 @@ class AddProducts extends Page
         // because i insert it in $stockService->recordMovement
         // to avoid stock_quantity duplication on insert
         unset($productData['stock_quantity']);
+
         return Product::create($productData);
     }
 

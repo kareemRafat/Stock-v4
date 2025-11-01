@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Invoice;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class InvoicePolicy
 {
@@ -21,7 +20,7 @@ class InvoicePolicy
      */
     public function view(User $user, Invoice $invoice): bool
     {
-        return true ;
+        return true;
     }
 
     /**
@@ -37,7 +36,7 @@ class InvoicePolicy
      */
     public function update(User $user, Invoice $invoice): bool
     {
-        return true ;
+        return true;
     }
 
     /**

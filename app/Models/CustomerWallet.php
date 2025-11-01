@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class CustomerWallet extends Model
 {
@@ -37,14 +37,14 @@ class CustomerWallet extends Model
     protected function createdDate(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $this->created_at ? Carbon::parse($this->created_at)->format('Y-m-d') : null,
+            get: fn ($value) => $this->created_at ? Carbon::parse($this->created_at)->format('Y-m-d') : null,
         );
     }
 
     protected function createdTime(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $this->created_at ? Carbon::parse($this->created_at)->format('h:i a') : null,
+            get: fn ($value) => $this->created_at ? Carbon::parse($this->created_at)->format('h:i a') : null,
         );
     }
 }

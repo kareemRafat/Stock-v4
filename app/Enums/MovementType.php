@@ -34,7 +34,7 @@ enum MovementType: string
      */
     public function isOutput(): bool
     {
-        return !$this->isInput();
+        return ! $this->isInput();
     }
 
     /**
@@ -42,7 +42,7 @@ enum MovementType: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::OPENING_STOCK => 'رصيد افتتاحي',
             self::PURCHASE => 'شراء من مورد',
             self::INVOICE_SALE => 'بيع لعميل',
@@ -59,7 +59,7 @@ enum MovementType: string
      */
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::OPENING_STOCK => 'info',
             self::PURCHASE, self::SALE_RETURN, self::ADJUSTMENT_IN => 'success',
             self::INVOICE_SALE, self::PURCHASE_RETURN, self::ADJUSTMENT_OUT => 'danger',

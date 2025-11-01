@@ -2,14 +2,14 @@
 
 namespace App\Filament\Resources\OutsourcedProductions\Tables;
 
-use Filament\Tables\Table;
-use Filament\Actions\EditAction;
-use Illuminate\Support\Facades\Auth;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class OutsourcedProductionsTable
 {
@@ -46,24 +46,24 @@ class OutsourcedProductionsTable
                 TextColumn::make('start_date')
                     ->label('تاريخ البدء')
                     ->weight(FontWeight::Medium)
-                    ->date("d-m-Y")
+                    ->date('d-m-Y')
                     ->sortable(),
                 TextColumn::make('actual_delivery_date')
                     ->label('تاريخ التسليم')
                     ->weight(FontWeight::Medium)
-                    ->date("d-m-Y")
+                    ->date('d-m-Y')
                     ->sortable(),
                 TextColumn::make('status')
                     ->label('الحالة')
                     ->weight(FontWeight::Medium)
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         'in_progress' => 'info',
                         'completed' => 'success',
                         'canceled' => 'danger',
                         default => 'secondary',
                     })
-                    ->formatStateUsing(fn($state) => match ($state) {
+                    ->formatStateUsing(fn ($state) => match ($state) {
                         'in_progress' => 'قيد التنفيذ',
                         'completed' => 'مكتمل',
                         'canceled' => 'ملغي',
@@ -76,13 +76,13 @@ class OutsourcedProductionsTable
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make()
-                    ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                    ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->extraAttributes(['class' => 'font-semibold'])
-                        ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                        ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
                 ]),
             ]);
     }

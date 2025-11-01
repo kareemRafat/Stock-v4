@@ -2,23 +2,22 @@
 
 namespace App\Filament\Resources\Invoices\Schemas;
 
+use App\Filament\Forms\Components\ClientDatetimeHidden;
+use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Product;
-use App\Models\Customer;
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\Radio;
-use Filament\Support\Icons\Heroicon;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Schemas\Components\Wizard;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Components\ViewField;
 use Filament\Resources\Pages\CreateRecord;
-use Filament\Forms\Components\ToggleButtons;
+use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
-use App\Filament\Forms\Components\ClientDatetimeHidden;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
 class InvoiceForm
 {
@@ -38,20 +37,19 @@ class InvoiceForm
                         ->schema(self::getInvoiceItemsInfo()),
                 ])
                     ->label('إنشاء فاتورة')
-                    ->columnSpanFull()
+                    ->columnSpanFull(),
             ]);
     }
-
 
     public static function getInvoiceInformation()
     {
         return [
             TextInput::make('invoice_number')
                 ->label('رقم الفاتورة')
-                ->default(fn($livewire) => $livewire instanceof CreateRecord ? Invoice::generateUniqueInvoiceNumber() : null)
+                ->default(fn ($livewire) => $livewire instanceof CreateRecord ? Invoice::generateUniqueInvoiceNumber() : null)
                 ->disabled()
                 ->dehydrated()
-                ->dehydrateStateUsing(fn($state) => $state)
+                ->dehydrateStateUsing(fn ($state) => $state)
                 ->required()
                 ->rules(['required', 'string', 'max:255']),
 
@@ -67,15 +65,15 @@ class InvoiceForm
                     return Customer::where('status', 'enabled')
                         ->limit(10)
                         ->get()
-                        ->mapWithKeys(fn($c) => [$c->id => $c->name]);
+                        ->mapWithKeys(fn ($c) => [$c->id => $c->name]);
                 })
-                ->getOptionLabelUsing(fn($value) => Customer::find($value)?->name)
+                ->getOptionLabelUsing(fn ($value) => Customer::find($value)?->name)
                 ->getSearchResultsUsing(function ($search) {
                     return Customer::where('name', 'like', "%{$search}%")
                         ->where('status', 'enabled')
                         ->limit(50)
                         ->get()
-                        ->mapWithKeys(fn($c) => [$c->id => $c->name]);
+                        ->mapWithKeys(fn ($c) => [$c->id => $c->name]);
                 }),
 
             // نوع السعر على مستوى الفاتورة
@@ -83,7 +81,7 @@ class InvoiceForm
                 ->label('نوع السعر (لكل الفاتورة)')
                 ->options([
                     'wholesale' => 'جملة',
-                    'retail'    => 'قطاعي',
+                    'retail' => 'قطاعي',
                 ])
                 ->default('wholesale')
                 ->required()
@@ -91,11 +89,11 @@ class InvoiceForm
                 ->extraAttributes(['class' => 'pl-2 py-2'])
                 ->colors([
                     'wholesale' => 'teal',
-                    'retail'    => 'orange',
+                    'retail' => 'orange',
                 ])
                 ->icons([
                     'wholesale' => 'heroicon-o-shopping-bag',
-                    'retail'    => 'heroicon-o-shopping-cart',
+                    'retail' => 'heroicon-o-shopping-cart',
                 ])
                 ->live()
                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
@@ -134,7 +132,6 @@ class InvoiceForm
         ];
     }
 
-
     public static function getInvoiceItemsInfo()
     {
         return [
@@ -149,22 +146,22 @@ class InvoiceForm
                         ->preload()
                         ->required()
                         ->options(function () {
-                            return Product::where('stock_quantity' , '>', 0 )
+                            return Product::where('stock_quantity', '>', 0)
                                 ->limit(20)
                                 ->get()
-                                ->mapWithKeys(fn($p) => [$p->id => $p->name]);
+                                ->mapWithKeys(fn ($p) => [$p->id => $p->name]);
                         })
                         ->getSearchResultsUsing(function (string $search) {
                             return Product::query()
                                 ->where(function ($q) use ($search) {
-                                    $q->where('stock_quantity' ,  '>' ,  0 );
+                                    $q->where('stock_quantity', '>', 0);
                                     $q->where('name', 'like', "%{$search}%");
                                 })
                                 ->limit(50)
                                 ->get()
-                                ->mapWithKeys(fn($p) => [$p->id => $p->name]);
+                                ->mapWithKeys(fn ($p) => [$p->id => $p->name]);
                         })
-                        ->getOptionLabelUsing(fn($value) => Product::find($value)?->name)
+                        ->getOptionLabelUsing(fn ($value) => Product::find($value)?->name)
                         ->live()
                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
                             $product = Product::find($state);
@@ -174,13 +171,11 @@ class InvoiceForm
 
                             $invoicePriceType = $get('../../price_type'); // نوع السعر من الفاتورة
 
-
                             if ($invoicePriceType === 'wholesale') {
                                 $price = round($product->discounted_wholesale_price, 2);
                             } else {
                                 $price = round($product->retail_price, 2);
                             }
-
 
                             $quantity = $get('quantity') ?? 1;
 
@@ -247,8 +242,6 @@ class InvoiceForm
                 ->minItems(1)
                 ->required(),
 
-
-
             ViewField::make('total_amount_display')
                 ->view('filament.partials.invoice-total')
                 ->live()
@@ -262,7 +255,6 @@ class InvoiceForm
             Hidden::make('total_amount')
                 ->dehydrated()
                 ->default(0),
-
 
             // special discount
             TextInput::make('special_discount')

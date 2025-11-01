@@ -9,7 +9,7 @@ enum UserRole: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::ADMIN => 'Administrator',
             self::EMPLOYEE => 'Employee'
         };
@@ -17,7 +17,7 @@ enum UserRole: string
 
     public function canManageUsers(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::ADMIN => true,
             self::EMPLOYEE => false,
         };

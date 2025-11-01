@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\SupplierInvoices\Pages;
 
-use Filament\Schemas\Schema;
-use Filament\Support\Enums\TextSize;
+use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\RepeatableEntry;
-use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
+use Filament\Schemas\Schema;
+use Filament\Support\Enums\TextSize;
 
 class ViewSupplierInvoice extends ViewRecord
 {
@@ -73,6 +73,7 @@ class ViewSupplierInvoice extends ViewRecord
                                         $discount = $record->product->discount ?? 0;
 
                                         $final = $price - ($price * ($discount / 100));
+
                                         return round($final, 2);
                                     })
                                     ->size(TextSize::Medium),
@@ -111,8 +112,9 @@ class ViewSupplierInvoice extends ViewRecord
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                // ->url(fn() => SupplierInvoiceResource::getUrl('index'))
-                ->action(fn() => redirect(SupplierInvoiceResource::getUrl('index'))),
+                // Refresh the table on index page
+                ->extraAttributes(['wire:navigate' => true]) // very important
+                ->url(SupplierInvoiceResource::getUrl('index')),
         ];
     }
 }

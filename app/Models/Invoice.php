@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Invoice extends Model
 {
@@ -53,8 +53,6 @@ class Invoice extends Model
     /**
      * حساب المبلغ المطلوب سداده نقداً
      * بعد خصم: (الخصم الخاص + المرتجعات + رصيد العميل المتاح)
-     *
-     * @return float
      */
     public function getAmountDueAttribute(): float
     {
@@ -79,8 +77,6 @@ class Invoice extends Model
 
     /**
      * حساب قيمة المرتجعات مع تطبيق نسبة الخصم الخاص
-     *
-     * @return float
      */
     public function calculateReturnsWithDiscount(): float
     {
@@ -110,8 +106,6 @@ class Invoice extends Model
 
     /**
      * الحصول على تفاصيل الحساب (للعرض)
-     *
-     * @return array
      */
     public function getPaymentBreakdown(): array
     {
@@ -134,12 +128,7 @@ class Invoice extends Model
         ];
     }
 
-
-
-
-
-
-    //////////////////////
+    // ////////////////////
 
     protected static function booted(): void
     {
@@ -156,7 +145,7 @@ class Invoice extends Model
         parent::boot();
 
         static::creating(function ($invoice) {
-            if (!$invoice->invoice_number) {
+            if (! $invoice->invoice_number) {
                 $invoice->invoice_number = self::generateUniqueInvoiceNumber();
             }
         });
@@ -167,15 +156,15 @@ class Invoice extends Model
         $prefix = 'INV-';
 
         for ($i = 0; $i < 5; $i++) {
-            $number = $prefix . str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $number = $prefix.str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-            if (!self::where('invoice_number', $number)->exists()) {
+            if (! self::where('invoice_number', $number)->exists()) {
                 return $number;
             }
         }
 
         // Fallback to a timestamp if all attempts fail
-        return $prefix . now()->format('ymdHis');
+        return $prefix.now()->format('ymdHis');
     }
 
     public function getTotalAmountAttribute($value)
@@ -186,35 +175,35 @@ class Invoice extends Model
     protected function createdDate(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $this->created_at ? Carbon::parse($this->created_at)->format('Y-m-d') : null,
+            get: fn ($value) => $this->created_at ? Carbon::parse($this->created_at)->format('Y-m-d') : null,
         );
     }
 
     protected function createdTime(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $this->created_at ? Carbon::parse($this->created_at)->format('h:i a') : null,
+            get: fn ($value) => $this->created_at ? Carbon::parse($this->created_at)->format('h:i a') : null,
         );
     }
 
     protected function createdTime12Hour(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $this->created_at ? Carbon::parse($this->created_at)->format('h:i A') : null,
+            get: fn ($value) => $this->created_at ? Carbon::parse($this->created_at)->format('h:i A') : null,
         );
     }
 
     public function hasReturns(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->returnInvoices->isNotEmpty(), // Uses eager loaded data
+            get: fn () => $this->returnInvoices->isNotEmpty(), // Uses eager loaded data
         );
     }
 
     public function returnsCount(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->returnInvoices()->count(),
+            get: fn () => $this->returnInvoices()->count(),
         );
     }
 

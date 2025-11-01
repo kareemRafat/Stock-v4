@@ -15,7 +15,7 @@ class ProductPurchase extends Model
         'total_cost',
         'purchase_date',
         'supplier_invoice_number',
-        'notes'
+        'notes',
     ];
 
     protected $casts = [
@@ -119,5 +119,4 @@ class ProductPurchase extends Model
     {
         return $query->where('product_id', $productId);
     }
-
 }

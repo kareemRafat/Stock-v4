@@ -19,7 +19,7 @@ return new class extends Migration
                 'payment',
                 'purchase_return',
                 'adjustment',
-                'debt_payment'
+                'debt_payment',
             ]);
             $table->decimal('amount', 10, 2);
             $table->foreignId('supplier_invoice_id')->nullable()->constrained()->onDelete('set null');

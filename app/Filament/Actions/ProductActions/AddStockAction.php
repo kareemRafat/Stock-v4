@@ -3,9 +3,8 @@
 namespace App\Filament\Actions\ProductActions;
 
 use App\Filament\Forms\Components\ClientDatetimeHidden;
-use Filament\Forms;
-use Filament\Actions\Action;
 use App\Services\StockService;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 
 class AddStockAction
@@ -25,7 +24,7 @@ class AddStockAction
                     ->numeric()
                     ->minValue(1)
                     ->required(),
-                ClientDatetimeHidden::make('created_at')
+                ClientDatetimeHidden::make('created_at'),
             ])
             ->action(function (array $data, $record, $livewire) {
                 app(StockService::class)->recordMovement(
@@ -38,11 +37,11 @@ class AddStockAction
                     retailPrice: $record->retail_price,
                     referenceId: $record->id,
                     referenceTable: 'products',
-                    createdAt:$data['created_at'],
+                    createdAt: $data['created_at'],
                 );
             })
             ->after(function ($record, $data, $livewire) {
-                 $livewire->dispatch('refresh-product-page');
+                $livewire->dispatch('refresh-product-page');
             })
             ->successNotificationTitle('تمت إضافة الكمية بنجاح');
     }

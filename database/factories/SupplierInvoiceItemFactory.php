@@ -19,14 +19,14 @@ class SupplierInvoiceItemFactory extends Factory
     public function definition(): array
     {
         $quantity = $this->faker->numberBetween(5, 100);
-        $price    = $this->faker->randomFloat(2, 10, 500);
+        $price = $this->faker->randomFloat(2, 10, 500);
 
         return [
             'supplier_invoice_id' => SupplierInvoice::factory(),
-            'product_id'          => Product::factory(),
-            'quantity'            => $quantity,
-            'cost_price'               => $price,
-            'subtotal'            => $quantity * $price,
+            'product_id' => Product::factory(),
+            'quantity' => $quantity,
+            'cost_price' => $price,
+            'subtotal' => $quantity * $price,
         ];
     }
 }

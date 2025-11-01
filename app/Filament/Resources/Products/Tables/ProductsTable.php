@@ -2,18 +2,17 @@
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Filament\Actions\ProductActions\AddStockAction;
 use App\Models\Supplier;
-use Filament\Tables\Table;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\Auth;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
-use App\Filament\Actions\ProductActions\AddStockAction;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class ProductsTable
 {
@@ -28,7 +27,7 @@ class ProductsTable
                 TextColumn::make('index')
                     ->label('#')
                     ->state(
-                        fn($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
+                        fn ($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
                             + $rowLoop->iteration
                     )
                     ->sortable(false)
@@ -47,8 +46,8 @@ class ProductsTable
                 TextColumn::make('stock_quantity')
                     ->numeric()
                     ->label('الكمية المتوفرة')
-                    ->formatStateUsing(fn($state) => $state == 0 ? 'لاتوجد' : $state)
-                    ->color(fn($state) => $state == 0 ? 'danger' : ($state < 20 ? 'orange' : null))
+                    ->formatStateUsing(fn ($state) => $state == 0 ? 'لاتوجد' : $state)
+                    ->color(fn ($state) => $state == 0 ? 'danger' : ($state < 20 ? 'orange' : null))
                     ->weight(FontWeight::Bold),
 
                 // TextColumn::make('cost_price')
@@ -102,6 +101,7 @@ class ProductsTable
                     })
                     ->getOptionLabelUsing(function ($value) {
                         $supplier = Supplier::find($value);
+
                         return $supplier ? $supplier->name : '';
                     })
                     ->placeholder('كل الموردين')
@@ -115,7 +115,7 @@ class ProductsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                        ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
                 ]),
             ]);
     }

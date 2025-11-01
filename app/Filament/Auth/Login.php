@@ -2,19 +2,19 @@
 
 namespace App\Filament\Auth;
 
-use Filament\Schemas\Schema;
+use Filament\Auth\Pages\Login as BaseLogin;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
-use Filament\Auth\Pages\Login as BaseLogin;
 
 class Login extends BaseLogin
 {
     public ?string $username = '';
 
-     public function form(Schema $schema): Schema
+    public function form(Schema $schema): Schema
     {
-        return  $schema
+        return $schema
             ->components([
                 $this->getUsernameFormComponent(),
                 $this->getPasswordFormComponent(),
@@ -25,7 +25,7 @@ class Login extends BaseLogin
     protected function getUsernameFormComponent()
     {
         return TextInput::make('username')
-            ->label("اسم الدخول")
+            ->label('اسم الدخول')
             ->required()
             ->autofocus()
             ->autocomplete()
@@ -53,6 +53,6 @@ class Login extends BaseLogin
     {
         $username = $this->form->getState()['username'] ?? request()->input('username');
 
-        return 'login|' . $username . '|' . request()->ip();
+        return 'login|'.$username.'|'.request()->ip();
     }
 }

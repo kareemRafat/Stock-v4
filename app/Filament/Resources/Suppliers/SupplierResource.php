@@ -2,18 +2,18 @@
 
 namespace App\Filament\Resources\Suppliers;
 
-use UnitEnum;
-use BackedEnum;
-use App\Models\Supplier;
-use Filament\Tables\Table;
-use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
-use Filament\Support\Icons\Heroicon;
 use App\Filament\Resources\Suppliers\Pages\EditSupplier;
 use App\Filament\Resources\Suppliers\Pages\ListSuppliers;
+use App\Filament\Resources\Suppliers\Pages\SupplierWalletPage;
 use App\Filament\Resources\Suppliers\Schemas\SupplierForm;
 use App\Filament\Resources\Suppliers\Tables\SuppliersTable;
-use App\Filament\Resources\Suppliers\Pages\SupplierWalletPage;
+use App\Models\Supplier;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+use UnitEnum;
 
 class SupplierResource extends Resource
 {

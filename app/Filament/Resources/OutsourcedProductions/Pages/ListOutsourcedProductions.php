@@ -14,8 +14,8 @@ class ListOutsourcedProductions extends ListRecords
     {
         return [
             CreateAction::make()
-            ->slideOver()
-            ->createAnother(false),
+                ->slideOver()
+                ->createAnother(false),
         ];
     }
 }

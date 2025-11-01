@@ -1,13 +1,11 @@
 <?php
 
-use Carbon\Carbon;
-use App\Models\Invoice;
-use App\Models\Product;
-use App\Models\StockMovement;
 use App\Models\CustomerWallet;
+use App\Models\Invoice;
+use App\Models\StockMovement;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-
 
 Route::get('/monthly-profit', function () {
     $month = now()->month;
@@ -42,7 +40,6 @@ Route::get('/monthly-profit', function () {
         'net_profit' => round($netProfit, 2),
     ]);
 });
-
 
 Route::get('/monthly-financial-report', function () {
     $month = now()->month;

@@ -5,10 +5,10 @@ namespace App\Filament\Resources\Products\Schemas;
 use App\Filament\Forms\Components\ClientDatetimeHidden;
 use App\Models\Supplier;
 use Filament\Forms\Components\Hidden;
-use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Schema;
 
 class ProductForm
 {
@@ -61,11 +61,11 @@ class ProductForm
                 TextInput::make('stock_quantity')
                     ->label('الكمية المتاحة بالمخزن')
                     ->numeric()
-                    ->default(fn($record) => $record?->stock_quantity ?? 0)
+                    ->default(fn ($record) => $record?->stock_quantity ?? 0)
                     ->afterStateUpdatedJs('
                         $set("new_stock", $state);
                     ')
-                    ->dehydrated(fn($operation) => $operation === 'create'),
+                    ->dehydrated(fn ($operation) => $operation === 'create'),
 
                 Hidden::make('new_stock')
                     ->label('الكمية الجديدة')
@@ -80,7 +80,7 @@ class ProductForm
                         // get 10 when open
                         return Supplier::limit(15)->pluck('name', 'id')->toArray();
                     })
-                    ->getOptionLabelUsing(fn($value) => Supplier::find($value)?->name)
+                    ->getOptionLabelUsing(fn ($value) => Supplier::find($value)?->name)
                     ->getSearchResultsUsing(function ($search) {
                         return Supplier::where('name', 'like', "%{$search}%")
                             ->pluck('name', 'id')

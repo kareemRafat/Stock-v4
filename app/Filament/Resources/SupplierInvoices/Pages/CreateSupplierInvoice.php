@@ -3,11 +3,11 @@
 namespace App\Filament\Resources\SupplierInvoices\Pages;
 
 use App\Enums\MovementType;
-use Filament\Actions\Action;
+use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
 use App\Models\SupplierWallet;
 use App\Services\StockService;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
-use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
 
 class CreateSupplierInvoice extends CreateRecord
 {
@@ -65,7 +65,7 @@ class CreateSupplierInvoice extends CreateRecord
                 $product->update([
                     'cost_price' => $item->cost_price,
                     'wholesale_price' => $item->wholesale_price,
-                    'retail_price'    => $item->retail_price,
+                    'retail_price' => $item->retail_price,
                 ]);
             }
 

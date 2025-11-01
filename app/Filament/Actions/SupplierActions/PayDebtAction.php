@@ -2,15 +2,14 @@
 
 namespace App\Filament\Actions\SupplierActions;
 
-use Filament\Forms;
-use Filament\Actions\Action;
-use App\Models\CustomerWallet;
-use App\Models\SupplierWallet;
-use Illuminate\Support\HtmlString;
-use Illuminate\Database\Eloquent\Model;
-use Filament\Notifications\Notification;
-use Filament\Infolists\Components\TextEntry;
 use App\Filament\Forms\Components\ClientDatetimeHidden;
+use App\Models\SupplierWallet;
+use Filament\Actions\Action;
+use Filament\Forms;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
 
 class PayDebtAction
 {
@@ -20,21 +19,22 @@ class PayDebtAction
             ->label('سداد مديونية')
             ->modalSubmitActionLabel('سداد مديونية')
             ->modalHeading(
-                fn(Model $record) => new HtmlString('سداد مديونية المورد : ' . "<span style='color: #3b82f6 !important;font-weight:bold'>{$record->name}</span>")
+                fn (Model $record) => new HtmlString('سداد مديونية المورد : '."<span style='color: #3b82f6 !important;font-weight:bold'>{$record->name}</span>")
             )
-            ->disabled(fn($record): bool => $record->balance < 0 || $record->balance == 0)
-            ->color(fn($record): string => $record->balance < 0 || $record->balance == 0 ? 'gray' : 'warning')
+            ->disabled(fn ($record): bool => $record->balance < 0 || $record->balance == 0)
+            ->color(fn ($record): string => $record->balance < 0 || $record->balance == 0 ? 'gray' : 'warning')
             ->schema([
                 TextEntry::make('available_debt')
                     ->label('المديونية الحالية')
-                    ->state(fn($record) => $record->balance)
+                    ->state(fn ($record) => $record->balance)
                     ->formatStateUsing(function ($state) {
                         if ($state > 0) {
-                            return number_format($state, 2) . ' ج.م';
+                            return number_format($state, 2).' ج.م';
                         }
+
                         return 'لا توجد مديونية للعميل';
                     })
-                    ->color(fn($state) => $state > 0 ? 'rose' : 'indigo')
+                    ->color(fn ($state) => $state > 0 ? 'rose' : 'indigo')
                     ->weight('semibold'),
 
                 Forms\Components\TextInput::make('amount')
@@ -52,16 +52,17 @@ class PayDebtAction
                     ->autosize()
                     ->maxLength(500),
 
-                ClientDatetimeHidden::make('created_at')
+                ClientDatetimeHidden::make('created_at'),
             ])
             ->action(function (array $data, Model $record): void {
-                //check balance if the transaction (Debit)
+                // check balance if the transaction (Debit)
                 if (($data['amount'] ?? 0) <= 0) {
                     Notification::make()
                         ->title('خطأ في المبلغ')
                         ->body('المبلغ يجب أن يكون أكبر من الصفر')
                         ->danger()
                         ->send();
+
                     return;
                 }
 
@@ -78,7 +79,7 @@ class PayDebtAction
                 $remainingBalance = max(0, $record->balance);
                 Notification::make()
                     ->title('تم السداد بنجاح')
-                    ->body('تم سداد ' . number_format($data['amount'], 2) . ' ج.م. المتبقي من الدين : ' . number_format($remainingBalance, 2) . ' ج.م')
+                    ->body('تم سداد '.number_format($data['amount'], 2).' ج.م. المتبقي من الدين : '.number_format($remainingBalance, 2).' ج.م')
                     ->success()
                     ->send();
             })

@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Product;
 use App\Enums\MovementType;
+use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
 
@@ -22,11 +22,10 @@ class StockService
         ?float $discount = null,
         $referenceId = null,
         $referenceTable = null,
-        $createdAt  = null
+        $createdAt = null
     ) {
         return DB::transaction(
-            function ()
-            use ($product, $movementType, $quantity, $costPrice, $wholeSalePrice, $retailPrice, $referenceId, $referenceTable, $discount, $createdAt) {
+            function () use ($product, $movementType, $quantity, $costPrice, $wholeSalePrice, $retailPrice, $referenceId, $referenceTable, $discount, $createdAt) {
 
                 $stockBefore = $product->stock_quantity;
 
@@ -55,18 +54,18 @@ class StockService
 
                 // add stock_movements table Record
                 return StockMovement::create([
-                    'product_id'       => $product->id,
-                    'movement_type'    => $movementType,
-                    'qty_in'           => $qtyIn,
-                    'qty_out'          => $qtyOut,
-                    'stock_before'     => $stockBefore,      // الرصيد قبل
-                    'stock_after'      => $stockAfter,       // الرصيد بعد
-                    'cost_price'       => $costPrice ?? $product->cost_price,
-                    'wholesale_price'  => $wholeSalePrice,
-                    'retail_price'     => $retailPrice,
-                    'reference_id'     => $referenceId,
-                    'reference_table'  => $referenceTable,
-                    'created_at'       => $createdAt ?? $product->created_at
+                    'product_id' => $product->id,
+                    'movement_type' => $movementType,
+                    'qty_in' => $qtyIn,
+                    'qty_out' => $qtyOut,
+                    'stock_before' => $stockBefore,      // الرصيد قبل
+                    'stock_after' => $stockAfter,       // الرصيد بعد
+                    'cost_price' => $costPrice ?? $product->cost_price,
+                    'wholesale_price' => $wholeSalePrice,
+                    'retail_price' => $retailPrice,
+                    'reference_id' => $referenceId,
+                    'reference_table' => $referenceTable,
+                    'created_at' => $createdAt ?? $product->created_at,
                 ]);
             }
         );

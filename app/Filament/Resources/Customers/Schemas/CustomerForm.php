@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Customers\Schemas;
 
-use Filament\Schemas\Schema;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Schemas\Schema;
 
 class CustomerForm
 {
@@ -40,12 +40,12 @@ class CustomerForm
                     ->label('رقم التواصل')
                     ->rules(['required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'])
                     ->required()
-                    ->helperText("رقم التواصل مطلوب لعملية تسجيل العميل"),
+                    ->helperText('رقم التواصل مطلوب لعملية تسجيل العميل'),
                 TextInput::make('phone2')
                     ->tel()
                     ->rules(['nullable', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'])
                     ->label('رقم احتياطي')
-                    ->helperText("يمكن ترك الحقل فارغاً"),
+                    ->helperText('يمكن ترك الحقل فارغاً'),
                 Textarea::make('address')
                     ->label('العنوان')
                     ->rules(['required', 'string', 'max:1000'])

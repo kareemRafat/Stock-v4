@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Invoices\Pages;
 
-use Filament\Actions;
-use Filament\Resources\Pages\ViewRecord;
 use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\ReturnInvoices\Pages\CreateReturnInvoice;
+use Filament\Actions;
+use Filament\Resources\Pages\ViewRecord;
 
 class ViewInvoice extends ViewRecord
 {
@@ -22,15 +22,14 @@ class ViewInvoice extends ViewRecord
                 ->label('عمل مرتجع')
                 ->color('rose')
                 ->icon('heroicon-s-arrow-path')
-                ->url(fn($record) => CreateReturnInvoice::getUrl([
+                ->url(fn ($record) => CreateReturnInvoice::getUrl([
                     // go to create ReturnInvoice page
                     'original_invoice' => $record->id,
                 ]))
                 ->openUrlInNewTab(false)
-                ->disabled(fn($record) => !$record->hasReturnableItems())
+                ->disabled(fn ($record) => ! $record->hasReturnableItems())
                 ->tooltip(
-                    fn($record) =>
-                    $record->hasReturnableItems()
+                    fn ($record) => $record->hasReturnableItems()
                         ? 'إنشاء مرتجع للفاتورة'
                         : 'لا توجد منتجات متاحة للاسترجاع'
                 ),
@@ -41,11 +40,11 @@ class ViewInvoice extends ViewRecord
                 ->color('gray')
                 // to refresh the full page in filament
                 ->extraAttributes(['wire:navigate' => true]) // very important
-                ->url(InvoiceResource::getUrl('index'))
+                ->url(InvoiceResource::getUrl('index')),
         ];
     }
 
-    public function mount(int | string $record): void
+    public function mount(int|string $record): void
     {
         parent::mount($record);
 

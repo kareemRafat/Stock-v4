@@ -2,8 +2,8 @@
 
 namespace App\Filament\Actions\InvoiceActions;
 
-use Mpdf\Mpdf;
 use Filament\Actions\Action;
+use Mpdf\Mpdf;
 
 class PrintInvoiceAction
 {
@@ -36,23 +36,23 @@ class PrintInvoiceAction
 
                 // إعداد بيانات العرض
                 $viewData = [
-                    'invoice_number'   => $invoiceData['invoice_number'] ?? '---',
-                    'customer'         => \App\Models\Customer::find($invoiceData['customer_id'] ?? null),
-                    'price_type'       => $invoiceData['price_type'] ?? 'wholesale',
-                    'items'            => $items,
-                    'notes'            => $invoiceData['notes'] ?? '',
+                    'invoice_number' => $invoiceData['invoice_number'] ?? '---',
+                    'customer' => \App\Models\Customer::find($invoiceData['customer_id'] ?? null),
+                    'price_type' => $invoiceData['price_type'] ?? 'wholesale',
+                    'items' => $items,
+                    'notes' => $invoiceData['notes'] ?? '',
                     'special_discount' => $invoiceData['special_discount'] ?? 0,
-                    'created_at'       => now()->format('Y-m-d H:i'),
+                    'created_at' => now()->format('Y-m-d H:i'),
                 ];
 
                 // إعدادات Mpdf مع DejaVu Sans
                 $mpdf = new Mpdf([
                     'debug' => false,
                     'showImageErrors' => false,
-                    'default_font'       => 'readexpro',
-                    'mode'               => 'utf-8',
-                    'format'             => 'A4',
-                    'fontDir'            => [
+                    'default_font' => 'readexpro',
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'fontDir' => [
                         public_path('fonts/'),
                         ...(new \Mpdf\Config\ConfigVariables)->getDefaults()['fontDir'],
                     ],
@@ -62,11 +62,11 @@ class PrintInvoiceAction
                             'useOTL' => 0xFF,
                         ],
                     ],
-                    'default_font_size'  => 11,
-                    'directionality'     => 'rtl',
-                    'autoScriptToLang'   => true,
-                    'autoLangToFont'     => true,
-                    'autoArabic'         => true,
+                    'default_font_size' => 11,
+                    'directionality' => 'rtl',
+                    'autoScriptToLang' => true,
+                    'autoLangToFont' => true,
+                    'autoArabic' => true,
                 ]);
 
                 $mpdf->SetDirectionality('rtl');
@@ -74,7 +74,7 @@ class PrintInvoiceAction
                 $mpdf->WriteHTML($html);
 
                 return response()->streamDownload(
-                    fn() => $mpdf->Output(),
+                    fn () => $mpdf->Output(),
                     "فاتورة-{$viewData['invoice_number']}.pdf"
                 );
             });
