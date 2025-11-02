@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Actions\ActionGroup;
+use Illuminate\Support\Facades\DB;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\Auth;
 use Filament\Actions\BulkActionGroup;
@@ -20,6 +21,9 @@ use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\Customers\CustomerResource;
 use App\Filament\Actions\InvoiceActions\PayInvoiceAction;
+use App\Filament\Forms\Components\ClientDatetimeHidden;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 
 class InvoicesTable
 {
@@ -53,11 +57,6 @@ class InvoicesTable
                         'success' => fn($state) => $state === 'retail',
                     ]),
 
-                TextColumn::make('total_amount')
-                    ->label('إجمالي الفاتورة')
-                    ->formatStateUsing(fn($record) => number_format($record->total_amount - $record->special_discount, 2))
-                    ->suffix(' جنيه '),
-
                 TextColumn::make('createdDate')
                     ->label('تاريخ الفاتورة')
                     ->color('primary'),
@@ -70,13 +69,17 @@ class InvoicesTable
                     ->color(fn(Invoice $record): string => $record->has_returns ? 'danger' : 'success')
                     ->formatStateUsing(fn(Invoice $record): string => $record->has_returns ? 'مرتجع' : 'لا'),
 
+                TextColumn::make('total_amount')
+                    ->label('إجمالي الفاتورة')
+                    ->formatStateUsing(fn($record) => number_format($record->total_amount - $record->special_discount, 2))
+                    ->suffix(' جنيه '),
+
                 TextColumn::make('remaining')
                     ->label('المتبقي')
                     ->state(fn($record) => max(0, ($record->total_amount - $record->special_discount) - $record->paid_amount))
                     ->formatStateUsing(fn($state) => number_format($state, 2) . ' ج.م')
                     ->badge()
                     ->color(fn($state) => $state == 0 ? 'success' : 'danger'),
-
 
                 TextColumn::make('status')
                     ->label('الحالة')
@@ -100,16 +103,60 @@ class InvoicesTable
                     })
                     ->action(
                         Action::make('markAsPaid')
-                            ->label('تسديد فاتورة')
-                            ->icon('heroicon-o-check')
+                            ->label('تسديد كامل')
+                            ->icon('heroicon-o-check-circle')
+                            ->color('success')
                             ->requiresConfirmation()
-                            ->modalSubmitActionLabel('تسديد فاتورة')
-                            ->action(function ($record) {
-                                if ($record->status === 'partial') {
-                                    $record->update(['status' => 'paid']);
-                                }
+                            ->modalHeading('تسديد الفاتورة بالكامل')
+                            ->modalDescription(
+                                fn($record) =>
+                                'سيتم تسجيل دفعة بقيمة: ' .
+                                    number_format($record->total_amount - $record->paid_amount, 2) .
+                                    ' ج.م لإتمام سداد الفاتورة'
+                            )
+                            ->schema([
+                                ClientDatetimeHidden::make('created_at')
+                            ])
+                            ->modalSubmitActionLabel('تسديد الآن')
+                            ->action(function ($record, $data) {
+                                DB::transaction(function () use ($record, $data) {
+                                    // حساب المبلغ المتبقي
+                                    $remainingAmount = $record->total_amount - $record->special_discount - $record->paid_amount;
+                                    if ($remainingAmount > 0) {
+                                        // تسجيل الدفعة في المحفظة
+                                        $record->customer->wallet()->create([
+                                            'type' => 'payment',
+                                            'amount' => $remainingAmount,
+                                            'invoice_id' => $record->id,
+                                            'invoice_number' => $record->invoice_number,
+                                            'notes' => 'سداد كامل للفاتورة (المبلغ المتبقي)',
+                                            'created_at' => $data['created_at'],
+                                        ]);
+
+                                        // تحديث paid_amount
+                                        $record->update([
+                                            'paid_amount' => $record->paid_amount + $remainingAmount,
+                                            'status' => 'paid'
+                                        ]);
+
+                                        Notification::make()
+                                            ->success()
+                                            ->title('تم تسديد الفاتورة بنجاح')
+                                            ->body('تم تسجيل دفعة بقيمة ' . number_format($remainingAmount, 2) . ' ج.م')
+                                            ->send();
+                                    } else {
+                                        // الفاتورة مدفوعة فعلاً
+                                        $record->update(['status' => 'paid']);
+
+                                        Notification::make()
+                                            ->info()
+                                            ->title('الفاتورة مدفوعة')
+                                            ->body('لا يوجد مبلغ متبقي للسداد')
+                                            ->send();
+                                    }
+                                });
                             })
-                            ->hidden(fn($record) => $record->status !== 'partial')
+                            ->visible(fn($record) => $record->status === 'partial')
                     ),
             ])
             ->filters([
