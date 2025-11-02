@@ -16,7 +16,7 @@ class PayInvoiceAction
     public static function make(): Action
     {
         return Action::make('payInvoice')
-            ->label(fn($record) => in_array($record->status, ['paid', 'partial']) ? 'خالص' : 'سداد')
+            ->label(fn($record) => in_array($record->status, ['paid', 'partial']) ? 'مسدد ' : 'سداد')
             ->disabled(fn($record) => in_array($record->status, ['paid', 'partial']))
             ->modalSubmitActionLabel('تسديد فاتورة')
             ->modalHeading(

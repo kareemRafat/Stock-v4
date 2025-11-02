@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Invoices\Tables;
 
+use App\Filament\Actions\InvoiceActions\MarkAsPaid;
 use App\Models\Invoice;
 use App\Models\Customer;
 use Filament\Tables\Table;
@@ -102,77 +103,19 @@ class InvoicesTable
                         default => $state,
                     })
                     ->action(
-                        Action::make('markAsPaid')
-                            ->label('تسديد كامل')
-                            ->icon('heroicon-o-check-circle')
-                            ->color('success')
-                            ->requiresConfirmation()
-                            ->modalHeading('تسديد الفاتورة بالكامل')
-                            ->modalDescription(
-                                fn($record) =>
-                                'سيتم تسجيل دفعة بقيمة: ' .
-                                    number_format($record->total_amount - $record->paid_amount, 2) .
-                                    ' ج.م لإتمام سداد الفاتورة'
-                            )
-                            ->schema([
-                                ClientDatetimeHidden::make('created_at')
-                            ])
-                            ->modalSubmitActionLabel('تسديد الآن')
-                            ->action(function ($record, $data) {
-                                DB::transaction(function () use ($record, $data) {
-                                    // حساب المبلغ المتبقي
-                                    $remainingAmount = $record->total_amount - $record->special_discount - $record->paid_amount;
-                                    if ($remainingAmount > 0) {
-                                        // تسجيل الدفعة في المحفظة
-                                        $record->customer->wallet()->create([
-                                            'type' => 'payment',
-                                            'amount' => $remainingAmount,
-                                            'invoice_id' => $record->id,
-                                            'invoice_number' => $record->invoice_number,
-                                            'notes' => 'سداد كامل للفاتورة (المبلغ المتبقي)',
-                                            'created_at' => $data['created_at'],
-                                        ]);
-
-                                        // تحديث paid_amount
-                                        $record->update([
-                                            'paid_amount' => $record->paid_amount + $remainingAmount,
-                                            'status' => 'paid'
-                                        ]);
-
-                                        Notification::make()
-                                            ->success()
-                                            ->title('تم تسديد الفاتورة بنجاح')
-                                            ->body('تم تسجيل دفعة بقيمة ' . number_format($remainingAmount, 2) . ' ج.م')
-                                            ->send();
-                                    } else {
-                                        // الفاتورة مدفوعة فعلاً
-                                        $record->update(['status' => 'paid']);
-
-                                        Notification::make()
-                                            ->info()
-                                            ->title('الفاتورة مدفوعة')
-                                            ->body('لا يوجد مبلغ متبقي للسداد')
-                                            ->send();
-                                    }
-                                });
-                            })
-                            ->visible(fn($record) => $record->status === 'partial')
+                        MarkAsPaid::make()
                     ),
             ])
             ->filters([
-                Filter::make('status')
-                    ->schema([
-                        Toggle::make('pending_only')
-                            ->label('عرض الفواتير غير المدفوعة')
-                            ->default(false)
-                            ->inline(false),
+                SelectFilter::make('status')
+                    ->label('حالة الفاتورة')
+                    ->options([
+                        'paid' => 'المدفوعة',
+                        'pending' => 'غير المدفوعة',
+                        'partial' => 'المدفوعة جزئياً',
                     ])
-                    ->query(function (Builder $query, array $data) {
-                        if ($data['pending_only'] ?? false) {
-                            $query->where('status', 'pending');
-                        }
-                    })
-                    ->columnSpanFull(),
+                    ->native(false)
+                    ->default(''),
 
                 SelectFilter::make('customer_id')
                     ->label('اسم العميل')
@@ -182,8 +125,7 @@ class InvoicesTable
                     ->getSearchResultsUsing(fn(string $search) => Customer::where('name', 'like', "%{$search}%")
                         ->pluck('name', 'id')
                         ->toArray())
-                    ->placeholder('كل العملاء')
-                    ->columnSpan(2),
+                    ->placeholder('كل العملاء'),
 
                 SelectFilter::make('price_type')
                     ->label('نوع الفاتورة')
@@ -191,10 +133,10 @@ class InvoicesTable
                         'wholesale' => 'جملة',
                         'retail' => 'قطاعي',
                     ])
-                    ->native(false)
-                    ->columnSpan(2),
+                    ->native(false),
 
             ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(3)
             ->deferFilters(false)
             ->recordActions([
                 ViewAction::make()
