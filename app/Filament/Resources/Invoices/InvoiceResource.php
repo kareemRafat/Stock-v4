@@ -2,18 +2,19 @@
 
 namespace App\Filament\Resources\Invoices;
 
-use App\Filament\Resources\Invoices\Pages\CreateInvoice;
-use App\Filament\Resources\Invoices\Pages\ListInvoices;
+use UnitEnum;
+use BackedEnum;
+use App\Models\Invoice;
+use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Resources\Resource;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\Invoices\Pages\ViewInvoice;
+use App\Filament\Resources\Invoices\Pages\ListInvoices;
+use App\Filament\Resources\Invoices\Pages\CreateInvoice;
 use App\Filament\Resources\Invoices\Schemas\InvoiceForm;
 use App\Filament\Resources\Invoices\Tables\InvoicesTable;
-use App\Models\Invoice;
-use BackedEnum;
-use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Table;
-use UnitEnum;
 
 class InvoiceResource extends Resource
 {

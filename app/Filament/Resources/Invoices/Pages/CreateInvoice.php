@@ -124,8 +124,6 @@ class CreateInvoice extends CreateRecord
                 'created_at' => $this->record->created_at, // استخدام نفس تاريخ الفاتورة
             ]);
         }
-
-        // $this->dispatch('$refresh');
     }
 
     protected function getRedirectUrl(): string

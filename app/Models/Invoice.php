@@ -18,6 +18,7 @@ class Invoice extends Model
         'invoice_number',
         'customer_id',
         'total_amount',
+        'paid_amount',
         'notes',
         'status',
         'special_discount',
