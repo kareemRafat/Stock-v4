@@ -44,7 +44,7 @@ class SupplierInvoiceForm
                                 return [$supplier->id => $supplier->name];
                             });
                     })
-                    ->getOptionLabelUsing(fn($value) => Supplier::find($value)?->name ?? 'محذوف'),
+                    ->getOptionLabelUsing(fn ($value) => Supplier::find($value)?->name ?? 'محذوف'),
                 TextInput::make('invoice_number')
                     ->label('رقم الفاتورة')
                     ->required()
@@ -163,7 +163,7 @@ class SupplierInvoiceForm
                     ->live() // allow frontend updates
                     ->state(function ($get) {
                         return collect($get('items') ?? [])
-                            ->sum(fn($item) => (int) ($item['subtotal'] ?? 0)) . ' جنيه';
+                            ->sum(fn ($item) => (int) ($item['subtotal'] ?? 0)).' جنيه';
                     })
                     ->extraAttributes([
                         'class' => 'bg-primary-600 text-white border rounded-lg shadow-sm p-3',

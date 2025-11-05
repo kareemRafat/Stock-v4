@@ -16,11 +16,11 @@ class PayInvoiceAction
     public static function make(): Action
     {
         return Action::make('payInvoice')
-            ->label(fn($record) => in_array($record->status, ['paid', 'partial']) ? 'مسدد ' : 'سداد')
-            ->disabled(fn($record) => in_array($record->status, ['paid', 'partial']))
+            ->label(fn ($record) => in_array($record->status, ['paid', 'partial']) ? 'مسدد ' : 'سداد')
+            ->disabled(fn ($record) => in_array($record->status, ['paid', 'partial']))
             ->modalSubmitActionLabel('تسديد فاتورة')
             ->modalHeading(
-                fn(Model $record) => new HtmlString('تسديد فاتورة العميل: ' . "<span style='color: #3b82f6 !important'>{$record->customer->name}</span>")
+                fn (Model $record) => new HtmlString('تسديد فاتورة العميل: '."<span style='color: #3b82f6 !important'>{$record->customer->name}</span>")
             )
             ->schema([
                 // حقل المبلغ المدفوع
@@ -48,12 +48,12 @@ class PayInvoiceAction
                     })
                     ->formatStateUsing(function ($state) {
                         if ($state > 0) {
-                            return number_format($state, 2) . ' ج.م';
+                            return number_format($state, 2).' ج.م';
                         }
 
                         return 'لا يوجد رصيد دائن للعميل';
                     })
-                    ->color(fn($state) => $state > 0 ? 'success' : 'indigo')
+                    ->color(fn ($state) => $state > 0 ? 'success' : 'indigo')
                     ->weight('semibold'),
 
                 // عرض المبلغ المطلوب سداده
@@ -62,7 +62,7 @@ class PayInvoiceAction
                     ->state(function ($record) {
                         return $record->amount_due;
                     })
-                    ->formatStateUsing(fn($state) => number_format($state, 2) . ' ج.م')
+                    ->formatStateUsing(fn ($state) => number_format($state, 2).' ج.م')
                     ->color('danger')
                     ->weight('semibold')
                     ->columnSpan(1)
@@ -89,8 +89,6 @@ class PayInvoiceAction
                     $customer = $record->customer;
                     $paid = $data['paid'] ?? 0;
                     $total = $record->total_amount;
-
-
 
                     // 1. حساب الرصيد الدائن المتاح قبل الفاتورة
                     $availableCredit = $customer->getAvailableCreditBalance($record->created_at);
@@ -127,7 +125,7 @@ class PayInvoiceAction
 
                     // 6. تحديث المبلغ المدفوع في الفاتورة
                     $record->update([
-                        'paid_amount' => $record->paid_amount + $paid + $amountToUseFromCredit
+                        'paid_amount' => $record->paid_amount + $paid + $amountToUseFromCredit,
                     ]);
 
                     // 7. تحديث حالة الفاتورة
@@ -135,16 +133,16 @@ class PayInvoiceAction
                     self::notifySuccess('تمت عملية التسديد بنجاح');
                 });
             })
-            ->color(fn($record) => in_array($record->status, ['paid', 'partial']) ? 'gray' : 'rose')
+            ->color(fn ($record) => in_array($record->status, ['paid', 'partial']) ? 'gray' : 'rose')
             ->extraAttributes(['class' => 'font-medium'])
-            ->icon(fn($record) => in_array($record->status, ['paid', 'partial']) ? 'heroicon-s-check-circle' : 'heroicon-s-banknotes');
+            ->icon(fn ($record) => in_array($record->status, ['paid', 'partial']) ? 'heroicon-s-check-circle' : 'heroicon-s-banknotes');
     }
 
     protected static function updateInvoiceStatus($record, float $remainingDebt): void
     {
         if (abs($remainingDebt) < 0.01) { // تجنب مشاكل الفلوات
             $record->update(['status' => 'paid']);
-        } else if ($remainingDebt > 0) {
+        } elseif ($remainingDebt > 0) {
             $record->update(['status' => 'partial']);
         } else {
             // إذا كان سالب (المدفوع أكثر من المطلوب)

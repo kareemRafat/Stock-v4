@@ -18,13 +18,12 @@ class MarkAsPaid
             ->requiresConfirmation()
             ->modalHeading('تسديد الفاتورة بالكامل')
             ->modalDescription(
-                fn($record) =>
-                'سيتم تسجيل دفعة بقيمة: ' .
-                    number_format($record->total_amount - $record->paid_amount, 2) .
+                fn ($record) => 'سيتم تسجيل دفعة بقيمة: '.
+                    number_format($record->total_amount - $record->paid_amount, 2).
                     ' ج.م لإتمام سداد الفاتورة'
             )
             ->schema([
-                ClientDatetimeHidden::make('created_at')
+                ClientDatetimeHidden::make('created_at'),
             ])
             ->modalSubmitActionLabel('تسديد الآن')
             ->action(function ($record, $data) {
@@ -45,13 +44,13 @@ class MarkAsPaid
                         // تحديث paid_amount
                         $record->update([
                             'paid_amount' => $record->paid_amount + $remainingAmount,
-                            'status' => 'paid'
+                            'status' => 'paid',
                         ]);
 
                         Notification::make()
                             ->success()
                             ->title('تم تسديد الفاتورة بنجاح')
-                            ->body('تم تسجيل دفعة بقيمة ' . number_format($remainingAmount, 2) . ' ج.م')
+                            ->body('تم تسجيل دفعة بقيمة '.number_format($remainingAmount, 2).' ج.م')
                             ->send();
                     } else {
                         // الفاتورة مدفوعة فعلاً
@@ -65,6 +64,6 @@ class MarkAsPaid
                     }
                 });
             })
-            ->visible(fn($record) => $record->status === 'partial');
+            ->visible(fn ($record) => $record->status === 'partial');
     }
 }
