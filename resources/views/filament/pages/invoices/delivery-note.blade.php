@@ -2,16 +2,14 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-center">
         <div class="mb-2">
-            <h1 class="text-3xl font-bold text-primary-600 mb-4">فاتورة</h1>
+            <h1 class="text-3xl font-bold text-primary-900 mb-4">فاتورة</h1>
             <div class="text-black text-sm space-y-1">
                 <p class="text-base font-medium text-black mb-2">شركة أحمد حسين</p>
                 <p>لمواد التعبئة والتغليف</p>
             </div>
             <div class="flex mt-1 text-sm font-medium gap-1">
-                {{-- <x-heroicon-s-phone class="w-4 h-4" /> --}}
                 <span class="text-sm">موبايل :</span>
                 <span>01016011318</span>
-
             </div>
         </div>
 

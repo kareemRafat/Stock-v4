@@ -22,7 +22,7 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-center">
                 <div class="mb-2">
-                    <h1 class="text-3xl font-bold text-primary-600 mb-4">فاتورة</h1>
+                    <h1 class="text-3xl font-bold text-primary-900 mb-4">فاتورة</h1>
                     <div class="text-black text-sm space-y-1">
                         <p class="text-base font-medium text-black mb-2">شركة أحمد حسين</p>
                         <p>لمواد التعبئة والتغليف</p>
@@ -85,17 +85,17 @@
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="text-right py-2 px-4 font-medium text-black text-xs border border-gray-400">
+                            <th class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 مسلسل</th>
-                            <th class="text-right py-2 px-4 font-medium text-black text-xs border border-gray-400">
+                            <th class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 المنتج</th>
-                            <th class="text-center py-2 px-4 font-medium text-black text-xs border border-gray-400">
+                            <th class="text-center py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 الكمية</th>
-                            <th class="text-right py-2 px-4 font-medium text-black text-xs border border-gray-400">
+                            <th class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 الخصم</th>
-                            <th class="text-right py-2 px-4 font-medium text-black text-xs border border-gray-400">
+                            <th class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 السعر للوحدة</th>
-                            <th class="text-right py-2 px-4 font-medium text-black text-xs border border-gray-400">
+                            <th class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 الإجمالي</th>
                         </tr>
                     </thead>
@@ -135,22 +135,22 @@
                             @endphp
 
                             <tr class="border-t border-gray-400">
-                                <td class="py-2 px-4 text-right text-black text-xs border border-gray-400">
+                                <td class="py-2 px-4 text-right text-black text-sm print:text-xs border border-gray-400">
                                     {{ $loop->iteration }}
                                 </td>
-                                <td class="py-2 px-4 text-black text-xs border border-gray-400">
+                                <td class="py-2 px-4 text-black text-sm print:text-xs border border-gray-400">
                                     {{ $product->name ?? '---' }}
                                 </td>
-                                <td class="py-2 px-4 text-center text-black text-xs border border-gray-400">
+                                <td class="py-2 px-4 text-center text-black text-sm print:text-xs border border-gray-400">
                                     {{ $item->quantity }} {{ $product->unit ?? '' }}
                                 </td>
-                                <td class="py-2 px-4 text-right text-black text-xs border border-gray-400">
+                                <td class="py-2 px-4 text-right text-black text-sm print:text-xs border border-gray-400">
                                     {{ $isWholesale ? number_format($discountPercent, 2) . ' %' : '-' }}
                                 </td>
-                                <td class="py-2 px-4 text-right text-black text-xs border border-gray-400">
+                                <td class="py-2 px-4 text-right text-black text-sm print:text-xs border border-gray-400">
                                     {{ number_format($priceBeforeDiscount, 2) }}
                                 </td>
-                                <td class="py-2 px-4 text-right font-medium text-black text-xs border border-gray-400">
+                                <td class="py-2 px-4 text-right font-medium text-black text-sm print:text-xs border border-gray-400">
                                     {{ number_format($lineTotal, 2) }}
                                 </td>
                             </tr>
