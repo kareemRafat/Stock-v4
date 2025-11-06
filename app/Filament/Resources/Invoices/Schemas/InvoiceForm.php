@@ -46,10 +46,10 @@ class InvoiceForm
         return [
             TextInput::make('invoice_number')
                 ->label('رقم الفاتورة')
-                ->default(fn ($livewire) => $livewire instanceof CreateRecord ? Invoice::generateUniqueInvoiceNumber() : null)
+                ->default(fn($livewire) => $livewire instanceof CreateRecord ? Invoice::generateUniqueInvoiceNumber() : null)
                 ->disabled()
                 ->dehydrated()
-                ->dehydrateStateUsing(fn ($state) => $state)
+                ->dehydrateStateUsing(fn($state) => $state)
                 ->required()
                 ->rules(['required', 'string', 'max:255']),
 
@@ -65,15 +65,15 @@ class InvoiceForm
                     return Customer::where('status', 'enabled')
                         ->limit(10)
                         ->get()
-                        ->mapWithKeys(fn ($c) => [$c->id => $c->name]);
+                        ->pluck('name', 'id');
                 })
-                ->getOptionLabelUsing(fn ($value) => Customer::find($value)?->name)
+                ->getOptionLabelUsing(fn($value) => Customer::find($value)?->name)
                 ->getSearchResultsUsing(function ($search) {
                     return Customer::where('name', 'like', "%{$search}%")
                         ->where('status', 'enabled')
                         ->limit(50)
                         ->get()
-                        ->mapWithKeys(fn ($c) => [$c->id => $c->name]);
+                        ->pluck('name', 'id');
                 }),
 
             // نوع السعر على مستوى الفاتورة
@@ -149,7 +149,7 @@ class InvoiceForm
                             return Product::where('stock_quantity', '>', 0)
                                 ->limit(20)
                                 ->get()
-                                ->mapWithKeys(fn ($p) => [$p->id => $p->name]);
+                                ->pluck('name', 'id');
                         })
                         ->getSearchResultsUsing(function (string $search) {
                             return Product::query()
@@ -159,9 +159,20 @@ class InvoiceForm
                                 })
                                 ->limit(50)
                                 ->get()
-                                ->mapWithKeys(fn ($p) => [$p->id => $p->name]);
+                                ->pluck('name', 'id');
                         })
-                        ->getOptionLabelUsing(fn ($value) => Product::find($value)?->name)
+                        ->getOptionLabelUsing(function ($value) {
+                            static $cache = [];
+
+                            if (!isset($cache[$value])) {
+                                $cache[$value] = Product::query()
+                                    ->where('stock_quantity', '>', 0)
+                                    ->where('id', $value)
+                                    ->value('name') ?? '';
+                            }
+
+                            return $cache[$value];
+                        })
                         ->live()
                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
                             $product = Product::find($state);

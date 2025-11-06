@@ -2,14 +2,15 @@
 
 namespace App\Filament\Resources\SupplierInvoices\Schemas;
 
-use App\Filament\Forms\Components\ClientDatetimeHidden;
+use App\Models\Product;
 use App\Models\Supplier;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
+use Filament\Infolists\Components\TextEntry;
+use App\Filament\Forms\Components\ClientDatetimeHidden;
 
 class SupplierInvoiceForm
 {
@@ -30,9 +31,7 @@ class SupplierInvoiceForm
                             ->latest()
                             ->limit(20)
                             ->get()
-                            ->mapWithKeys(function ($supplier) {
-                                return [$supplier->id => $supplier->name];
-                            });
+                            ->pluck('name', 'id');
                     })
                     ->getSearchResultsUsing(function (string $search) {
                         // results when search
@@ -40,11 +39,9 @@ class SupplierInvoiceForm
                             ->where('name', 'like', "%{$search}%")
                             ->limit(50)
                             ->get()
-                            ->mapWithKeys(function ($supplier) {
-                                return [$supplier->id => $supplier->name];
-                            });
+                            ->pluck('name', 'id');
                     })
-                    ->getOptionLabelUsing(fn ($value) => Supplier::find($value)?->name ?? 'محذوف'),
+                    ->getOptionLabelUsing(fn($value) => Supplier::find($value)?->name ?? 'محذوف'),
                 TextInput::make('invoice_number')
                     ->label('رقم الفاتورة')
                     ->required()
@@ -75,35 +72,34 @@ class SupplierInvoiceForm
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->options(function () {
-                                return \App\Models\Product::query()
-                                    ->limit(20)
-                                    ->get()
-                                    ->mapWithKeys(function ($product) {
-                                        return [
-                                            $product->id => $product->name,
-                                        ];
-                                    });
-                            })
-                            ->getSearchResultsUsing(function (string $search) {
-                                return \App\Models\Product::query()
-                                    ->where(function ($query) use ($search) {
-                                        $query->where('name', 'like', "%{$search}%");
-                                    })
-                                    ->limit(50)
-                                    ->get()
-                                    ->mapWithKeys(function ($product) {
-                                        return [
-                                            $product->id => $product->name,
-                                        ];
-                                    });
-                            })
+                            ->options(fn() => Product::query()
+                                ->orderBy('name')
+                                ->limit(20)
+                                ->pluck('name', 'id'))
+                            ->getSearchResultsUsing(fn(string $search) => Product::query()
+                                ->where('name', 'like', "%{$search}%")
+                                ->orderBy('name')
+                                ->limit(50)
+                                ->pluck('name', 'id'))
                             ->getOptionLabelUsing(function ($value) {
-                                $product = \App\Models\Product::find($value);
+                                static $cache = [];
 
-                                return $product ? $product->name : '';
+                                if (!isset($cache[$value])) {
+                                    $cache[$value] = Product::query()
+                                        ->where('id', $value)
+                                        ->value('name') ?? '';
+                                }
+
+                                return $cache[$value];
                             })
                             ->live()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $product = Product::find($state);
+                                if ($product) {
+                                    $set('wholesale_price', $product->wholesale_price ?? 0);
+                                    $set('retail_price', $product->retail_price ?? 0);
+                                }
+                            })
                             ->columnSpan(2),
 
                         TextInput::make('cost_price')
@@ -163,7 +159,7 @@ class SupplierInvoiceForm
                     ->live() // allow frontend updates
                     ->state(function ($get) {
                         return collect($get('items') ?? [])
-                            ->sum(fn ($item) => (int) ($item['subtotal'] ?? 0)).' جنيه';
+                            ->sum(fn($item) => (int) ($item['subtotal'] ?? 0)) . ' جنيه';
                     })
                     ->extraAttributes([
                         'class' => 'bg-primary-600 text-white border rounded-lg shadow-sm p-3',

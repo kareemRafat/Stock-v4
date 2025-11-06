@@ -85,9 +85,7 @@ class ProductsTable
                             ->latest()
                             ->limit(20)
                             ->get()
-                            ->mapWithKeys(function ($supplier) {
-                                return [$supplier->id => $supplier->name];
-                            });
+                            ->pluck('name', 'id');
                     })
                     ->getSearchResultsUsing(function (string $search) {
                         // results when search
@@ -95,9 +93,7 @@ class ProductsTable
                             ->where('name', 'like', "%{$search}%")
                             ->limit(50)
                             ->get()
-                            ->mapWithKeys(function ($supplier) {
-                                return [$supplier->id => $supplier->name];
-                            });
+                            ->pluck('name', 'id');
                     })
                     ->getOptionLabelUsing(function ($value) {
                         $supplier = Supplier::find($value);
