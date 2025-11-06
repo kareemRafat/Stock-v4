@@ -48,13 +48,13 @@ class ProductsTable
                     ->label('الكمية المتوفرة')
                     ->formatStateUsing(fn ($state) => $state == 0 ? 'لاتوجد' : $state)
                     ->color(fn ($state) => $state == 0 ? 'danger' : ($state < 20 ? 'orange' : null))
-                    ->weight(FontWeight::Bold),
+                    ->weight(FontWeight::Medium),
 
-                // TextColumn::make('cost_price')
-                //     ->label('سعر المصنع')
-                //     ->suffix(' جنيه ')
-                //     ->weight(FontWeight::Medium)
-                //     ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                TextColumn::make('cost_price')
+                    ->label('سعر المصنع')
+                    ->suffix(' جنيه ')
+                    ->weight(FontWeight::Medium)
+                    ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
 
                 TextColumn::make('wholesale_price')
                     ->label('سعر الجملة')

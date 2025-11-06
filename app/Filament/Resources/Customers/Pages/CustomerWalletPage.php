@@ -39,7 +39,7 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                 TextColumn::make('index')
                     ->label('#')
                     ->state(
-                        fn ($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
+                        fn($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
                             + $rowLoop->iteration
                     )
                     ->sortable(false)
@@ -54,13 +54,13 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                         'danger' => 'sale',
 
                         // دائن
-                        'success' => fn (string $state): bool => in_array($state, ['payment']),
-                        'teal' => fn (string $state): bool => in_array($state, ['sale_return']),
+                        'success' => fn(string $state): bool => in_array($state, ['payment']),
+                        'teal' => fn(string $state): bool => in_array($state, ['sale_return']),
 
                         // تسويات
-                        'warning' => fn (string $state): bool => in_array($state, ['adjustment', 'credit_use']),
+                        'warning' => fn(string $state): bool => in_array($state, ['adjustment', 'credit_use']),
                     ])
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'sale' => 'فاتورة مبيعات',
                         'payment' => 'دفعة سداد',
                         'sale_return' => 'مرتجع مبيعات',
@@ -75,19 +75,11 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->numeric(locale: 'en')
                     ->suffix(' ج.م')
                     ->weight('medium')
-                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ','))
-                    ->color(function ($record) {
-                        // مدين
-                        if ($record->type === 'sale') {
-                            return 'danger';
-                        }
-                        // دائن
-                        if (in_array($record->type, ['payment', 'sale_return', 'credit_use'])) {
-                            return 'success';
-                        }
-
-                        // تسويات
-                        return 'warning';
+                    ->formatStateUsing(fn($state) => number_format((float) $state, 2, '.', ','))
+                    ->color(fn($record) => match ($record->type) {
+                        'sale' => 'danger',
+                        'payment', 'sale_return', 'credit_use', 'adjustment' => 'success',
+                        default => 'warning',
                     }),
 
                 TextColumn::make('invoice.invoice_number')
@@ -96,11 +88,11 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->default('لا يوجد')
                     ->weight('medium')
                     ->url(
-                        fn ($record) => $record->invoice_id
+                        fn($record) => $record->invoice_id
                             ? route('filament.admin.resources.invoices.view', ['record' => $record->invoice_id])
                             : null
                     )
-                    ->color(fn ($record) => $record->invoice_id ? 'primary' : 'gray'),
+                    ->color(fn($record) => $record->invoice_id ? 'primary' : 'gray'),
 
                 TextColumn::make('notes')
                     ->label('ملاحظات الحركة')
@@ -116,9 +108,7 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->label('وقت الإضافة')
                     ->weight('medium'),
             ])
-            ->filters([
-
-            ], layout: FiltersLayout::AboveContent)
+            ->filters([], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
             ->defaultSort('created_at', 'desc')
             ->paginated([10, 25, 50, 100]);
@@ -136,7 +126,7 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
 
     public function getTitle(): string
     {
-        return 'رصيد العميل: '.$this->customer->name;
+        return 'رصيد العميل: ' . $this->customer->name;
     }
 
     protected function getHeaderActions(): array

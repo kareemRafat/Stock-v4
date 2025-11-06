@@ -15,7 +15,7 @@
 
         <div class="mt-4 sm:mt-0 sm:text-right">
             <div
-                class="flex items-stretch text-primary-900 px-4 py-1.5 rounded-md mb-2 text-sm font-medium justify-end gap-4">
+                class="flex items-stretch text-black px-4 py-1.5 rounded-md mb-2 text-sm font-medium justify-end gap-4">
                 <div class="flex items-center flex-col">
                     <span class="mb-2">رقم الفاتورة :</span>
                     <span># {{ $this->getRecord()->invoice_number }}</span>

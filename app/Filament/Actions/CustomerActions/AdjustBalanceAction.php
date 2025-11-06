@@ -18,7 +18,7 @@ class AdjustBalanceAction
             ->label('إضافة رصيد')
             ->modalSubmitActionLabel('إضافة رصيد')
             ->modalHeading(
-                fn (Model $record) => new HtmlString('إضافة رصيد العميل: '."<span style='color: #3b82f6 !important;font-weight:bold'>{$record->name}</span>")
+                fn(Model $record) => new HtmlString('إضافة رصيد العميل: ' . "<span style='color: #3b82f6 !important;font-weight:bold'>{$record->name}</span>")
             )
             ->schema([
                 Forms\Components\TextInput::make('amount')
@@ -49,19 +49,17 @@ class AdjustBalanceAction
 
                     return;
                 }
-
                 // create Transaction in wallet
-                CustomerWallet::create([
-                    'customer_id' => $record->id,
-                    'type' => 'credit',
+                $record->wallet()->create([
+                    'type' => 'adjustment',
                     'amount' => $data['amount'],
-                    'notes' => $data['notes'] ?? null,
-                    'created_at' => $data['created_at'] ?? now(),
+                    'notes' => $data['notes'] ?? 'اضافة رصيد يدوي ',
+                    'created_at' => $data['created_at'],
                 ]);
 
                 Notification::make()
                     ->title('تمت إضافة الرصيد بنجاح')
-                    ->body('تم إضافة '.number_format($data['amount'], 2).' إلى رصيد العميل')
+                    ->body('تم إضافة ' . number_format($data['amount'], 2) . ' إلى رصيد العميل')
                     ->success()
                     ->send();
             })

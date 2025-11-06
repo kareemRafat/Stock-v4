@@ -136,7 +136,6 @@ class SupplierWalletPage extends Page implements HasTable
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                // تم تحديث هذا السطر لاستخدام المنطق الاحتياطي الجديد
                 ->url(fn () => $url),
         ];
     }
