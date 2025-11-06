@@ -20,12 +20,18 @@
 
         <div id="print-area" class="bg-white p-6 rounded-lg shadow-sm ring-1 ring-gray-200">
             <!-- Header -->
-            <div class="flex flex-col sm:flex-row justify-between items-start">
-                <div class="mb-4">
+            <div class="flex flex-col sm:flex-row justify-between items-center">
+                <div class="mb-2">
                     <h1 class="text-3xl font-bold text-primary-600 mb-4">فاتورة</h1>
-                    <div class="text-gray-500 text-sm space-y-1">
-                        <p class="text-base font-medium text-gray-600 mb-4">شركة أحمد حسين</p>
+                    <div class="text-black text-sm space-y-1">
+                        <p class="text-base font-medium text-black mb-2">شركة أحمد حسين</p>
                         <p>لمواد التعبئة والتغليف</p>
+                    </div>
+                    <div class="flex mt-1 text-sm font-medium gap-1">
+                        {{-- <x-heroicon-s-phone class="w-4 h-4" /> --}}
+                        <span class="text-sm">موبايل :</span>
+                        <span>01016011318</span>
+
                     </div>
                 </div>
 
@@ -45,29 +51,32 @@
                             <span dir="ltr">{{ $this->getRecord()->createdTime }}</span>
                         </div>
                     </div>
-                    <div class="flex px-4 pb-2 mb-2 text-sm font-medium justify-end gap-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                            class="w-4 h-4 font-bold">
-                            <path fill-rule="evenodd"
-                                d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 0 0 6.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        <p>01016011318</p>
-                        {{-- <span> - </span>
-                        <p>01030231321</p> --}}
-                    </div>
+
                 </div>
             </div>
 
-            <hr class="my-4 border-gray-500">
+            <hr class="mb-4 mt-2 border-gray-500">
 
             <!-- Customer -->
             <div class="mb-6">
-                <h3 class="text-base font-medium text-gray-600 my-4">طبعت الفاتورة لأمر :</h3>
+                {{-- <h3 class="text-base font-medium text-black my-4">طبعت الفاتورة لأمر :</h3> --}}
                 <div
-                    class="bg-gray-50 p-3 rounded-md border border-gray-400 my-4 flex flex-col sm:flex-row justify-between">
-                    <p class="font-medium text-gray-600">{{ $this->getRecord()->customer->name ?? '-' }}</p>
-                    <p class="text-gray-600 text-sm">{{ $this->getRecord()->customer->address ?? '---' }}</p>
+                    class="bg-gray-50 px-3 py-2 rounded-sm border border-gray-400 my-4 flex flex-col sm:flex-row justify-between items-center">
+                    <p class="text-black">{{ $this->getRecord()->customer->name ?? '-' }}</p>
+                    <div class="flex flex-row gap-5">
+                        <p class="text-black text-sm flex gap-3">
+                            <x-heroicon-s-map-pin class="w-4 h-4" />
+                            {{ $this->getRecord()->customer->address ?? '---' }}
+                        </p>
+                        <div
+                            style="width: 1px; height: auto; border-right: 1px solid rgb(111, 111, 111); margin: 0 2px;">
+                        </div>
+                        <p class="text-black text-sm flex gap-3">
+                            <x-heroicon-s-phone class="w-4 h-4" />
+                            {{ $this->getRecord()->customer->phone ?? '---' }}
+                        </p>
+
+                    </div>
                 </div>
             </div>
 
@@ -76,17 +85,17 @@
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                            <th class="text-right py-2 px-4 font-medium text-black text-xs border border-gray-400">
                                 مسلسل</th>
-                            <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                            <th class="text-right py-2 px-4 font-medium text-black text-xs border border-gray-400">
                                 المنتج</th>
-                            <th class="text-center py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                            <th class="text-center py-2 px-4 font-medium text-black text-xs border border-gray-400">
                                 الكمية</th>
-                            <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                            <th class="text-right py-2 px-4 font-medium text-black text-xs border border-gray-400">
                                 الخصم</th>
-                            <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                            <th class="text-right py-2 px-4 font-medium text-black text-xs border border-gray-400">
                                 السعر للوحدة</th>
-                            <th class="text-right py-2 px-4 font-medium text-gray-600 text-sm border border-gray-400">
+                            <th class="text-right py-2 px-4 font-medium text-black text-xs border border-gray-400">
                                 الإجمالي</th>
                         </tr>
                     </thead>
@@ -126,23 +135,22 @@
                             @endphp
 
                             <tr class="border-t border-gray-400">
-                                <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
+                                <td class="py-2 px-4 text-right text-black text-xs border border-gray-400">
                                     {{ $loop->iteration }}
                                 </td>
-                                <td class="py-2 px-4 text-gray-600 text-sm border border-gray-400">
+                                <td class="py-2 px-4 text-black text-xs border border-gray-400">
                                     {{ $product->name ?? '---' }}
                                 </td>
-                                <td class="py-2 px-4 text-center text-gray-500 text-sm border border-gray-400">
+                                <td class="py-2 px-4 text-center text-black text-xs border border-gray-400">
                                     {{ $item->quantity }} {{ $product->unit ?? '' }}
                                 </td>
-                                <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
+                                <td class="py-2 px-4 text-right text-black text-xs border border-gray-400">
                                     {{ $isWholesale ? number_format($discountPercent, 2) . ' %' : '-' }}
                                 </td>
-                                <td class="py-2 px-4 text-right text-gray-500 text-sm border border-gray-400">
+                                <td class="py-2 px-4 text-right text-black text-xs border border-gray-400">
                                     {{ number_format($priceBeforeDiscount, 2) }}
                                 </td>
-                                <td
-                                    class="py-2 px-4 text-right font-medium text-gray-600 text-sm border border-gray-400">
+                                <td class="py-2 px-4 text-right font-medium text-black text-xs border border-gray-400">
                                     {{ number_format($lineTotal, 2) }}
                                 </td>
                             </tr>
@@ -156,12 +164,12 @@
             <!-- Totals -->
             <div class="flex w-full justify-between mt-4 font-semibold">
                 <div class="w-full space-y-2">
-                    <div class="flex justify-between py-2 px-2">
+                    <div class="flex justify-between py-1 px-2">
                         <span class="text-sm text-black">الإجمالي قبل الخصم:</span>
                         <span class="font-medium text-sm text-black">{{ number_format($totalBeforeSale, 2) }}</span>
                     </div>
 
-                    <div class="flex justify-between py-2 px-2">
+                    <div class="flex justify-between px-2">
                         <span class="text-sm text-black">إجمالي الخصومات:</span>
                         <span class="font-medium text-sm text-black">
                             {{ $isWholesale ? number_format($totalDiscounts, 2) : '-' }}
@@ -180,15 +188,15 @@
                             </div>
 
                             <div class="flex justify-between py-3">
-                                <span class="text-base font-medium text-black">الإجمالي :</span>
-                                <span class="text-base font-medium text-black">
+                                <span class="text-sm font-medium text-black">الإجمالي :</span>
+                                <span class="text-sm font-medium text-black">
                                     {{ number_format(($isWholesale ? $totalAfterDiscount : $totalBeforeSale) - $this->getRecord()->special_discount, 2) }}
                                     ج.م
                                 </span>
                             </div>
                         </div>
                     @else
-                        <div class="flex justify-between py-3 px-4 rounded-md">
+                        <div class="flex justify-between py-1 px-4 rounded-md">
                             <span class="text-base font-medium text-black">الإجمالي :</span>
                             <span class="text-base font-medium text-black">
                                 {{ number_format($isWholesale ? $totalAfterDiscount : $totalBeforeSale, 2) }} ج.م
