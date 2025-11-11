@@ -117,7 +117,7 @@ class CustomersTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->extraAttributes(['class' => 'font-semibold'])
-                        ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
+                        ->hidden(fn () => ! Auth::user()->isAdmin()),
                 ]),
             ]);
     }

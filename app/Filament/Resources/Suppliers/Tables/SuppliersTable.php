@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Suppliers\Tables;
 
-use App\Filament\Actions\SupplierActions\PayDebtAction;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -37,7 +36,8 @@ class SuppliersTable
 
                 TextColumn::make('phone')
                     ->label('رقم الهاتف')
-                    ->weight(FontWeight::Medium),
+                    ->weight(FontWeight::Medium)
+                    ->hidden(fn()=> ! Auth::user()->isAdmin()),
 
                 TextColumn::make('address')
                     ->label('العنوان')
@@ -60,7 +60,6 @@ class SuppliersTable
                     ->extraAttributes(['class' => 'font-semibold'])
                     ->url(fn ($record) => route('filament.admin.resources.suppliers.wallet', $record))
                     ->icon('heroicon-o-wallet'),
-                PayDebtAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

@@ -31,15 +31,26 @@ class Supplier extends Model
     // حساب الرصيد
     public function getBalanceAttribute()
     {
-        return $this->wallet()
+        // check if exists
+        if (isset($this->attributes['balance'])) {
+            return $this->attributes['balance'];
+        }
+
+        // لو لا، احسبه وخزنه
+        $balance = $this->wallet()
             ->selectRaw('
-            SUM(CASE
-                WHEN type IN ("purchase", "adjustment") THEN amount
-                WHEN type IN ("payment", "purchase_return", "debt_payment") THEN -amount
-                ELSE 0
-            END) as balance
-        ')
+        SUM(CASE
+            WHEN type IN ("purchase", "adjustment") THEN amount
+            WHEN type IN ("payment", "purchase_return", "debt_payment") THEN -amount
+            ELSE 0
+        END) as balance
+    ')
             ->value('balance') ?? 0;
+
+        // خزن القيمة عشان ما تحسبهاش تاني
+        $this->attributes['balance'] = $balance;
+
+        return $balance;
     }
 
     /**
@@ -76,16 +87,5 @@ class Supplier extends Model
         $count = $this->total_purchases_count;
 
         return $count > 0 ? round($this->total_purchases_value / $count, 2) : 0;
-    }
-
-    /**
-     * البحث في الموردين
-     */
-    public function scopeSearch($query, $search)
-    {
-        return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%");
-        });
     }
 }

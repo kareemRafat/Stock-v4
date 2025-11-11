@@ -19,22 +19,22 @@ class PayDebtAction
             ->label('سداد مديونية')
             ->modalSubmitActionLabel('سداد مديونية')
             ->modalHeading(
-                fn (Model $record) => new HtmlString('سداد مديونية المورد : '."<span style='color: #3b82f6 !important;font-weight:bold'>{$record->name}</span>")
+                fn(Model $record) => new HtmlString('سداد مديونية المورد : ' . "<span style='color: #3b82f6 !important;font-weight:bold'>{$record->name}</span>")
             )
-            ->disabled(fn ($record): bool => $record->balance < 0 || $record->balance == 0)
-            ->color(fn ($record): string => $record->balance < 0 || $record->balance == 0 ? 'gray' : 'warning')
+            ->disabled(fn($record): bool => $record->balance < 0 || $record->balance == 0)
+            ->color(fn($record): string => $record->balance < 0 || $record->balance == 0 ? 'gray' : 'warning')
             ->schema([
                 TextEntry::make('available_debt')
                     ->label('المديونية الحالية')
-                    ->state(fn ($record) => $record->balance)
+                    ->state(fn($record) => $record->balance)
                     ->formatStateUsing(function ($state) {
                         if ($state > 0) {
-                            return number_format($state, 2).' ج.م';
+                            return number_format($state, 2) . ' ج.م';
                         }
 
                         return 'لا توجد مديونية للعميل';
                     })
-                    ->color(fn ($state) => $state > 0 ? 'rose' : 'indigo')
+                    ->color(fn($state) => $state > 0 ? 'rose' : 'indigo')
                     ->weight('semibold'),
 
                 Forms\Components\TextInput::make('amount')
@@ -45,9 +45,9 @@ class PayDebtAction
                     ->minValue(0.01)
                     ->step(0.01),
 
-                Forms\Components\Textarea::make('notes')
+                Forms\Components\Textarea::make('note')
                     ->label('ملاحظات الإضافة')
-                    ->placeholder('أدخل ملاحظات حول عملية إضافة الرصيد')
+                    ->placeholder('أدخل ملاحظات حول عملية إضافة الرصيد ان وجد')
                     ->columnSpanFull()
                     ->autosize()
                     ->maxLength(500),
@@ -79,14 +79,17 @@ class PayDebtAction
                 $remainingBalance = max(0, $record->balance);
                 Notification::make()
                     ->title('تم السداد بنجاح')
-                    ->body('تم سداد '.number_format($data['amount'], 2).' ج.م. المتبقي من الدين : '.number_format($remainingBalance, 2).' ج.م')
+                    ->body('تم سداد ' . number_format($data['amount'], 2) . ' ج.م. المتبقي من الدين : ' . number_format($remainingBalance, 2) . ' ج.م')
                     ->success()
                     ->send();
             })
-            ->after(function (Model $record) {
+            ->after(function (Model $record, Action $action) {
                 if ($record->relationLoaded('wallet')) {
                     $record->load('wallet');
                 }
+
+                // to reload livewire wallet page component when add pay
+                $action->getLivewire()->dispatch('refresh-wallet');
             })
             ->outlined()
             ->extraAttributes(['class' => 'font-semibold'])
