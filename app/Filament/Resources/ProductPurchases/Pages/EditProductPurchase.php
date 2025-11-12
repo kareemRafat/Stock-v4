@@ -15,7 +15,7 @@ class EditProductPurchase extends EditRecord
     {
         return [
             DeleteAction::make()
-                ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
+                ->hidden(fn () => ! Auth::user()->isAdmin()),
         ];
     }
 }

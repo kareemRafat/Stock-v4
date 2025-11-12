@@ -2,10 +2,8 @@
 
 namespace App\Filament\Resources\Customers\Tables;
 
-use App\Filament\Actions\CustomerActions\AdjustBalanceAction;
 use App\Filament\Resources\Customers\CustomerResource;
 use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -29,7 +27,7 @@ class CustomersTable
                 TextColumn::make('index')
                     ->label('#')
                     ->state(
-                        fn ($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
+                        fn($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
                             + $rowLoop->iteration
                     )
                     ->sortable(false)
@@ -41,20 +39,23 @@ class CustomersTable
                     ->fontFamily(FontFamily::Sans)
                     ->color('indigo')
                     ->weight(FontWeight::Medium),
+
                 TextColumn::make('phone')
                     ->searchable()
                     ->copyable()
                     ->label('رقم التواصل')
-                    ->weight(FontWeight::Medium),
+                    ->weight(FontWeight::Medium)
+                    ->hidden(fn() => ! Auth::user()->isAdmin()),
+
                 TextColumn::make('balance_sum')
                     ->label('رصيد العميل')
                     ->formatStateUsing(
-                        fn ($state) => $state == 0
+                        fn($state) => $state == 0
                             ? '0 ج.م'
-                            : number_format(abs($state), 2).' ج.م'
+                            : number_format(abs($state), 2) . ' ج.م'
                     )
                     ->color(
-                        fn ($state) => $state > 0 ? 'rose' : ($state < 0 ? 'success' : 'gray')
+                        fn($state) => $state > 0 ? 'rose' : ($state < 0 ? 'success' : 'gray')
                     )
                     ->tooltip(function ($state) {
                         if ($state > 0) {
@@ -65,22 +66,31 @@ class CustomersTable
                             return 'حساب متوازن';
                         }
                     })
-                    ->url(fn ($record) => route('filament.admin.resources.customers.wallet', $record))
+                    ->url(function($record){
+                        // open url only for admin
+                        if(Auth::user() && Auth::user()->isAdmin()){
+                            return route('filament.admin.resources.customers.wallet', $record);
+                        }
+
+                        return null ;
+                    })
                     ->weight(FontWeight::Medium),
+
                 TextColumn::make('created_at')
                     ->label('تاريخ التسجيل')
                     ->date('d-m-Y')
                     ->sortable()
                     ->weight(FontWeight::Medium),
+
                 TextColumn::make('status')
                     ->label('الحالة')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'enabled' => 'success', // Yellow badge for enabled
                         'disabled' => 'warning', // Green badge for disabled
 
                     })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'enabled' => 'مفعل',
                         'disabled' => 'معطل',
                     }),
@@ -95,29 +105,24 @@ class CustomersTable
                     ->extraAttributes(['class' => 'font-semibold'])
                     ->tooltip(' تفاصيل العميل')
                     ->label('عرض التفاصيل'),
-                ActionGroup::make([
-                    AdjustBalanceAction::make(),
-                    Action::make('wallet')
-                        ->label('حركة الرصيد')
-                        ->color('teal')
-                        ->extraAttributes(['class' => 'font-semibold'])
-                        ->url(fn ($record) => CustomerResource::getUrl('wallet', ['record' => $record]))
-                        ->icon('heroicon-o-wallet'),
-                    EditAction::make()
-                        ->extraAttributes(['class' => 'font-semibold']),
-                ])
-                    ->label('المزيد')
-                    ->button()
-                    ->color('gray')
-                    ->size('xs')
-                    ->tooltip('إجراءات إضافية'),
 
+                Action::make('wallet')
+                    ->label('حركة الرصيد')
+                    ->color('teal')
+                    ->extraAttributes(['class' => 'font-semibold'])
+                    ->url(fn($record) => CustomerResource::getUrl('wallet', ['record' => $record]))
+                    ->icon('heroicon-o-wallet')
+                    ->hidden(fn() => ! Auth::user()->isAdmin()),
+
+                EditAction::make()
+                    ->extraAttributes(['class' => 'font-semibold']),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
+                        ->modalDescription(' هل أنت متأكد من القيام بهذه العملية ؟ سيتم حذف جميع سجلات الارصدة للعميل')
                         ->extraAttributes(['class' => 'font-semibold'])
-                        ->hidden(fn () => ! Auth::user()->isAdmin()),
+                        ->hidden(fn() => ! Auth::user()->isAdmin()),
                 ]),
             ]);
     }

@@ -63,10 +63,12 @@ class AdjustBalanceAction
                     ->success()
                     ->send();
             })
-            ->after(function (Model $record) {
+            ->after(function (Model $record, Action $action) {
                 if ($record->relationLoaded('wallet')) {
                     $record->load('wallet');
                 }
+
+                $action->getLivewire()->dispatch('refresh-wallet');
             })
             ->color('warning')
             ->outlined()

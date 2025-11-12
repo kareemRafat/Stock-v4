@@ -23,7 +23,7 @@ class SuppliersTable
                 TextColumn::make('index')
                     ->label('#')
                     ->state(
-                        fn ($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
+                        fn($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
                             + $rowLoop->iteration
                     )
                     ->sortable(false)
@@ -37,13 +37,14 @@ class SuppliersTable
                 TextColumn::make('phone')
                     ->label('رقم الهاتف')
                     ->weight(FontWeight::Medium)
-                    ->hidden(fn()=> ! Auth::user()->isAdmin()),
+                    ->hidden(fn() => ! Auth::user()->isAdmin()),
 
                 TextColumn::make('address')
                     ->label('العنوان')
                     ->limit(30)
                     ->default('لايوجد')
-                    ->weight(FontWeight::Medium),
+                    ->weight(FontWeight::Medium)
+                    ->hidden(fn() => ! Auth::user()->isAdmin()),
 
                 TextColumn::make('created_at')
                     ->label('تاريخ الإضافة')
@@ -58,14 +59,18 @@ class SuppliersTable
                     ->label('حركة الرصيد')
                     ->color('teal')
                     ->extraAttributes(['class' => 'font-semibold'])
-                    ->url(fn ($record) => route('filament.admin.resources.suppliers.wallet', $record))
-                    ->icon('heroicon-o-wallet'),
-                EditAction::make(),
+                    ->url(fn($record) => route('filament.admin.resources.suppliers.wallet', $record))
+                    ->icon('heroicon-o-wallet')
+                    ->hidden(fn() => ! Auth::user()->isAdmin()),
+
+                EditAction::make()
+                    ->hidden(fn() => ! Auth::user()->isAdmin()),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
+                        ->modalDescription(' هل أنت متأكد من القيام بهذه العملية ؟ سيتم حذف جميع سجلات الارصدة للمورد')
+                        ->hidden(fn() => ! Auth::user()->isAdmin()),
                 ]),
             ]);
     }

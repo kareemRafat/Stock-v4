@@ -29,7 +29,7 @@ class ViewCustomer extends ViewRecord
                 ->label('حذف')
                 ->icon('heroicon-o-trash')
                 ->color('danger')
-                ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin')
+                ->hidden(fn () => ! Auth::user()->isAdmin())
                 ->extraAttributes(['class' => 'font-semibold']),
         ];
     }

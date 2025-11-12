@@ -137,7 +137,7 @@ class InvoicesTable
             ->toolbarActions([
             /* BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                        ->hidden(fn() => !Auth::user()->isAdmin()),
                 ]), */]);
     }
 }

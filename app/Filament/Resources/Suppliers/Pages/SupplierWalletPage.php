@@ -9,6 +9,7 @@ use Filament\Tables\Table;
 use Livewire\Attributes\On;
 use App\Models\SupplierWallet;
 use Filament\Resources\Pages\Page;
+use Illuminate\Support\Facades\Auth;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Enums\FiltersLayout;
@@ -142,6 +143,11 @@ class SupplierWalletPage extends Page implements HasTable
                 ->color('gray')
                 ->url(fn() => $url),
         ];
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        return Auth::user() && Auth::user()->isAdmin();
     }
 
     #[On('refresh-wallet')]

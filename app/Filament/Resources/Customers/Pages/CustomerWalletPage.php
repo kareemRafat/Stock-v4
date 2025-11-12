@@ -2,15 +2,18 @@
 
 namespace App\Filament\Resources\Customers\Pages;
 
-use App\Filament\Resources\Customers\CustomerResource;
-use App\Models\Customer;
-use Filament\Actions;
 use Filament\Panel;
-use Filament\Resources\Pages\Page;
 use Filament\Tables;
+use Filament\Actions;
+use App\Models\Customer;
+use Filament\Tables\Table;
+use Livewire\Attributes\On;
+use Filament\Resources\Pages\Page;
+use Illuminate\Support\Facades\Auth;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
-use Filament\Tables\Table;
+use App\Filament\Resources\Customers\CustomerResource;
+use App\Filament\Actions\CustomerActions\AdjustBalanceAction;
 
 class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
 {
@@ -132,11 +135,27 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
     protected function getHeaderActions(): array
     {
         return [
+            AdjustBalanceAction::make()
+                ->record($this->customer), // to use $this-record inside the action
             Actions\Action::make('back')
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
                 ->url(CustomerResource::getUrl('index')),
+
+
         ];
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        return Auth::user() && Auth::user()->isAdmin();
+    }
+
+    #[On('refresh-wallet')]
+    public function refreshWallet()
+    {
+        // to reload livewire wallet page component when add pay
+        $this->customer->refresh();
     }
 }

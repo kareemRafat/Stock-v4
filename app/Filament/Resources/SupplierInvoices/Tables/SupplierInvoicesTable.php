@@ -29,15 +29,28 @@ class SupplierInvoicesTable
                     ->searchable()
                     ->color('indigo')
                     ->weight('medium')
-                    ->formatStateUsing(fn ($state) => strtoupper($state)),
+                    ->formatStateUsing(fn($state) => strtoupper($state)),
 
                 TextColumn::make('supplier.name')
                     ->label('اسم المورد')
                     ->weight('medium')
                     ->searchable()
                     ->tooltip('حركة رصيد العميل')
-                    ->url(fn (SupplierInvoice $record): ?string => $record->supplier_id ?
-                        SupplierResource::getUrl('wallet', ['record' => $record->supplier_id]) : null),
+                    ->tooltip(function (SupplierInvoice $record): ?string {
+                        if (Auth::user() && Auth::user()->isAdmin()) {
+                            return 'حركة رصيد العميل';
+                        }
+
+                        return null;
+                    })
+                    ->url(function (SupplierInvoice $record): ?string {
+                         // open url only for admin
+                        if (Auth::user() && Auth::user()->isAdmin() && $record->supplier_id) {
+                            return SupplierResource::getUrl('wallet', ['record' => $record->supplier_id]);
+                        }
+
+                        return null;
+                    }),
 
                 TextColumn::make('total_amount')
                     ->label('إجمالي الفاتورة')
@@ -55,14 +68,14 @@ class SupplierInvoicesTable
                 SelectFilter::make('supplier_id')
                     ->label('المورد')
                     ->options(
-                        fn () => Supplier::query()
+                        fn() => Supplier::query()
                             ->latest()
                             ->limit(10)
                             ->pluck('name', 'id')
                     )
                     ->searchable()
                     ->getSearchResultsUsing(
-                        fn (string $search) => Supplier::query()
+                        fn(string $search) => Supplier::query()
                             ->where('name', 'like', "%{$search}%")
                             ->limit(50)
                             ->pluck('name', 'id')
@@ -73,15 +86,15 @@ class SupplierInvoicesTable
             ->deferFilters(false)
             ->recordActions([
                 ViewAction::make()
-                    ->label('عرض الفاتورة'),
-                // EditAction::make()
+                    ->label('عرض الفاتورة')
+                    ->hidden(fn() => ! Auth::user()->isAdmin()),
+
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()
+                    /* DeleteBulkAction::make()
                         ->extraAttributes(['class' => 'font-semibold'])
-                        ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
-                ]),
+                        ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'), */]),
             ]);
     }
 }

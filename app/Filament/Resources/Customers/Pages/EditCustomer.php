@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\Customers\Pages;
 
-use App\Filament\Resources\Customers\CustomerResource;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Auth;
+use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\Customers\CustomerResource;
 
 class EditCustomer extends EditRecord
 {
@@ -15,7 +16,13 @@ class EditCustomer extends EditRecord
     {
         return [
             DeleteAction::make()
-                ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
+                ->modalDescription(' هل أنت متأكد من القيام بهذه العملية ؟ سيتم حذف جميع سجلات الارصدة للعميل')
+                ->hidden(fn() => ! Auth::user()->isAdmin()),
+            Action::make('back')
+                ->label('رجوع')
+                ->icon('heroicon-o-arrow-left')
+                ->color('gray')
+                ->url(fn() => CustomerResource::getUrl('index')),
         ];
     }
 }

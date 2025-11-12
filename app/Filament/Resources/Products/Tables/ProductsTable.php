@@ -54,7 +54,7 @@ class ProductsTable
                     ->label('سعر المصنع')
                     ->suffix(' جنيه ')
                     ->weight(FontWeight::Medium)
-                    ->hidden(fn() => !Auth::user() || Auth::user()->role->value !== 'admin'),
+                    ->hidden(fn() => !Auth::user()->isAdmin()),
 
                 TextColumn::make('wholesale_price')
                     ->label('سعر الجملة')
@@ -105,13 +105,12 @@ class ProductsTable
             ], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
             ->recordActions([
-                // AddStockAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'),
+                        ->hidden(fn () => ! Auth::user()->isAdmin()),
                 ]),
             ]);
     }
