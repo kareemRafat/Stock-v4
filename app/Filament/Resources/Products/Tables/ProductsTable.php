@@ -2,21 +2,26 @@
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Enums\MovementType;
+use App\Filament\Actions\ProductActions\AddStockAction;
+use App\Models\Product;
 use App\Models\Supplier;
-use Filament\Tables\Table;
-use Filament\Actions\EditAction;
+use App\Services\StockService;
 use Filament\Actions\ActionGroup;
-use Illuminate\Support\Facades\Auth;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
-use App\Filament\Actions\ProductActions\AddStockAction;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class ProductsTable
 {
+    private static ?float $newStockQuantity = null;
+
     public static function configure(Table $table): Table
     {
         return $table
@@ -28,7 +33,7 @@ class ProductsTable
                 TextColumn::make('index')
                     ->label('#')
                     ->state(
-                        fn($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
+                        fn ($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
                             + $rowLoop->iteration
                     )
                     ->sortable(false)
@@ -47,15 +52,15 @@ class ProductsTable
                 TextColumn::make('stock_quantity')
                     ->numeric()
                     ->label('الكمية المتوفرة')
-                    ->formatStateUsing(fn($state) => $state == 0 ? 'لاتوجد' : $state)
-                    ->color(fn($state) => $state == 0 ? 'danger' : ($state < 20 ? 'orange' : null))
+                    ->formatStateUsing(fn ($state) => $state == 0 ? 'لاتوجد' : $state)
+                    ->color(fn ($state) => $state == 0 ? 'danger' : ($state < 20 ? 'orange' : null))
                     ->weight(FontWeight::Medium),
 
                 TextColumn::make('cost_price')
                     ->label('سعر المصنع')
                     ->suffix(' جنيه ')
                     ->weight(FontWeight::Medium)
-                    ->hidden(fn() => ! Auth::user()->isAdmin()),
+                    ->hidden(fn () => ! Auth::user()->isAdmin()),
 
                 TextColumn::make('wholesale_price')
                     ->label('سعر الجملة')
@@ -110,18 +115,57 @@ class ProductsTable
             ->recordActions([
                 ActionGroup::make([
                     AddStockAction::make(),
-                    EditAction::make(),
+                    EditAction::make()
+                        ->before(function (EditAction $action) {
+                            // احفظ القيمة الجديدة قبل الحفظ
+                            self::$newStockQuantity = $action->getData()['new_stock'] ?? null;
+                        })
+                        ->after(function (EditAction $action) {
+                            $record = $action->getRecord()->refresh();
+                            $newQty = self::$newStockQuantity;
+
+                            self::recordStockMovement($record, $newQty);
+                        }),
                 ])
-                ->label('المزيد')
-                ->button()
-                ->color('gray')
-                ->size('xs'),
+                    ->label('المزيد')
+                    ->button()
+                    ->color('gray')
+                    ->size('xs'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->hidden(fn(): bool => ! Auth::user()->isAdmin()),
+                        ->hidden(fn (): bool => ! Auth::user()->isAdmin()),
                 ]),
             ]);
+    }
+
+    private static function recordStockMovement(Product $record, ?float $newQty): void
+    {
+        if (! $newQty) {
+            return;
+        }
+
+        $originalQty = $record->getOriginal('stock_quantity');
+        $diff = $newQty - $originalQty;
+
+        if ($diff != 0) {
+            $movementType = $diff > 0
+                ? MovementType::ADJUSTMENT_IN
+                : MovementType::ADJUSTMENT_OUT;
+
+            app(StockService::class)->recordMovement(
+                product: $record,
+                movementType: $movementType,
+                quantity: abs($diff),
+                costPrice: $record->cost_price,
+                wholeSalePrice: $record->wholesale_price,
+                discount: $record->discount,
+                retailPrice: $record->retail_price,
+                referenceId: $record->id,
+                referenceTable: 'products',
+                createdAt: $record->created_at
+            );
+        }
     }
 }

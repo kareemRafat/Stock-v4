@@ -91,7 +91,8 @@ class ProductForm
                     ->columnSpanFull()
                     ->label('وصف المنتج'),
 
-                ClientDatetimeHidden::make('created_at'),
+                ClientDatetimeHidden::make('created_at')
+                    ->dehydrated(fn ($operation) => $operation === 'create'),
             ]);
     }
 }

@@ -53,6 +53,6 @@ class Login extends BaseLogin
     {
         $username = $this->form->getState()['username'] ?? request()->input('username');
 
-        return 'login|' . $username . '|' . request()->ip();
+        return 'login|'.$username.'|'.request()->ip();
     }
 }

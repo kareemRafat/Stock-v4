@@ -44,7 +44,7 @@ class StockService
                     $qtyOut = $quantity;
                 }
 
-                // ✅ حفظ الرصيد بعد العملية (اجلب القيمة المحدثة)
+                //  حفظ الرصيد بعد العملية (اجلب القيمة المحدثة)
                 $stockAfter = $product->fresh()->stock_quantity;
 
                 // تطبيق الخصم على سعر الجملة
@@ -58,8 +58,8 @@ class StockService
                     'movement_type' => $movementType,
                     'qty_in' => $qtyIn,
                     'qty_out' => $qtyOut,
-                    'stock_before' => $stockBefore,      // الرصيد قبل
-                    'stock_after' => $stockAfter,       // الرصيد بعد
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $stockAfter,
                     'cost_price' => $costPrice ?? $product->cost_price,
                     'wholesale_price' => $wholeSalePrice,
                     'retail_price' => $retailPrice,
