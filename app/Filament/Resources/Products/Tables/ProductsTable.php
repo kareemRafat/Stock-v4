@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Products\Tables;
 use App\Models\Supplier;
 use Filament\Tables\Table;
 use Filament\Actions\EditAction;
+use Filament\Actions\ActionGroup;
 use Illuminate\Support\Facades\Auth;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -107,8 +108,14 @@ class ProductsTable
             ], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
             ->recordActions([
-                AddStockAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    AddStockAction::make(),
+                    EditAction::make(),
+                ])
+                ->label('المزيد')
+                ->button()
+                ->color('gray')
+                ->size('xs'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
