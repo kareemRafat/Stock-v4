@@ -45,7 +45,7 @@ class Login extends BaseLogin
         RateLimiter::hit($this->getRateLimitingThrottleKey());
 
         throw ValidationException::withMessages([
-            'data.username' => __('filament-panels::pages/auth/login.messages.failed'),
+            'data.username' => 'اسم الدخول أو كلمة المرور غير صحيحة.',
         ]);
     }
 
@@ -53,6 +53,6 @@ class Login extends BaseLogin
     {
         $username = $this->form->getState()['username'] ?? request()->input('username');
 
-        return 'login|'.$username.'|'.request()->ip();
+        return 'login|' . $username . '|' . request()->ip();
     }
 }

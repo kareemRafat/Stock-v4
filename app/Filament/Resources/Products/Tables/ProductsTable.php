@@ -26,7 +26,7 @@ class ProductsTable
                 TextColumn::make('index')
                     ->label('#')
                     ->state(
-                        fn ($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
+                        fn($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
                             + $rowLoop->iteration
                     )
                     ->sortable(false)
@@ -45,15 +45,15 @@ class ProductsTable
                 TextColumn::make('stock_quantity')
                     ->numeric()
                     ->label('الكمية المتوفرة')
-                    ->formatStateUsing(fn ($state) => $state == 0 ? 'لاتوجد' : $state)
-                    ->color(fn ($state) => $state == 0 ? 'danger' : ($state < 20 ? 'orange' : null))
+                    ->formatStateUsing(fn($state) => $state == 0 ? 'لاتوجد' : $state)
+                    ->color(fn($state) => $state == 0 ? 'danger' : ($state < 20 ? 'orange' : null))
                     ->weight(FontWeight::Medium),
 
                 TextColumn::make('cost_price')
                     ->label('سعر المصنع')
                     ->suffix(' جنيه ')
                     ->weight(FontWeight::Medium)
-                    ->hidden(fn () => ! Auth::user()->isAdmin()),
+                    ->hidden(fn() => ! Auth::user()->isAdmin()),
 
                 TextColumn::make('wholesale_price')
                     ->label('سعر الجملة')
@@ -109,7 +109,7 @@ class ProductsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->hidden(fn () => ! Auth::user()->isAdmin()),
+                        ->hidden(fn():bool => ! Auth::user()->isAdmin()),
                 ]),
             ]);
     }
