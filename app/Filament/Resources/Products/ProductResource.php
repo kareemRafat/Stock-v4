@@ -55,7 +55,7 @@ class ProductResource extends Resource
             'index' => ListProducts::route('/'),
             'add-products' => AddProducts::route('/add-products'),
             // 'create' => CreateProduct::route('/create'),
-            'edit' => EditProduct::route('/{record}/edit'),
+            // 'edit' => EditProduct::route('/{record}/edit'),
         ];
     }
 }

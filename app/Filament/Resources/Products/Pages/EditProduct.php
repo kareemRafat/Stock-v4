@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Products\Pages;
 
 use App\Enums\MovementType;
-use App\Filament\Actions\ProductActions\AddStockAction;
 use App\Filament\Resources\Products\ProductResource;
 use App\Services\StockService;
 use Filament\Actions\Action;
@@ -57,7 +56,7 @@ class EditProduct extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            AddStockAction::make(),
+
             Action::make('back')
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')

@@ -40,9 +40,9 @@ class AddStockAction
                     createdAt: $data['created_at'],
                 );
             })
-            ->after(function ($record, $data, $livewire) {
+            /* ->after(function ($record, $data, $livewire) {
                 $livewire->dispatch('refresh-product-page');
-            })
+            }) */
             ->successNotificationTitle('تمت إضافة الكمية بنجاح');
     }
 

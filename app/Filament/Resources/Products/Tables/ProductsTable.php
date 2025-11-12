@@ -3,15 +3,16 @@
 namespace App\Filament\Resources\Products\Tables;
 
 use App\Models\Supplier;
+use Filament\Tables\Table;
+use Filament\Actions\EditAction;
+use Illuminate\Support\Facades\Auth;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
+use App\Filament\Actions\ProductActions\AddStockAction;
 
 class ProductsTable
 {
@@ -79,12 +80,14 @@ class ProductsTable
                     ->label('المورد')
                     ->searchable()
                     ->options(function () {
-                        // show only 15
-                        return Supplier::query()
-                            ->latest()
-                            ->limit(20)
-                            ->get()
-                            ->pluck('name', 'id');
+                        // static cache
+                        static $suppliers = null;
+
+                        if ($suppliers === null) {
+                            $suppliers = Supplier::latest()->limit(20)->pluck('name', 'id');
+                        }
+
+                        return $suppliers;
                     })
                     ->getSearchResultsUsing(function (string $search) {
                         // results when search
@@ -104,12 +107,13 @@ class ProductsTable
             ], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
             ->recordActions([
+                AddStockAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->hidden(fn():bool => ! Auth::user()->isAdmin()),
+                        ->hidden(fn(): bool => ! Auth::user()->isAdmin()),
                 ]),
             ]);
     }
