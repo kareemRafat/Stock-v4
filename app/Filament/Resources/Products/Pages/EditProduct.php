@@ -66,13 +66,6 @@ class EditProduct extends EditRecord
         ];
     }
 
-    #[On('refresh-product-page')]
-    public function refreshPage()
-    {
-        //  $livewire->dispatch('refresh-product-page'); in the action AddStockAction
-        $this->mount($this->record->getKey()); // إعادة تحميل نفس المنتج
-    }
-
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
