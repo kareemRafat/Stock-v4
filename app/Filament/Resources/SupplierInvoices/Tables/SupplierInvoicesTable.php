@@ -7,7 +7,6 @@ use App\Models\Supplier;
 use App\Models\SupplierInvoice;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
@@ -29,7 +28,7 @@ class SupplierInvoicesTable
                     ->searchable()
                     ->color('indigo')
                     ->weight('medium')
-                    ->formatStateUsing(fn($state) => strtoupper($state)),
+                    ->formatStateUsing(fn ($state) => strtoupper($state)),
 
                 TextColumn::make('supplier.name')
                     ->label('اسم المورد')
@@ -44,7 +43,7 @@ class SupplierInvoicesTable
                         return null;
                     })
                     ->url(function (SupplierInvoice $record): ?string {
-                         // open url only for admin
+                        // open url only for admin
                         if (Auth::user() && Auth::user()->isAdmin() && $record->supplier_id) {
                             return SupplierResource::getUrl('wallet', ['record' => $record->supplier_id]);
                         }
@@ -68,14 +67,14 @@ class SupplierInvoicesTable
                 SelectFilter::make('supplier_id')
                     ->label('المورد')
                     ->options(
-                        fn() => Supplier::query()
+                        fn () => Supplier::query()
                             ->latest()
                             ->limit(10)
                             ->pluck('name', 'id')
                     )
                     ->searchable()
                     ->getSearchResultsUsing(
-                        fn(string $search) => Supplier::query()
+                        fn (string $search) => Supplier::query()
                             ->where('name', 'like', "%{$search}%")
                             ->limit(50)
                             ->pluck('name', 'id')
@@ -87,12 +86,12 @@ class SupplierInvoicesTable
             ->recordActions([
                 ViewAction::make()
                     ->label('عرض الفاتورة')
-                    ->hidden(fn() => ! Auth::user()->isAdmin()),
+                    ->hidden(fn () => ! Auth::user()->isAdmin()),
 
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    /* DeleteBulkAction::make()
+                /* DeleteBulkAction::make()
                         ->extraAttributes(['class' => 'font-semibold'])
                         ->hidden(fn () => ! Auth::user() || Auth::user()->role->value !== 'admin'), */]),
             ]);

@@ -54,7 +54,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function isAdmin()
     {
-         return $this->role->value === 'admin';
+        return $this->role->value === 'admin';
     }
 
     // FilamentUser interface

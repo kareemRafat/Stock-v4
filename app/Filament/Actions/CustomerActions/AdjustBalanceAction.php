@@ -3,7 +3,6 @@
 namespace App\Filament\Actions\CustomerActions;
 
 use App\Filament\Forms\Components\ClientDatetimeHidden;
-use App\Models\CustomerWallet;
 use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -18,7 +17,7 @@ class AdjustBalanceAction
             ->label('إضافة رصيد')
             ->modalSubmitActionLabel('إضافة رصيد')
             ->modalHeading(
-                fn(Model $record) => new HtmlString('إضافة رصيد العميل: ' . "<span style='color: #3b82f6 !important;font-weight:bold'>{$record->name}</span>")
+                fn (Model $record) => new HtmlString('إضافة رصيد العميل: '."<span style='color: #3b82f6 !important;font-weight:bold'>{$record->name}</span>")
             )
             ->schema([
                 Forms\Components\TextInput::make('amount')
@@ -59,7 +58,7 @@ class AdjustBalanceAction
 
                 Notification::make()
                     ->title('تمت إضافة الرصيد بنجاح')
-                    ->body('تم إضافة ' . number_format($data['amount'], 2) . ' إلى رصيد العميل')
+                    ->body('تم إضافة '.number_format($data['amount'], 2).' إلى رصيد العميل')
                     ->success()
                     ->send();
             })

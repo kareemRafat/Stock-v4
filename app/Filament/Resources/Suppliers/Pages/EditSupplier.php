@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Suppliers\Pages;
 
-use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\Auth;
-use Filament\Resources\Pages\EditRecord;
 use App\Filament\Resources\Suppliers\SupplierResource;
+use Filament\Actions\DeleteAction;
+use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Auth;
 
 class EditSupplier extends EditRecord
 {
@@ -16,7 +16,7 @@ class EditSupplier extends EditRecord
         return [
             DeleteAction::make()
                 ->modalDescription(' هل أنت متأكد من القيام بهذه العملية ؟ سيتم حذف جميع سجلات الارصدة للمورد')
-                ->hidden(fn() => ! Auth::user()->isAdmin()),
+                ->hidden(fn () => ! Auth::user()->isAdmin()),
         ];
     }
 }

@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\Customers\Pages;
 
+use App\Filament\Resources\Customers\CustomerResource;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\Auth;
 use Filament\Resources\Pages\EditRecord;
-use App\Filament\Resources\Customers\CustomerResource;
+use Illuminate\Support\Facades\Auth;
 
 class EditCustomer extends EditRecord
 {
@@ -17,12 +17,12 @@ class EditCustomer extends EditRecord
         return [
             DeleteAction::make()
                 ->modalDescription(' هل أنت متأكد من القيام بهذه العملية ؟ سيتم حذف جميع سجلات الارصدة للعميل')
-                ->hidden(fn() => ! Auth::user()->isAdmin()),
+                ->hidden(fn () => ! Auth::user()->isAdmin()),
             Action::make('back')
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                ->url(fn() => CustomerResource::getUrl('index')),
+                ->url(fn () => CustomerResource::getUrl('index')),
         ];
     }
 }

@@ -2,15 +2,15 @@
 
 namespace App\Filament\Resources\SupplierInvoices\Schemas;
 
+use App\Filament\Forms\Components\ClientDatetimeHidden;
 use App\Models\Product;
 use App\Models\Supplier;
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
-use App\Filament\Forms\Components\ClientDatetimeHidden;
+use Filament\Schemas\Schema;
 
 class SupplierInvoiceForm
 {
@@ -41,7 +41,7 @@ class SupplierInvoiceForm
                             ->get()
                             ->pluck('name', 'id');
                     })
-                    ->getOptionLabelUsing(fn($value) => Supplier::find($value)?->name ?? 'محذوف'),
+                    ->getOptionLabelUsing(fn ($value) => Supplier::find($value)?->name ?? 'محذوف'),
                 TextInput::make('invoice_number')
                     ->label('رقم الفاتورة')
                     ->required()
@@ -72,11 +72,11 @@ class SupplierInvoiceForm
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->options(fn() => Product::query()
+                            ->options(fn () => Product::query()
                                 ->orderBy('name')
                                 ->limit(20)
                                 ->pluck('name', 'id'))
-                            ->getSearchResultsUsing(fn(string $search) => Product::query()
+                            ->getSearchResultsUsing(fn (string $search) => Product::query()
                                 ->where('name', 'like', "%{$search}%")
                                 ->orderBy('name')
                                 ->limit(50)
@@ -84,7 +84,7 @@ class SupplierInvoiceForm
                             ->getOptionLabelUsing(function ($value) {
                                 static $cache = [];
 
-                                if (!isset($cache[$value])) {
+                                if (! isset($cache[$value])) {
                                     $cache[$value] = Product::query()
                                         ->where('id', $value)
                                         ->value('name') ?? '';
@@ -159,7 +159,7 @@ class SupplierInvoiceForm
                     ->live() // allow frontend updates
                     ->state(function ($get) {
                         return collect($get('items') ?? [])
-                            ->sum(fn($item) => (int) ($item['subtotal'] ?? 0)) . ' جنيه';
+                            ->sum(fn ($item) => (int) ($item['subtotal'] ?? 0)).' جنيه';
                     })
                     ->extraAttributes([
                         'class' => 'bg-primary-600 text-white border rounded-lg shadow-sm p-3',

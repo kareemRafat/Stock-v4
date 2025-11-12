@@ -3,9 +3,7 @@
 namespace App\Filament\Resources\SupplierInvoices\Pages;
 
 use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
-use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\Auth;
 
 class EditSupplierInvoice extends EditRecord
 {
@@ -14,7 +12,7 @@ class EditSupplierInvoice extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-           
+
         ];
     }
 }

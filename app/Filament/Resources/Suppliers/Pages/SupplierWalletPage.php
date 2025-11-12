@@ -2,20 +2,20 @@
 
 namespace App\Filament\Resources\Suppliers\Pages;
 
-use Filament\Tables;
-use Filament\Actions;
+use App\Filament\Actions\SupplierActions\PayDebtAction;
+use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
+use App\Filament\Resources\Suppliers\SupplierResource;
 use App\Models\Supplier;
-use Filament\Tables\Table;
-use Livewire\Attributes\On;
 use App\Models\SupplierWallet;
+use Filament\Actions;
 use Filament\Resources\Pages\Page;
-use Illuminate\Support\Facades\Auth;
+use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Enums\FiltersLayout;
-use App\Filament\Resources\Suppliers\SupplierResource;
-use App\Filament\Actions\SupplierActions\PayDebtAction;
-use App\Filament\Resources\SupplierInvoices\SupplierInvoiceResource;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
 
 class SupplierWalletPage extends Page implements HasTable
 {
@@ -46,7 +46,7 @@ class SupplierWalletPage extends Page implements HasTable
                 TextColumn::make('index')
                     ->label('#')
                     ->state(
-                        fn($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
+                        fn ($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
                             + $rowLoop->iteration
                     )
                     ->sortable(false)
@@ -55,11 +55,11 @@ class SupplierWalletPage extends Page implements HasTable
                     ->label('نوع الحركة')
                     ->badge()
                     ->colors([
-                        'rose' => fn($record) => in_array($record->type, ['purchase', 'adjustment']),
-                        'success' => fn($record) => in_array($record->type, ['payment', 'purchase_return']),
-                        'warning' => fn($record) => in_array($record->type, ['debt_payment']),
+                        'rose' => fn ($record) => in_array($record->type, ['purchase', 'adjustment']),
+                        'success' => fn ($record) => in_array($record->type, ['payment', 'purchase_return']),
+                        'warning' => fn ($record) => in_array($record->type, ['debt_payment']),
                     ])
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         'purchase' => 'فاتورة مشتريات',
                         'payment' => 'دفعة سداد',
                         'purchase_return' => 'مرتجع مشتريات',
@@ -72,9 +72,9 @@ class SupplierWalletPage extends Page implements HasTable
                     ->numeric(locale: 'en')
                     ->suffix(' ج.م')
                     ->colors([
-                        'success' => fn($record) => $record->type === 'credit',
-                        'rose' => fn($record) => $record->type === 'debit',
-                        'warning' => fn($record) => $record->type === 'invoice',
+                        'success' => fn ($record) => $record->type === 'credit',
+                        'rose' => fn ($record) => $record->type === 'debit',
+                        'warning' => fn ($record) => $record->type === 'invoice',
                     ])
                     ->weight('medium'),
 
@@ -84,7 +84,7 @@ class SupplierWalletPage extends Page implements HasTable
                     ->default('لا يوجد')
                     ->tooltip('عرض تفاصيل الفاتورة')
                     ->url(
-                        fn(SupplierWallet $record): ?string => $record->supplier_invoice_id
+                        fn (SupplierWallet $record): ?string => $record->supplier_invoice_id
                             ? SupplierInvoiceResource::getUrl('view', ['record' => $record->supplier_invoice_id])
                             : null
                     ),
@@ -99,7 +99,7 @@ class SupplierWalletPage extends Page implements HasTable
                     ->date('d-m-Y'),
                 TextColumn::make('time_only')
                     ->label('الوقت')
-                    ->getStateUsing(fn($record) => $record->created_at->format('h:i a')),
+                    ->getStateUsing(fn ($record) => $record->created_at->format('h:i a')),
             ])
             ->filters([], layout: FiltersLayout::AboveContent)
             ->deferFilters(false)
@@ -119,7 +119,7 @@ class SupplierWalletPage extends Page implements HasTable
 
     public function getTitle(): string
     {
-        return 'رصيد المورد: ' . $this->supplier->name;
+        return 'رصيد المورد: '.$this->supplier->name;
     }
 
     protected function getHeaderActions(): array
@@ -141,7 +141,7 @@ class SupplierWalletPage extends Page implements HasTable
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
-                ->url(fn() => $url),
+                ->url(fn () => $url),
         ];
     }
 

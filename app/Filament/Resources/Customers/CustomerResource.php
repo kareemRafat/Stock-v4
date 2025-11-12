@@ -2,19 +2,19 @@
 
 namespace App\Filament\Resources\Customers;
 
-use UnitEnum;
-use BackedEnum;
-use App\Models\Customer;
-use Filament\Tables\Table;
-use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
-use Illuminate\Support\Facades\DB;
-use Filament\Support\Icons\Heroicon;
-use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\Customers\Pages\EditCustomer;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\Customers\Schemas\CustomerForm;
 use App\Filament\Resources\Customers\Tables\CustomersTable;
+use App\Models\Customer;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+use UnitEnum;
 
 class CustomerResource extends Resource
 {
@@ -31,8 +31,6 @@ class CustomerResource extends Resource
     protected static ?string $modelLabel = 'عميل';
 
     protected static ?string $pluralModelLabel = 'العملاء';
-
-
 
     public static function form(Schema $schema): Schema
     {

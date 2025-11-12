@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Products\Tables;
 
-use App\Filament\Actions\ProductActions\AddStockAction;
 use App\Models\Supplier;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -54,7 +53,7 @@ class ProductsTable
                     ->label('سعر المصنع')
                     ->suffix(' جنيه ')
                     ->weight(FontWeight::Medium)
-                    ->hidden(fn() => !Auth::user()->isAdmin()),
+                    ->hidden(fn () => ! Auth::user()->isAdmin()),
 
                 TextColumn::make('wholesale_price')
                     ->label('سعر الجملة')

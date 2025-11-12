@@ -2,18 +2,18 @@
 
 namespace App\Filament\Resources\Customers\Pages;
 
-use Filament\Panel;
-use Filament\Tables;
-use Filament\Actions;
+use App\Filament\Actions\CustomerActions\AdjustBalanceAction;
+use App\Filament\Resources\Customers\CustomerResource;
 use App\Models\Customer;
-use Filament\Tables\Table;
-use Livewire\Attributes\On;
+use Filament\Actions;
+use Filament\Panel;
 use Filament\Resources\Pages\Page;
-use Illuminate\Support\Facades\Auth;
+use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
-use App\Filament\Resources\Customers\CustomerResource;
-use App\Filament\Actions\CustomerActions\AdjustBalanceAction;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
 
 class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
 {
@@ -42,7 +42,7 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                 TextColumn::make('index')
                     ->label('#')
                     ->state(
-                        fn($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
+                        fn ($rowLoop, $livewire) => ($livewire->getTableRecordsPerPage() * ($livewire->getTablePage() - 1))
                             + $rowLoop->iteration
                     )
                     ->sortable(false)
@@ -57,13 +57,13 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                         'danger' => 'sale',
 
                         // دائن
-                        'success' => fn(string $state): bool => in_array($state, ['payment']),
-                        'teal' => fn(string $state): bool => in_array($state, ['sale_return']),
+                        'success' => fn (string $state): bool => in_array($state, ['payment']),
+                        'teal' => fn (string $state): bool => in_array($state, ['sale_return']),
 
                         // تسويات
-                        'warning' => fn(string $state): bool => in_array($state, ['adjustment', 'credit_use']),
+                        'warning' => fn (string $state): bool => in_array($state, ['adjustment', 'credit_use']),
                     ])
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         'sale' => 'فاتورة مبيعات',
                         'payment' => 'دفعة سداد',
                         'sale_return' => 'مرتجع مبيعات',
@@ -78,8 +78,8 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->numeric(locale: 'en')
                     ->suffix(' ج.م')
                     ->weight('medium')
-                    ->formatStateUsing(fn($state) => number_format((float) $state, 2, '.', ','))
-                    ->color(fn($record) => match ($record->type) {
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ','))
+                    ->color(fn ($record) => match ($record->type) {
                         'sale' => 'danger',
                         'payment', 'sale_return', 'credit_use', 'adjustment' => 'success',
                         default => 'warning',
@@ -91,11 +91,11 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                     ->default('لا يوجد')
                     ->weight('medium')
                     ->url(
-                        fn($record) => $record->invoice_id
+                        fn ($record) => $record->invoice_id
                             ? route('filament.admin.resources.invoices.view', ['record' => $record->invoice_id])
                             : null
                     )
-                    ->color(fn($record) => $record->invoice_id ? 'primary' : 'gray'),
+                    ->color(fn ($record) => $record->invoice_id ? 'primary' : 'gray'),
 
                 TextColumn::make('notes')
                     ->label('ملاحظات الحركة')
@@ -129,7 +129,7 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
 
     public function getTitle(): string
     {
-        return 'رصيد العميل: ' . $this->customer->name;
+        return 'رصيد العميل: '.$this->customer->name;
     }
 
     protected function getHeaderActions(): array
@@ -142,7 +142,6 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
                 ->icon('heroicon-o-arrow-left')
                 ->color('gray')
                 ->url(CustomerResource::getUrl('index')),
-
 
         ];
     }

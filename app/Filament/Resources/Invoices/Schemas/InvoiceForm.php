@@ -46,10 +46,10 @@ class InvoiceForm
         return [
             TextInput::make('invoice_number')
                 ->label('رقم الفاتورة')
-                ->default(fn($livewire) => $livewire instanceof CreateRecord ? Invoice::generateUniqueInvoiceNumber() : null)
+                ->default(fn ($livewire) => $livewire instanceof CreateRecord ? Invoice::generateUniqueInvoiceNumber() : null)
                 ->disabled()
                 ->dehydrated()
-                ->dehydrateStateUsing(fn($state) => $state)
+                ->dehydrateStateUsing(fn ($state) => $state)
                 ->required()
                 ->rules(['required', 'string', 'max:255']),
 
@@ -67,7 +67,7 @@ class InvoiceForm
                         ->get()
                         ->pluck('name', 'id');
                 })
-                ->getOptionLabelUsing(fn($value) => Customer::find($value)?->name)
+                ->getOptionLabelUsing(fn ($value) => Customer::find($value)?->name)
                 ->getSearchResultsUsing(function ($search) {
                     return Customer::where('name', 'like', "%{$search}%")
                         ->where('status', 'enabled')
@@ -164,7 +164,7 @@ class InvoiceForm
                         ->getOptionLabelUsing(function ($value) {
                             static $cache = [];
 
-                            if (!isset($cache[$value])) {
+                            if (! isset($cache[$value])) {
                                 $cache[$value] = Product::query()
                                     ->where('stock_quantity', '>', 0)
                                     ->where('id', $value)
