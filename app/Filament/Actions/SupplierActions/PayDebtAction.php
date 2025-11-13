@@ -79,7 +79,7 @@ class PayDebtAction
                 $remainingBalance = max(0, $record->balance);
                 Notification::make()
                     ->title('تم السداد بنجاح')
-                    ->body('تم سداد '.number_format($data['amount'], 2).' ج.م. المتبقي من الدين : '.number_format($remainingBalance, 2).' ج.م')
+                    ->body('تم سداد '.number_format($data['amount'], 2))
                     ->success()
                     ->send();
             })

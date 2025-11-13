@@ -8,7 +8,6 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Support\Enums\TextSize;
 
 class ViewSupplierInvoice extends ViewRecord
 {
@@ -49,25 +48,23 @@ class ViewSupplierInvoice extends ViewRecord
                             ->schema([
                                 TextEntry::make('product.name')
                                     ->label('اسم المنتج')
-                                    ->color('indigo')
-                                    ->weight('semibold')
-                                    ->size(TextSize::Medium),
+                                    ->color('indigo'),
+
                                 TextEntry::make('quantity')
                                     ->label('الكمية')
                                     ->numeric()
-                                    ->weight('semibold')
-                                    ->size(TextSize::Medium),
+                                    ->formatStateUsing(fn ($state) => (int) $state.''),
+
                                 TextEntry::make('cost_price')
                                     ->label('سعر المورد للوحدة')
                                     ->suffix(' جنيه')
                                     ->numeric()
-                                    ->weight('semibold')
-                                    ->size(TextSize::Medium),
+                                    ->formatStateUsing(fn ($state) => (int) $state.''),
+
                                 TextEntry::make('wholesale_price')
                                     ->label('سعر  الجملة بعد الخصم')
                                     ->suffix(' جنيه')
                                     ->numeric()
-                                    ->weight('semibold')
                                     ->state(function ($record) {
                                         $price = $record->wholesale_price ?? 0;
                                         $discount = $record->product->discount ?? 0;
@@ -76,19 +73,19 @@ class ViewSupplierInvoice extends ViewRecord
 
                                         return round($final, 2);
                                     })
-                                    ->size(TextSize::Medium),
+                                    ->formatStateUsing(fn ($state) => (int) $state.''),
+
                                 TextEntry::make('retail_price')
                                     ->label('سعر البيع للقطاعي')
                                     ->suffix(' جنيه')
                                     ->numeric()
-                                    ->weight('semibold')
-                                    ->size(TextSize::Medium),
+                                    ->formatStateUsing(fn ($state) => (int) $state.''),
+
                                 TextEntry::make('subtotal')
                                     ->label('الإجمالي')
                                     ->suffix(' جنيه')
                                     ->numeric()
-                                    ->weight('semibold')
-                                    ->size(TextSize::Medium),
+                                    ->formatStateUsing(fn ($state) => (int) $state.''),
                             ])
                             ->columns(6)
                             ->grid(1),

@@ -13,6 +13,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use UnitEnum;
 
 class SupplierResource extends Resource
@@ -57,5 +59,18 @@ class SupplierResource extends Resource
             'edit' => EditSupplier::route('/{record}/edit'),
             'wallet' => SupplierWalletPage::route('/{record}/wallet'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->addSelect([
+                'balance_sum' => DB::table('supplier_wallets')
+                    ->selectRaw('COALESCE(SUM(CASE
+                WHEN type = "purchase" THEN amount
+                WHEN type IN ("payment", "purchase_return", "adjustment", "debt_payment") THEN -amount
+                ELSE 0 END), 0)')
+                    ->whereColumn('supplier_wallets.supplier_id', 'suppliers.id'),
+            ]);
     }
 }

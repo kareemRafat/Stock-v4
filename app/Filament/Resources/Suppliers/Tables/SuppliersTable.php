@@ -28,6 +28,7 @@ class SuppliersTable
                     )
                     ->sortable(false)
                     ->weight('semibold'),
+
                 TextColumn::make('name')
                     ->label('اسم المورد')
                     ->searchable()
@@ -38,6 +39,34 @@ class SuppliersTable
                     ->label('رقم الهاتف')
                     ->weight(FontWeight::Medium)
                     ->hidden(fn () => ! Auth::user()->isAdmin()),
+
+                TextColumn::make('balance_sum')
+                    ->label('رصيد المورد')
+                    ->formatStateUsing(
+                        fn ($state) => $state == 0
+                            ? '0 ج.م'
+                            : number_format(abs($state), 2).' ج.م'
+                    )
+                    ->color(
+                        fn ($state) => $state > 0 ? 'rose' : ($state < 0 ? 'success' : 'lightgray')
+                    )
+                    ->tooltip(function ($state) {
+                        if ($state > 0) {
+                            return 'مديونية للمورد';
+                        } elseif ($state < 0) {
+                            return 'رصيد دائن على المورد';
+                        } else {
+                            return 'حساب متوازن';
+                        }
+                    })
+                    ->url(function ($record) {
+                        if (Auth::user() && Auth::user()->isAdmin()) {
+                            return route('filament.admin.resources.suppliers.wallet', $record);
+                        }
+
+                        return null;
+                    })
+                    ->weight(FontWeight::Medium),
 
                 TextColumn::make('address')
                     ->label('العنوان')

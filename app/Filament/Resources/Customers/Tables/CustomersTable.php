@@ -55,7 +55,7 @@ class CustomersTable
                             : number_format(abs($state), 2).' ج.م'
                     )
                     ->color(
-                        fn ($state) => $state > 0 ? 'rose' : ($state < 0 ? 'success' : 'gray')
+                        fn ($state) => $state > 0 ? 'rose' : ($state < 0 ? 'success' : 'lightgray')
                     )
                     ->tooltip(function ($state) {
                         if ($state > 0) {
