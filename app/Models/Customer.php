@@ -39,7 +39,7 @@ class Customer extends Model
     {
         static $cache = [];
 
-        $cacheKey = $this->id.'_'.($beforeDate ? (string) $beforeDate : 'current');
+        $cacheKey = $this->id . '_' . ($beforeDate ? (string) $beforeDate : 'current');
 
         if (! isset($cache[$cacheKey])) {
             $query = $this->wallet();
@@ -75,6 +75,15 @@ class Customer extends Model
         // إذا كان الرصيد سالب (دائن)، نرجع القيمة المطلقة
         // إذا كان موجب (مدين)، نرجع 0
         return $balance < 0 ? abs($balance) : 0;
+    }
+
+    /**
+     * حساب المديونية على العميل فقط
+     */
+    public function getDebtAmount($beforeDate = null)
+    {
+        $balance = $this->calculateBalance($beforeDate);
+        return $balance > 0 ? $balance : 0; // مديونية
     }
 
     /**
