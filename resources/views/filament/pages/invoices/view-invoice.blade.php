@@ -85,17 +85,23 @@
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
+                            <th
+                                class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 مسلسل</th>
-                            <th class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
+                            <th
+                                class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 المنتج</th>
-                            <th class="text-center py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
+                            <th
+                                class="text-center py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 الكمية</th>
-                            <th class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
+                            <th
+                                class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 الخصم</th>
-                            <th class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
+                            <th
+                                class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 السعر للوحدة</th>
-                            <th class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
+                            <th
+                                class="text-right py-2 px-4 font-medium text-black text-sm print:text-xs border border-gray-400">
                                 الإجمالي</th>
                         </tr>
                     </thead>
@@ -135,22 +141,27 @@
                             @endphp
 
                             <tr class="border-t border-gray-400">
-                                <td class="py-2 px-4 text-right text-black text-sm print:text-xs border border-gray-400">
+                                <td
+                                    class="py-2 px-4 text-right text-black text-sm print:text-xs border border-gray-400">
                                     {{ $loop->iteration }}
                                 </td>
                                 <td class="py-2 px-4 text-black text-sm print:text-xs border border-gray-400">
                                     {{ $product->name ?? '---' }}
                                 </td>
-                                <td class="py-2 px-4 text-center text-black text-sm print:text-xs border border-gray-400">
+                                <td
+                                    class="py-2 px-4 text-center text-black text-sm print:text-xs border border-gray-400">
                                     {{ $item->quantity }} {{ $product->unit ?? '' }}
                                 </td>
-                                <td class="py-2 px-4 text-right text-black text-sm print:text-xs border border-gray-400">
+                                <td
+                                    class="py-2 px-4 text-right text-black text-sm print:text-xs border border-gray-400">
                                     {{ $isWholesale ? number_format($discountPercent, 2) . ' %' : '-' }}
                                 </td>
-                                <td class="py-2 px-4 text-right text-black text-sm print:text-xs border border-gray-400">
+                                <td
+                                    class="py-2 px-4 text-right text-black text-sm print:text-xs border border-gray-400">
                                     {{ number_format($priceBeforeDiscount, 2) }}
                                 </td>
-                                <td class="py-2 px-4 text-right font-medium text-black text-sm print:text-xs border border-gray-400">
+                                <td
+                                    class="py-2 px-4 text-right font-medium text-black text-sm print:text-xs border border-gray-400">
                                     {{ number_format($lineTotal, 2) }}
                                 </td>
                             </tr>
@@ -176,6 +187,13 @@
                         </span>
                     </div>
 
+                    <div class="flex justify-between px-2">
+                        <span class="text-sm text-black">المديونية السابقة :</span>
+                        <span class="font-medium text-sm text-black">
+                            {{ number_format($this->getRecord()->previous_debt, 2) }}
+                        </span>
+                    </div>
+
                     <hr class="border-gray-400">
 
                     @if ($this->getRecord()->special_discount > 0)
@@ -190,7 +208,7 @@
                             <div class="flex justify-between py-3">
                                 <span class="text-sm font-medium text-black">الإجمالي :</span>
                                 <span class="text-sm font-medium text-black">
-                                    {{ number_format(($isWholesale ? $totalAfterDiscount : $totalBeforeSale) - $this->getRecord()->special_discount, 2) }}
+                                    {{-- {{ number_format(($isWholesale ? $totalAfterDiscount : $totalBeforeSale) - $this->getRecord()->special_discount + $this->getRecord()->previousDebt, 2) }} --}}
                                     ج.م
                                 </span>
                             </div>
@@ -199,7 +217,8 @@
                         <div class="flex justify-between py-1 px-4 rounded-md">
                             <span class="text-base font-medium text-black">الإجمالي :</span>
                             <span class="text-base font-medium text-black">
-                                {{ number_format($isWholesale ? $totalAfterDiscount : $totalBeforeSale, 2) }} ج.م
+                                {{-- {{ number_format($isWholesale ? $totalAfterDiscount : $totalBeforeSale, 2) + $this->getRecord()->previousDebt }} --}}
+                                ج.م
                             </span>
                         </div>
                     @endif

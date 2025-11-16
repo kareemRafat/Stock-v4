@@ -30,6 +30,7 @@ class Invoice extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'special_discount' => 'decimal:2',
+        'previous_debt' => 'decimal:2',
     ];
 
     public function returnInvoices(): HasMany
@@ -158,7 +159,7 @@ class Invoice extends Model
         $prefix = 'INV-';
 
         for ($i = 0; $i < 5; $i++) {
-            $number = $prefix.str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $number = $prefix . str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
             if (! self::where('invoice_number', $number)->exists()) {
                 return $number;
@@ -166,7 +167,7 @@ class Invoice extends Model
         }
 
         // Fallback to a timestamp if all attempts fail
-        return $prefix.now()->format('ymdHis');
+        return $prefix . now()->format('ymdHis');
     }
 
     public function getTotalAmountAttribute($value)
@@ -177,35 +178,35 @@ class Invoice extends Model
     protected function createdDate(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $this->created_at ? Carbon::parse($this->created_at)->format('Y-m-d') : null,
+            get: fn($value) => $this->created_at ? Carbon::parse($this->created_at)->format('Y-m-d') : null,
         );
     }
 
     protected function createdTime(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $this->created_at ? Carbon::parse($this->created_at)->format('h:i a') : null,
+            get: fn($value) => $this->created_at ? Carbon::parse($this->created_at)->format('h:i a') : null,
         );
     }
 
     protected function createdTime12Hour(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $this->created_at ? Carbon::parse($this->created_at)->format('h:i A') : null,
+            get: fn($value) => $this->created_at ? Carbon::parse($this->created_at)->format('h:i A') : null,
         );
     }
 
     public function hasReturns(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->returnInvoices->isNotEmpty(), // Uses eager loaded data
+            get: fn() => $this->returnInvoices->isNotEmpty(), // Uses eager loaded data
         );
     }
 
     public function returnsCount(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->returnInvoices()->count(),
+            get: fn() => $this->returnInvoices()->count(),
         );
     }
 

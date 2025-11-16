@@ -88,7 +88,7 @@ class PayInvoiceAction
                 DB::transaction(function () use ($data, $record) {
                     $customer = $record->customer;
                     $paid = $data['paid'] ?? 0;
-                    $total = $record->total_amount;
+                    $total = $record->total_amount - $record->special_discount;
 
                     // 1. حساب الرصيد الدائن المتاح قبل الفاتورة
                     $availableCredit = $customer->getAvailableCreditBalance($record->created_at);

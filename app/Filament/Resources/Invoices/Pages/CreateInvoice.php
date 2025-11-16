@@ -62,25 +62,18 @@ class CreateInvoice extends CreateRecord
 
     protected function afterCreate(): void
     {
-
         // Inject the StockService manually (Filament doesn't do constructor DI here)
         $stockService = app(StockService::class);
 
-        // 'wholesale' or 'retail'
-        $invoicePriceType = $this->record->price_type;
+        // 1 Update total amount and previous debt
+        $previousBalance = $this->record->customer->calculateBalance();
 
-        // 1 Update total amount
         $this->record->update([
             'total_amount' => $this->record->items()->sum('subtotal'),
+            'previous_debt' => max(0, $previousBalance)
         ]);
 
-        // 2 update previous Debt
-        $previousBalance = $this->record->customer->calculateBalance();
-        $this->record->update([
-            'previous_debt' => max(0, $previousBalance) // مديونية سابقة
-        ]);
-
-        // 3 Loop through items and record stock movement for each
+        // 2 Loop through items and record stock movement for each
         foreach ($this->record->items as $item) {
             $product = $item->product;
             if (! $product) {
@@ -102,7 +95,7 @@ class CreateInvoice extends CreateRecord
                 'discount' => $discountPercent,
             ]);
 
-            // 4 Decrease stock via StockService
+            // 3 Decrease stock via StockService
             $stockService->recordMovement(
                 product: $product,
                 movementType: MovementType::INVOICE_SALE,
@@ -119,7 +112,7 @@ class CreateInvoice extends CreateRecord
         // قيمة الفاتورة الكلية لتسجيلها في المحفظة
         $totalAmount = $this->record->total_amount - $this->data['special_discount'];
 
-        // 5 تسجيل حركة المديونية في محفظة العميل (SALE)
+        // 4 تسجيل حركة المديونية في محفظة العميل (SALE)
         if ($totalAmount > 0) {
             $this->record->customer->wallet()->create([
                 'type' => 'sale',
