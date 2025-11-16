@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->decimal('paid_amount', 10, 2)->default(0);
+            // previous_debt in stand alone migration
             $table->enum('status', ['pending', 'paid', 'cancelled', 'partial'])->default('pending');
             $table->enum('price_type', ['wholesale', 'retail'])->default('wholesale')->comment('جملة وقطاعي');
             $table

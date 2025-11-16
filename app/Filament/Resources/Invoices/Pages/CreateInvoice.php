@@ -69,12 +69,18 @@ class CreateInvoice extends CreateRecord
         // 'wholesale' or 'retail'
         $invoicePriceType = $this->record->price_type;
 
-        // 1️⃣ Update total amount
+        // 1 Update total amount
         $this->record->update([
             'total_amount' => $this->record->items()->sum('subtotal'),
         ]);
 
-        // 2️⃣ Loop through items and record stock movement for each
+        // 2 update previous Debt
+        $previousBalance = $this->record->customer->calculateBalance();
+        $this->record->update([
+            'previous_debt' => max(0, $previousBalance) // مديونية سابقة
+        ]);
+
+        // 3 Loop through items and record stock movement for each
         foreach ($this->record->items as $item) {
             $product = $item->product;
             if (! $product) {
@@ -96,7 +102,7 @@ class CreateInvoice extends CreateRecord
                 'discount' => $discountPercent,
             ]);
 
-            // 3️⃣ Decrease stock via StockService
+            // 4 Decrease stock via StockService
             $stockService->recordMovement(
                 product: $product,
                 movementType: MovementType::INVOICE_SALE,
@@ -113,7 +119,7 @@ class CreateInvoice extends CreateRecord
         // قيمة الفاتورة الكلية لتسجيلها في المحفظة
         $totalAmount = $this->record->total_amount - $this->data['special_discount'];
 
-        // 4️⃣ تسجيل حركة المديونية في محفظة العميل (SALE)
+        // 5 تسجيل حركة المديونية في محفظة العميل (SALE)
         if ($totalAmount > 0) {
             $this->record->customer->wallet()->create([
                 'type' => 'sale',
