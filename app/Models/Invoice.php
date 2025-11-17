@@ -57,6 +57,7 @@ class Invoice extends Model
      * حساب المبلغ المطلوب سداده نقداً
      * بعد خصم: (الخصم الخاص + المرتجعات + رصيد العميل المتاح)
      */
+    /*
     public function getAmountDueAttribute(): float
     {
         // استخدام relationLoaded
@@ -65,8 +66,12 @@ class Invoice extends Model
             : $this->items()->sum('subtotal');
 
         $afterSpecialDiscount = $subtotal - $this->special_discount;
+
+        // إضافة المديونية السابقة
+        $withPreviousDebt = $afterSpecialDiscount + $this->previous_debt;
+
         $totalReturns = $this->calculateReturnsWithDiscount();
-        $afterReturns = $afterSpecialDiscount - $totalReturns;
+        $afterReturns = $withPreviousDebt - $totalReturns;
 
         // استخدام relationLoaded للعميل
         $availableCredit = $this->relationLoaded('customer')
@@ -76,6 +81,25 @@ class Invoice extends Model
         $amountDue = $afterReturns - $availableCredit;
 
         return max(0, $amountDue);
+    }
+    */
+
+    /**
+     * المبلغ المطلوب سداده (قبل خصم الرصيد الدائن)
+     * الفاتورة + المديونية - المرتجعات - المدفوع
+     */
+    public function getAmountDueWithoutCreditAttribute(): float
+    {
+        $subtotal = $this->relationLoaded('items')
+            ? $this->items->sum('subtotal')
+            : $this->items()->sum('subtotal');
+
+        $afterSpecialDiscount = $subtotal - $this->special_discount;
+        $withPreviousDebt = $afterSpecialDiscount + $this->previous_debt;
+        $totalReturns = $this->calculateReturnsWithDiscount();
+        $afterReturns = $withPreviousDebt - $totalReturns;
+
+        return max(0, $afterReturns - $this->paid_amount);
     }
 
     /**

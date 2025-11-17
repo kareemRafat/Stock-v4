@@ -208,7 +208,7 @@
                             <div class="flex justify-between py-3">
                                 <span class="text-sm font-medium text-black">الإجمالي :</span>
                                 <span class="text-sm font-medium text-black">
-                                    {{-- {{ number_format(($isWholesale ? $totalAfterDiscount : $totalBeforeSale) - $this->getRecord()->special_discount + $this->getRecord()->previousDebt, 2) }} --}}
+                                    {{ number_format(($isWholesale ? $totalAfterDiscount : $totalBeforeSale) - $this->getRecord()->special_discount + $this->getRecord()->previous_debt, 2) }}
                                     ج.م
                                 </span>
                             </div>
@@ -217,7 +217,7 @@
                         <div class="flex justify-between py-1 px-4 rounded-md">
                             <span class="text-base font-medium text-black">الإجمالي :</span>
                             <span class="text-base font-medium text-black">
-                                {{-- {{ number_format($isWholesale ? $totalAfterDiscount : $totalBeforeSale, 2) + $this->getRecord()->previousDebt }} --}}
+                                {{ number_format($isWholesale ? $totalAfterDiscount : $totalBeforeSale, 2) + $this->getRecord()->previous_debt }}
                                 ج.م
                             </span>
                         </div>

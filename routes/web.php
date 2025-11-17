@@ -1,9 +1,9 @@
 <?php
 
-use App\Models\CustomerWallet;
+use Carbon\Carbon;
 use App\Models\Invoice;
 use App\Models\StockMovement;
-use Carbon\Carbon;
+use App\Models\CustomerWallet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -99,4 +99,8 @@ Route::get('/monthly-financial-report', function () {
             'final_balance' => round($netProfit + $totalCashIn - $totalDebts, 2),
         ],
     ]);
+});
+
+Route::get('/test', function () {
+
 });

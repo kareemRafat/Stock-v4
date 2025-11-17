@@ -63,12 +63,12 @@ class InvoicesTable
 
                 TextColumn::make('total_amount')
                     ->label('إجمالي الفاتورة')
-                    ->formatStateUsing(fn ($record) => number_format($record->total_amount - $record->special_discount, 2))
+                    ->formatStateUsing(fn ($record) => number_format($record->total_amount - $record->special_discount + $record->previous_debt, 2))
                     ->suffix(' جنيه '),
 
                 TextColumn::make('remaining')
                     ->label('المتبقي')
-                    ->state(fn ($record) => max(0, ($record->total_amount - $record->special_discount) - $record->paid_amount))
+                    ->state(fn ($record) => max(0, ($record->total_amount - $record->special_discount + $record->previous_debt) - $record->paid_amount))
                     ->formatStateUsing(fn ($state) => number_format($state, 2).' ج.م')
                     ->badge()
                     ->color(fn ($state) => $state == 0 ? 'success' : 'danger'),

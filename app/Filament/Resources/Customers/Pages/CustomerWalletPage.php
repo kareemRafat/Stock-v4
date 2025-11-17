@@ -135,8 +135,10 @@ class CustomerWalletPage extends Page implements Tables\Contracts\HasTable
     protected function getHeaderActions(): array
     {
         return [
+            /*
             AdjustBalanceAction::make()
                 ->record($this->customer), // to use $this-record inside the action
+            */
             Actions\Action::make('back')
                 ->label('رجوع')
                 ->icon('heroicon-o-arrow-left')
