@@ -154,7 +154,7 @@
                                 </td>
                                 <td
                                     class="py-2 px-4 text-right text-black text-sm print:text-xs border border-gray-400">
-                                    {{ $isWholesale ? number_format($discountPercent, 2) . ' %' : '-' }}
+                                    {{ $isWholesale ? number_format($discountPercent) . ' %' : '-' }}
                                 </td>
                                 <td
                                     class="py-2 px-4 text-right text-black text-sm print:text-xs border border-gray-400">
@@ -217,7 +217,7 @@
                         <div class="flex justify-between py-1 px-4 rounded-md">
                             <span class="text-base font-medium text-black">الإجمالي :</span>
                             <span class="text-base font-medium text-black">
-                                {{ number_format($isWholesale ? $totalAfterDiscount : $totalBeforeSale, 2) + $this->getRecord()->previous_debt }}
+                                {{ number_format(($isWholesale ? $totalAfterDiscount : $totalBeforeSale)  + $this->getRecord()->previous_debt, 2) }}
                                 ج.م
                             </span>
                         </div>

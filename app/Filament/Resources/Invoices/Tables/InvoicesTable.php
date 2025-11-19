@@ -65,15 +65,16 @@ class InvoicesTable
                     ->label('إجمالي الفاتورة')
                     ->formatStateUsing(fn ($record) => number_format($record->total_amount - $record->special_discount + $record->previous_debt, 2))
                     ->suffix(' جنيه '),
-
+                    /*
                 TextColumn::make('remaining')
                     ->label('المتبقي')
                     ->state(fn ($record) => max(0, ($record->total_amount - $record->special_discount + $record->previous_debt) - $record->paid_amount))
                     ->formatStateUsing(fn ($state) => number_format($state, 2).' ج.م')
                     ->badge()
                     ->color(fn ($state) => $state == 0 ? 'success' : 'danger'),
-
-                TextColumn::make('status')
+                    */
+                    /*
+                    TextColumn::make('status')
                     ->label('الحالة')
                     ->badge()
                     ->icon(fn ($record) => $record->status === 'partial'
@@ -96,6 +97,7 @@ class InvoicesTable
                     ->action(
                         MarkAsPaid::make()
                     ),
+                    */
             ])
             ->filters([
                 SelectFilter::make('status')
