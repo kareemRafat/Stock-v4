@@ -17,7 +17,10 @@ class PayInvoiceAction
     {
         return Action::make('payInvoice')
             ->label(fn($record) => in_array($record->status, ['paid', 'partial']) ? 'مسدد ' : 'سداد')
-            ->disabled(fn($record) => in_array($record->status, ['paid', 'partial']))
+            ->disabled(function ($record) {
+                return in_array($record->status, ['paid', 'partial']) ||
+                    $record->has_newer_unpaid > 0;
+            })
             ->modalSubmitActionLabel('تسديد فاتورة')
             ->modalHeading(
                 fn(Model $record) => new HtmlString('تسديد فاتورة العميل: ' . "<span style='color: #3b82f6 !important'>{$record->customer->name}</span>")
@@ -28,9 +31,9 @@ class PayInvoiceAction
                     ->label('المبلغ المدفوع')
                     ->numeric()
                     ->required()
-                    ->default(fn($record) => $record->amount_due_without_credit)
+                    // ->default(fn($record) => number_format($record->amount_due_without_credit ,2))
                     ->dehydrated()
-                    ->helperText('المبلغ المدفوع نقداً')
+                    ->placeholder('المبلغ المدفوع نقداً')
                     ->columnSpan(1),
 
                 // عرض الرصيد الدائن المتاح
@@ -69,62 +72,43 @@ class PayInvoiceAction
                 ClientDatetimeHidden::make('created_at'),
             ])
             ->action(function (array $data, Model $record) {
-                // التحقق من وجود مبلغ للسداد
                 $paid = $data['paid'] ?? 0;
 
-                // static cache
-                static $availableCredit = null;
-
-                if ($availableCredit === null) {
-                    $availableCredit = $record->customer->getAvailableCreditBalance($record->created_at);
-                }
+                // حساب الرصيد الدائن الحالي
+                $availableCredit = $record->customer->getAvailableCreditBalance();
 
                 if ($paid <= 0 && $availableCredit <= 0) {
                     return self::notifyError('حدث خطأ: يجب إدخال مبلغ نقدي أو توفر رصيد دائن كافٍ للعميل.');
                 }
 
-                DB::transaction(function () use ($data, $record) {
+                DB::transaction(function () use ($data, $record, $paid, $availableCredit) {
                     $customer = $record->customer;
-                    $paid = $data['paid'] ?? 0;
-                    $total = $record->total_amount;
 
-                    // 1. حساب الرصيد الدائن المتاح قبل الفاتورة
-                    $availableCredit = $customer->getAvailableCreditBalance($record->created_at);
+                    // 1. حساب الإجمالي المطلوب للفاتورة (شامل المديونية والمرتجعات)
+                    $totalDue = $record->amount_due_without_credit;
 
                     // 2. المبلغ الذي سيتم تغطيته من الرصيد الدائن
-                    $amountToUseFromCredit = min($availableCredit, max(0, $total - $paid));
+                    $amountToUseFromCredit = min($availableCredit, max(0, $totalDue - $paid));
 
-                    // 3. المبلغ المتبقي للسداد
-                    $remainingDebt = $total - $paid - $amountToUseFromCredit - $record->special_discount;
+                    // 3. إجمالي المبلغ المدفوع (نقدي + رصيد)
+                    $totalPaidNow = $paid + $amountToUseFromCredit;
 
-                    // 4. تسديد كل الفواتير السابقة الغير مدفوعة
-                    $customer->invoices()
-                        ->where('created_at', '<=', $record->created_at)
-                        ->whereIn('status', ['pending', 'partial'])
-                        ->update(['status' => 'paid']);
+                    // 4. المبلغ المتبقي للسداد
+                    $remainingDebt = $totalDue - $totalPaidNow;
 
-                    // تحديث paid_amount = total_due
-                    DB::table('invoices')
-                        ->where('customer_id', $customer->id)
-                        ->where('created_at', '<=', $record->created_at)
-                        ->whereIn('status', ['paid'])
-                        ->update([
-                            'paid_amount' => DB::raw('total_amount - special_discount + previous_debt')
-                        ]);
-
-                    // 5. تسجيل حركة الدفعة النقدية (دائن)
+                    // 5. تسجيل حركة الدفعة النقدية
                     if ($paid > 0) {
                         $customer->wallet()->create([
                             'type' => 'payment',
                             'amount' => $paid,
                             'invoice_id' => $record->id,
                             'invoice_number' => $record->invoice_number,
-                            'notes' => 'سداد نقدي للفاتورة ',
+                            'notes' => 'سداد نقدي للفاتورة',
                             'created_at' => $data['created_at'],
                         ]);
                     }
 
-                    // 6. استخدام الرصيد الدائن (دائن)
+                    // 6. استخدام الرصيد الدائن
                     if ($amountToUseFromCredit > 0) {
                         $customer->wallet()->create([
                             'type' => 'credit_use',
@@ -138,7 +122,7 @@ class PayInvoiceAction
 
                     // 7. تحديث المبلغ المدفوع في الفاتورة
                     $record->update([
-                        'paid_amount' => $record->paid_amount + $paid + $amountToUseFromCredit,
+                        'paid_amount' => $record->paid_amount + $totalPaidNow
                     ]);
 
                     // 8. تحديث حالة الفاتورة
@@ -151,16 +135,31 @@ class PayInvoiceAction
             ->icon(fn($record) => in_array($record->status, ['paid', 'partial']) ? 'heroicon-s-check-circle' : 'heroicon-s-banknotes');
     }
 
-    protected static function updateInvoiceStatus($record, float $remainingDebt): void
+    protected static function updateInvoiceStatus($record, $remainingDebt): void
     {
-        if (abs($remainingDebt) < 0.01) { // تجنب مشاكل الفلوات
+        $customer = $record->customer;
+
+        if (abs($remainingDebt) < 0.01) {
             $record->update(['status' => 'paid']);
-        } elseif ($remainingDebt > 0) {
+        } else if ($remainingDebt > 0) {
             $record->update(['status' => 'partial']);
         } else {
-            // إذا كان سالب (المدفوع أكثر من المطلوب)
             $record->update(['status' => 'paid']);
         }
+
+        // سدد كل الفواتير الأقدم
+        $customer->invoices()
+            ->where('created_at', '<', $record->created_at)
+            ->whereIn('status', ['pending', 'partial'])
+            ->update(['status' => 'paid']);
+
+        DB::table('invoices')
+            ->where('customer_id', $customer->id)
+            ->where('created_at', '<=', $record->created_at)
+            ->where('status', 'paid')
+            ->update([
+                'paid_amount' => DB::raw('total_amount - special_discount + previous_debt')
+            ]);
     }
 
     protected static function notifyError(string $message)

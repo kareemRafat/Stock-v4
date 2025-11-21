@@ -15,13 +15,16 @@ class MarkAsPaid
             ->label('تسديد كامل')
             ->icon('heroicon-o-check-circle')
             ->color('success')
+            ->disabled(fn($record) => $record->has_newer_unpaid > 0)
             ->requiresConfirmation()
             ->modalHeading('تسديد الفاتورة بالكامل')
-            ->modalDescription(
-                fn ($record) => 'سيتم تسجيل دفعة بقيمة: '.
-                    number_format($record->total_amount - $record->paid_amount, 2).
-                    ' ج.م لإتمام سداد الفاتورة'
-            )
+            ->modalDescription(function ($record) {
+                $remainingAmount = $record->amount_due_without_credit;
+
+                return 'سيتم تسجيل دفعة بقيمة: ' .
+                    number_format($remainingAmount, 2) .
+                    ' ج.م لإتمام سداد الفاتورة';
+            })
             ->schema([
                 ClientDatetimeHidden::make('created_at'),
             ])
@@ -29,7 +32,7 @@ class MarkAsPaid
             ->action(function ($record, $data) {
                 DB::transaction(function () use ($record, $data) {
                     // حساب المبلغ المتبقي
-                    $remainingAmount = $record->total_amount - $record->special_discount - $record->paid_amount;
+                    $remainingAmount = $record->amount_due_without_credit;
                     if ($remainingAmount > 0) {
                         // تسجيل الدفعة في المحفظة
                         $record->customer->wallet()->create([
@@ -50,7 +53,7 @@ class MarkAsPaid
                         Notification::make()
                             ->success()
                             ->title('تم تسديد الفاتورة بنجاح')
-                            ->body('تم تسجيل دفعة بقيمة '.number_format($remainingAmount, 2).' ج.م')
+                            ->body('تم تسجيل دفعة بقيمة ' . number_format($remainingAmount, 2) . ' ج.م')
                             ->send();
                     } else {
                         // الفاتورة مدفوعة فعلاً
@@ -64,6 +67,6 @@ class MarkAsPaid
                     }
                 });
             })
-            ->visible(fn ($record) => $record->status === 'partial');
+            ->visible(fn($record) => $record->status === 'partial');
     }
 }
